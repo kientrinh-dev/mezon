@@ -50,7 +50,7 @@ import {
 	useAppDispatch
 } from '@mezon/store';
 import { Icons } from '@mezon/ui';
-import { PLATFORM_ENV, Platform, TIME_OF_SHOWING_FIRST_POPUP, isLinuxDesktop, isMacDesktop, isWindowsDesktop } from '@mezon/utils';
+import { PLATFORM_ENV, Platform, TIME_OF_SHOWING_FIRST_POPUP, generateE2eId, isLinuxDesktop, isMacDesktop, isWindowsDesktop } from '@mezon/utils';
 import isElectron from 'is-electron';
 import { ChannelType } from 'mezon-js';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -369,6 +369,7 @@ const SidebarMenu = memo(
 					<div className="mt-3">
 						<NavLinkComponent>
 							<div
+								data-e2e={generateE2eId('clan_page.side_bar.button.add_channel')}
 								className="flex items-center justify-between text-theme-primary group"
 								onClick={openCreateClanModal}
 								title="Create CLans"
@@ -506,17 +507,15 @@ const ClansList = memo(() => {
 									<SidebarClanItem
 										option={item.clan}
 										active={isActive(item.clan.clan_id || '')}
-										className={`transition-all duration-200 ${draggingThis ? 'opacity-30' : ''} ${
-											isGroupIntentTarget && dropZone === 'center' ? 'animate-pulse' : ''
-										}`}
+										className={`transition-all duration-200 ${draggingThis ? 'opacity-30' : ''} ${isGroupIntentTarget && dropZone === 'center' ? 'animate-pulse' : ''
+											}`}
 									/>
 								) : item.type === 'group' && 'group' in item && item.group ? (
 									<div onMouseEnter={(e) => handleItemMouseEnter(e, item.id)} onMouseMove={(e) => handleItemMouseEnter(e, item.id)}>
 										<ClanGroup
 											group={item.group}
-											className={`transition-all duration-200 ${draggingThis ? 'opacity-30' : ''} ${
-												isGroupIntentTarget ? 'animate-pulse' : ''
-											}`}
+											className={`transition-all duration-200 ${draggingThis ? 'opacity-30' : ''} ${isGroupIntentTarget ? 'animate-pulse' : ''
+												}`}
 											isGroupIntent={isGroupIntentTarget}
 											onMouseDown={(e) => handleMouseDown(e, item.id)}
 											onClanMouseDown={handleClanMouseDown}

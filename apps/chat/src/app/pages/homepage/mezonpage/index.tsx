@@ -123,10 +123,11 @@ function MezonPage() {
 					<div
 						className={`bg-white max-md:pb-0 max-md:mt-[36px] md:mt-[100px] md:pb-[50px] flex flex-col gap-[48px] max-md:gap-[32px] md:px-[32px] transition-opacity duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
 					>
-						<div className="flex flex-col gap-5 items-center">
-							<div
-								data-e2e={generateE2eId('homepage.main-page.heading.title')}
-								className="text-black text-6xl max-w-[1000px] font-bold leading-relaxed text-center max-md:text-4xl max-sm:text-3xl"
+						<div className="flex flex-col items-center justify-center gap-[24px] m-auto text-center w-full max-w-full md:max-w-[662px]">
+							<h1
+								style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial' }}
+								className="tracking-[-.02em] text-center text-[60px] max-md:text-[36px] leading-[72px] max-md:leading-[48px] text-[#F4F7F9] max-md:text-textDarkTheme"
+								data-e2e={generateE2eId('homepage.main_page.heading.title')}
 							>
 								The <HighLightText content="Live" />, <HighLightText content="Work" />, and <HighLightText content="Play Platform" />{' '}
 								the best <HighLightText content="Discord" /> Alternative
@@ -233,8 +234,8 @@ function MezonPage() {
 
 			<Layout sideBarIsOpen={sideBarIsOpen} />
 			<Footer downloadUrl={downloadUrl} universalUrl={universalUrl} portableUrl={portableUrl} />
-			{!isElectron() && <CustomCookieConsent />}
-		</div>
+			{ !isElectron() && <CustomCookieConsent /> }
+		</div >
 	);
 }
 
