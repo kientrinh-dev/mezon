@@ -124,17 +124,17 @@ const ModalCreateCategory = ({ onClose, onCreateCategory }: ModalCreateCategoryP
 				</div>
 				<div className=" font-semibold text-sm flex   justify-end flex-row items-center gap-4 py-4 px-6 rounded-bl-[5px] rounded-br-[5px]">
 					<button
-						data-e2e={generateE2eId(`clan_page.modal.create_category.button.cancel`)}
 						onClick={onClose}
 						className=" hover:underline text-theme-primary"
+						data-e2e={generateE2eId(`clan_page.modal.create_category.button.cancel`)}
 					>
 						Cancel
 					</button>
 					<button
-						data-e2e={generateE2eId(`clan_page.modal.create_category.button.confirm`)}
 						className={`px-4 py-2  btn-primary btn-primary-hover rounded-lg  ${checkValidate ? 'opacity-50 cursor-not-allowed' : ''}`}
 						onClick={handleCreateCate}
 						disabled={checkCategoryName}
+						data-e2e={generateE2eId(`clan_page.modal.create_category.button.confirm`)}
 					>
 						Create Category
 					</button>
