@@ -1,6 +1,6 @@
 import { useGetPriorityNameFromUserClan } from '@mezon/core';
 import { PinMessageEntity, messagesActions, selectCurrentClanId, selectMessageByMessageId, useAppDispatch, useAppSelector } from '@mezon/store';
-import { IMessageWithUser, TOPBARS_MAX_WIDTH, convertTimeString, generateE2eId } from '@mezon/utils';
+import { IMessageWithUser, TOPBARS_MAX_WIDTH, convertTimeString } from '@mezon/utils';
 import { ChannelStreamMode, safeJSONParse } from 'mezon-js';
 import { ApiMessageAttachment } from 'mezon-js/api.gen';
 import { useMemo } from 'react';
@@ -75,7 +75,7 @@ const ItemPinMessage = (props: ItemPinMessageProps) => {
 		>
 			<div className="flex items-start gap-2 w-full ">
 				<div className="pointer-events-none">
-					<BaseProfile avatar={avatarToShow || ''} hideIcon={true} dataE2e={generateE2eId(`common.item_pin_message.username`)} />
+					<BaseProfile avatar={avatarToShow || ''} hideIcon={true} />
 				</div>
 
 				<div className="flex flex-col gap-1 text-left w-[85%] enableSelectText cursor-text">
@@ -96,27 +96,24 @@ const ItemPinMessage = (props: ItemPinMessageProps) => {
 							/>
 						)}
 					</div>
-					{!!pinMessageAttachments.length &&
-						(() => {
-							const enhancedAttachments = pinMessageAttachments.map((att: ApiMessageAttachment) => ({
-								...att,
-								create_time: validCreateTime,
-								sender_id: pinMessage.sender_id,
-								message_id: pinMessage.message_id
-							}));
-							return (
-								<MessageAttachment
-									mode={mode as ChannelStreamMode}
-									message={
-										{
-											...pinMessage,
-											attachments: enhancedAttachments
-										} as IMessageWithUser
-									}
-									defaultMaxWidth={TOPBARS_MAX_WIDTH}
-								/>
-							);
-						})()}
+					{!!pinMessageAttachments.length && (() => {
+						const enhancedAttachments = pinMessageAttachments.map((att: ApiMessageAttachment) => ({
+							...att,
+							create_time: validCreateTime, 
+							sender_id: pinMessage.sender_id,
+							message_id: pinMessage.message_id
+						}));
+						return (
+							<MessageAttachment
+								mode={mode as ChannelStreamMode}
+								message={{
+									...pinMessage,
+									attachments: enhancedAttachments
+								} as IMessageWithUser}
+								defaultMaxWidth={TOPBARS_MAX_WIDTH}
+							/>
+						);
+					})()}
 				</div>
 			</div>
 			<div className="absolute h-fit flex gap-x-2 items-center opacity-0 right-2 top-2 group-hover/item-pinMess:opacity-100">
