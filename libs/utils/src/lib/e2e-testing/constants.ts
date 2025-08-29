@@ -135,18 +135,6 @@ export const DATA_E2E_IDENTIFIER = {
 				},
 				name: ''
 			}
-		},
-		settings: {
-			sidebar: {
-				delete: ''
-			},
-			modal: {
-				delete_clan: {
-					input: '',
-					confirm: '',
-					cancel: ''
-				}
-			}
 		}
 	},
 	chat: {
@@ -226,8 +214,7 @@ export const DATA_E2E_IDENTIFIER = {
 			emoji: '',
 			sticker: ''
 		},
-		suggest_item: '',
-
+		suggest_item: ''
 	},
 	onboarding: {
 		chat: {
