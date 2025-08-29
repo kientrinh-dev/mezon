@@ -10,7 +10,7 @@ const BaseProfile = ({
 	hideIcon = false,
 	userMeta,
 	displayName,
-	dataE2e
+	dataE2E
 }: {
 	avatar: string;
 	name?: string;
@@ -18,7 +18,7 @@ const BaseProfile = ({
 	status?: string;
 	hideIcon?: boolean;
 	userMeta?: { status: string; user_status: EUserStatus };
-	dataE2e?: string;
+	dataE2E?: string;
 }) => {
 	return (
 		<div className={`relative h-10 flex gap-3 items-center text-theme-primary`}>
@@ -38,7 +38,7 @@ const BaseProfile = ({
 
 			<div className="flex flex-col justify-center ">
 				{(displayName || name) && (
-					<span className="one-line text-start" data-e2e={dataE2e}>
+					<span className="one-line text-start" data-e2e={dataE2E}>
 						{displayName || name}
 					</span>
 				)}

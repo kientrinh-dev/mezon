@@ -74,7 +74,7 @@ const ClanMentionReactInput = memo((props: MentionReactInputProps) => {
 			membersOfParent={membersOfParent || []}
 			dataReferences={dataReferences}
 			dataReferencesTopic={dataReferencesTopic}
-			prefixDataE2E={props.indetiferIdxE2E}
+			dataE2E={props?.dataE2E}
 		/>
 	);
 });

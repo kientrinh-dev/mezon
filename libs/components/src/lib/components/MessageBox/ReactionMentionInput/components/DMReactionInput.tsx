@@ -1,6 +1,6 @@
 import { useDraftCompose } from '@mezon/core';
 import { selectIsShowMemberListDM, selectIsUseProfileDM } from '@mezon/store';
-import { MentionReactInputProps } from '@mezon/utils';
+import { generateE2eId, MentionReactInputProps } from '@mezon/utils';
 import { ChannelStreamMode } from 'mezon-js';
 import { memo, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -39,7 +39,7 @@ const DMReactionInput = memo((props: DMReactionInputProps) => {
 			draftRequest={draftRequest}
 			updateDraft={updateDraft}
 			currentDmGroupId={props.currentChannelId as string}
-			prefixDataE2E="direct_message"
+			dataE2E={generateE2eId('', 'direct_message')}
 		/>
 	);
 });

@@ -125,7 +125,7 @@ export interface MentionReactBaseProps extends MentionReactInputProps {
 	dataReferences?: ApiMessageRef;
 	dataReferencesTopic?: ApiMessageRef;
 	currentDmGroupId?: string;
-	prefixDataE2E?: string;
+	dataE2E?: string;
 }
 
 export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElement => {
@@ -142,7 +142,7 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 		valueThread,
 		draftRequest,
 		updateDraft,
-		prefixDataE2E
+		dataE2E
 	} = props;
 
 	const dispatch = useAppDispatch();
@@ -985,7 +985,7 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 					maxHistorySize={50}
 					hasFilesToSend={attachmentData.length > 0}
 					currentChannelId={props.currentChannelId}
-					dataE2E={generateE2eId('chat.mention.input', prefixDataE2E)}
+					dataE2E={generateE2eId('chat.mention.input', dataE2E)}
 				>
 					<Mention
 						trigger="@"

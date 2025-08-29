@@ -23,6 +23,7 @@ import {
 	MAX_FILE_ATTACHMENTS,
 	MAX_FILE_SIZE,
 	UploadLimitReason,
+	generateE2eId,
 	processFile
 } from '@mezon/utils';
 import isElectron from 'is-electron';
@@ -305,7 +306,7 @@ const TopicDiscussionBox = () => {
 									isTopic
 									handleConvertToFile={onConvertToFiles}
 									currentChannelId={currentInputChannelId}
-									indetiferIdxE2E="mention_topic"
+									dataE2E={generateE2eId('', 'mention_topic')}
 								/>
 							</div>
 						</div>

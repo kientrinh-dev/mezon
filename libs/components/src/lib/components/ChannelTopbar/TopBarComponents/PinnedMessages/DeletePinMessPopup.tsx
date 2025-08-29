@@ -34,7 +34,7 @@ export const ModalDeletePinMess = (props: ModalDeletePinMessProps) => {
 							<BaseProfile
 								avatar={pinMessage.avatar || ''}
 								hideIcon={true}
-								dataE2e={generateE2eId(`common.delete_pin_message.username`)}
+								dataE2E={generateE2eId(`common.delete_pin_message.username`)}
 							/>
 						</div>
 						<div className="flex text-sm flex-col gap-1 text-left flex-1 min-w-0 pointer-events-none [&_.attachment-actions]:!hidden [&_button]:!hidden">
