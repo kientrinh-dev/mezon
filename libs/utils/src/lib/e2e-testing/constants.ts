@@ -22,7 +22,7 @@ export const DATA_E2E_IDENTIFIER = {
 	},
 	mention: {
 		input: '',
-		selected_file: '',
+		selected_file: ''
 	},
 	discussion: {
 		box: {
@@ -189,6 +189,22 @@ export const DATA_E2E_IDENTIFIER = {
 				leave_group: {
 					button: ''
 				}
+			},
+			header: {
+				buttons: ''
+			},
+			friend_request_form: {
+				input: ''
+			},
+			friend_status_list: {
+				header: {
+					title: ''
+				},
+				list: {
+					item: {
+						username: ''
+					}
+				}
 			}
 		},
 		channel_message: {
@@ -269,7 +285,7 @@ export const DATA_E2E_IDENTIFIER = {
 				button_change_avatar: '',
 				button_reset: '',
 				button_save_changes: ''
-			},
+			}
 		}
 	},
 	common: {
@@ -291,4 +307,3 @@ type DotNestedKeys<T> = T extends object
 	: never;
 
 export type E2eKeyType = DotNestedKeys<typeof DATA_E2E_IDENTIFIER>;
- 
