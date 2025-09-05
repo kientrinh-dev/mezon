@@ -12,6 +12,7 @@ import {
 	useAppDispatch
 } from '@mezon/store';
 import { Button, Icons, Image, InputField } from '@mezon/ui';
+import { generateE2eId } from '@mezon/utils';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import ActivityList from './ActivityList';
@@ -143,7 +144,10 @@ const FriendsPage = () => {
 
 	return (
 		<div className="flex flex-col flex-1 shrink min-w-0  h-[100%]">
-			<div className={`draggable-area flex min-w-0 items-center bg-theme-chat  px-6 py-3 justify-start h-heightHeader border-b-theme-primary`}>
+			<div
+				className={`draggable-area flex min-w-0 items-center bg-theme-chat  px-6 py-3 justify-start h-heightHeader border-b-theme-primary`}
+				data-e2e={generateE2eId('chat.direct_message.header')}
+			>
 				{closeMenuMobile && (
 					<div className="text-theme-primary" onClick={() => setStatusMenu(true)}>
 						<Icons.OpenMenu defaultSize="w-6 h-6" />
@@ -164,6 +168,7 @@ const FriendsPage = () => {
 									className={`px-3 py-[6px] font-medium rounded-lg text-theme-primary text-theme-primary-hover shadow-none border-none bg-button-hover ${currentTabStatus === tab.value && !openModalAddFriend ? 'bg-active-button text-theme-primary-active' : ''} ${tab.value === 'pending' && quantityPendingRequest !== 0 ? 'pr-[30px]' : ''}`}
 									tabIndex={index}
 									onClick={() => handleChangeTab(tab.value)}
+									data-e2e={generateE2eId('chat.direct_message.header.buttons')}
 								>
 									{tab.title}
 								</button>
@@ -187,7 +192,10 @@ const FriendsPage = () => {
 				<div className=" flex-1 flex flex-col bg-theme-chat">
 					{!openModalAddFriend && (
 						<>
-							<div className="flex flex-col text-theme-primary px-8 pt-6">
+							<div
+								className="flex flex-col text-theme-primary px-8 pt-6"
+								data-e2e={generateE2eId('chat.direct_message.friend_status_list.header')}
+							>
 								<div className="relative">
 									<InputField
 										type="text"
@@ -199,11 +207,17 @@ const FriendsPage = () => {
 										<Icons.Search />
 									</div>
 								</div>
-								<span className="text-[14px]  mb-4 font-bold px-[14px]">
+								<span
+									className="text-[14px]  mb-4 font-bold px-[14px]"
+									data-e2e={generateE2eId('chat.direct_message.friend_status_list.header.title')}
+								>
 									{currentTabStatus.toUpperCase()} - {listFriendFilter.length}
 								</span>
 							</div>
-							<div className="px-8 overflow-hidden flex flex-1 pb-4">
+							<div
+								className="px-8 overflow-hidden flex flex-1 pb-4"
+								data-e2e={generateE2eId('chat.direct_message.friend_status_list.list')}
+							>
 								<FriendList listFriendFilter={listFriendFilter} />
 							</div>
 						</>
@@ -213,7 +227,7 @@ const FriendsPage = () => {
 							<div className="w-full flex flex-col gap-3 border-b-theme-primary">
 								<span className="font-[700] text-theme-primary-active">ADD FRIEND</span>
 								<span className="font-[400] text-theme-primary text-[14px]">You can add friends with their Mezon usernames</span>
-								<div className="relative group">
+								<div className="relative group" data-e2e={generateE2eId('chat.direct_message.friend_request_form')}>
 									<InputField
 										onChange={(e) => handleChange('username', e.target.value)}
 										onKeyDown={(e) => {
@@ -227,12 +241,15 @@ const FriendsPage = () => {
 										placeholder="Enter username"
 										needOutline={true}
 										title="You can add friends with their Mezon usernames"
+										data-e2e={generateE2eId('chat.direct_message.friend_request_form.input')}
 									/>
 									{isAlreadyFriend && (
 										<div className="text-red-500 dark:text-red-400 text-[14px] pb-5">You're already friends with that user!</div>
 									)}
 									{isInvalidInput && (
-										<div className="text-red-500 dark:text-red-400 text-[14px] pb-5">Please only use numbers, letters, underscores _ or full stops.</div>
+										<div className="text-red-500 dark:text-red-400 text-[14px] pb-5">
+											Please only use numbers, letters, underscores _ or full stops.
+										</div>
 									)}
 									<div className="invisible group-hover:visible absolute -top-8 left-0 bg-gray-800 text-white text-sm px-2 py-1 rounded">
 										You can add friends with their Mezon usernames

@@ -50,22 +50,12 @@ const FriendMenu = ({ friend, coords, onClose, onDeleteFriend, onBlockFriend }: 
 	};
 
 	return (
-		<div
-			ref={menuRef}
-			className="bg-theme-contexify p-2 w-[150px] text-[14px] font-medium absolute z-50"
-			style={menuStyle}
-		>
+		<div ref={menuRef} className="bg-theme-contexify p-2 w-[150px] text-[14px] font-medium absolute z-50" style={menuStyle}>
 			<div className="flex flex-col gap-1">
-				<button
-					className="text-theme-primary bg-item-hover p-2 rounded-[5px] w-full flex"
-					onClick={onClose}
-				>
+				<button className="text-theme-primary bg-item-hover p-2 rounded-[5px] w-full flex" onClick={onClose}>
 					Start Video Call
 				</button>
-				<button
-					className="text-theme-primary bg-item-hover p-2 rounded-[5px] w-full flex"
-					onClick={onClose}
-				>
+				<button className="text-theme-primary bg-item-hover p-2 rounded-[5px] w-full flex" onClick={onClose}>
 					Start Voice Call
 				</button>
 				<button
@@ -187,7 +177,12 @@ const FriendsListItem = ({ friend }: FriendProps) => {
 						displayName={
 							<>
 								{friend?.user?.display_name || friend?.user?.username}{' '}
-								<span className="group-hover:inline-block hidden text-theme-primary-hover">{friend?.user?.username}</span>
+								<span
+									className="group-hover:inline-block hidden text-theme-primary-hover"
+									data-e2e={generateE2eId('chat.direct_message.friend_status_list.list.item.username')}
+								>
+									{friend?.user?.username}
+								</span>
 							</>
 						}
 						status={(friend?.user?.metadata as MetaDateStatusUser)?.status}

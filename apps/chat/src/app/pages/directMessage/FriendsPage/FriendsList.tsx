@@ -1,5 +1,6 @@
 import { useVirtualizer } from '@mezon/components';
 import { FriendsEntity, selectTheme } from '@mezon/store';
+import { generateE2eId } from '@mezon/utils';
 import { useRef } from 'react';
 import { useSelector } from 'react-redux';
 import FriendsListItem from './FriendsListItem';
@@ -51,6 +52,7 @@ const FriendList = ({ listFriendFilter }: ListFriendsProps) => {
 							height: `${virtualRow.size}px`,
 							transform: `translateY(${virtualRow.start}px)`
 						}}
+						data-e2e={generateE2eId('chat.direct_message.friend_status_list.list.item')}
 					>
 						<div
 							style={{
