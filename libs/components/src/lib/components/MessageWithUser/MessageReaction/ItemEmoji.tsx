@@ -1,6 +1,14 @@
 import { useChatReaction } from '@mezon/core';
 import { getStore, selectAllAccount, selectCurrentChannel } from '@mezon/store';
-import { EmojiDataOptionals, IMessageWithUser, SenderInfoOptionals, calculateTotalCount, getSrcEmoji, isPublicChannel } from '@mezon/utils';
+import {
+	EmojiDataOptionals,
+	IMessageWithUser,
+	SenderInfoOptionals,
+	calculateTotalCount,
+	generateE2eId,
+	getSrcEmoji,
+	isPublicChannel
+} from '@mezon/utils';
 import Tooltip from 'rc-tooltip';
 import { memo } from 'react';
 import { useSelector } from 'react-redux';
@@ -43,6 +51,7 @@ function ItemEmoji({ emoji, message, isTopic }: EmojiItemProps) {
 		<Tooltip overlay={<UserReactionPanel message={message} emojiShowPanel={emoji} isTopic={isTopic} />} placement="top">
 			<div
 				style={{ height: 24 }}
+				data-e2e={generateE2eId('chat.mention.icon_reaction')}
 				className={`rounded-md w-fit min-w-12 gap-3 h-6 flex flex-row noselect
           cursor-pointer justify-center  items-center relative pl-7 text-sm font-medium text-theme-primary
           ${Number(userSenderCount) > 0 ? 'highlight-react-theme' : ''}`}
