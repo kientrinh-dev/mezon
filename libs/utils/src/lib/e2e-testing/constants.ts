@@ -173,7 +173,8 @@ export const DATA_E2E_IDENTIFIER = {
 			friend_list: {
 				friend_item: '',
 				username_friend_item: '',
-				all_friend: ''
+				all_friend: '',
+				displayname_friend_item: ''
 			},
 			member_list: {
 				button: '',
@@ -291,4 +292,3 @@ type DotNestedKeys<T> = T extends object
 	: never;
 
 export type E2eKeyType = DotNestedKeys<typeof DATA_E2E_IDENTIFIER>;
- 
