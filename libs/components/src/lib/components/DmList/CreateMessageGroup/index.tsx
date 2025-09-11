@@ -274,7 +274,12 @@ const CreateMessageGroup = ({ onClose, classNames, currentDM, rootRef }: CreateM
 										>
 											{friend.user?.display_name}
 										</span>
-										<span className="  font-medium">{friend.user?.username}</span>
+										<span
+											className="  font-medium"
+											data-e2e={generateE2eId(`chat.direct_message.friend_list.displayname_friend_item`)}
+										>
+											{friend.user?.username}
+										</span>
 									</div>
 									<div className="relative flex flex-row justify-center">
 										<input
