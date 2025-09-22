@@ -1,4 +1,4 @@
-import { selectAllPermissionsDefault } from '@mezon/store';
+import { selectAllPermissionsDefault } from '@mezon/store-mobile';
 import { EPermission } from '@mezon/utils';
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';

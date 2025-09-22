@@ -13,7 +13,7 @@ import {
 	selectLastEmojiRecent,
 	useAppDispatch,
 	WriteMessageReactionArgs
-} from '@mezon/store';
+} from '@mezon/store-mobile';
 import { transformPayloadWriteSocket } from '@mezon/utils';
 import { ApiClanEmoji } from 'mezon-js/api.gen';
 import { useCallback, useMemo } from 'react';

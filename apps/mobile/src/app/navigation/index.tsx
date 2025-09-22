@@ -30,11 +30,18 @@ const getMezonConfig = (): CreateMezonClientOptions => {
 	}
 
 	return {
-		host: process.env.NX_CHAT_APP_API_GW_HOST as string,
-		port: process.env.NX_CHAT_APP_API_GW_PORT as string,
-		key: process.env.NX_CHAT_APP_API_KEY as string,
-		ssl: process.env.NX_CHAT_APP_API_SECURE === 'true'
+		host: 'gw.mezon.ai' as string,
+		port: '443' as string,
+		key: 'HTTP3m3zonPr0dkey' as string,
+		ssl: true
 	};
+
+	// return {
+	// 	host: process.env.NX_CHAT_APP_API_GW_HOST as string,
+	// 	port: process.env.NX_CHAT_APP_API_GW_PORT as string,
+	// 	key: process.env.NX_CHAT_APP_API_KEY as string,
+	// 	ssl: process.env.NX_CHAT_APP_API_SECURE === 'true'
+	// };
 };
 
 const mezon = getMezonConfig();

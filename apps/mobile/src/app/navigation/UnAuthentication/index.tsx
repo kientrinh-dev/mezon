@@ -12,7 +12,7 @@ const Stack = createNativeStackNavigator();
 
 export const UnAuthentication = () => {
 	const getInitialRouteName = APP_SCREEN.LOGIN;
-	useCheckUpdatedVersion();
+	// useCheckUpdatedVersion();
 
 	return (
 		<Stack.Navigator initialRouteName={getInitialRouteName} screenOptions={{ headerShown: false, gestureEnabled: Platform.OS === 'ios' }}>

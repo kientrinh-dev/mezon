@@ -60,7 +60,14 @@ export function uploadImageToMinIOMobile(url: string, stream: Buffer, type: stri
 	});
 }
 
-export async function handleUploadEmoticon(client: Client, session: Session, filename: string, file: File): Promise<ApiMessageAttachment> {
+export async function handleUploadEmoticon(
+	client: Client,
+	session: Session,
+	filename: string,
+	file: File,
+	isMobile = false,
+	arrayBuffer?: any
+): Promise<ApiMessageAttachment> {
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise<ApiMessageAttachment>(async function (resolve, reject) {
 		try {
@@ -70,10 +77,23 @@ export async function handleUploadEmoticon(client: Client, session: Session, fil
 				const fileExtension = fileNameParts[fileNameParts.length - 1].toLowerCase();
 				fileType = `text/${fileExtension}`;
 			}
-
-			const buf = await file?.arrayBuffer();
-
-			resolve(uploadFile(client, session, filename, fileType, file.size, Buffer.from(buf)));
+			// const filePath = `${currentClanId}/${currentChannelId}/${session?.user_id}/${filename}`;
+			//
+			resolve(
+				uploadFile(
+					client,
+					session,
+					file?.path || filename,
+					convertToMimeType(fileType),
+					file.size,
+					arrayBuffer,
+					true,
+					file?.name,
+					file?.width,
+					file?.height,
+					file?.thumbnail
+				)
+			);
 		} catch (error) {
 			reject(new Error(`${error}`));
 		}
@@ -132,6 +152,24 @@ export async function handleUploadFile(
 	});
 }
 
+function convertToMimeType(text: string): string {
+	if (text?.startsWith('image/') || text?.startsWith('video/')) {
+		return text;
+	}
+
+	const extensionToMimeType: Record<string, string> = {
+		'.jpeg': 'image/jpeg',
+		'.jpg': 'image/jpeg',
+		'.png': 'image/png',
+		'.gif': 'image/gif',
+		'.bmp': 'image/bmp',
+		'.webp': 'image/webp',
+		'.mp4': 'video/mp4'
+	};
+
+	return extensionToMimeType[text?.toLowerCase()] || text;
+}
+
 export async function handleUploadFileMobile(
 	client: Client,
 	session: Session,
@@ -143,20 +181,52 @@ export async function handleUploadFileMobile(
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise<ApiMessageAttachment>(async function (resolve, reject) {
 		try {
-			let fileType = file.type;
+			const fileNameParts = file?.name?.split('.') || file?.uri?.split('.');
+			const fileExtension = fileNameParts[fileNameParts.length - 1].toLowerCase();
+			let fileType = file?.type || fileExtension;
+
 			if (!fileType) {
-				const fileNameParts = file.name.split('.');
+				const fileNameParts = file?.name?.split('.') || file?.uri?.split('.');
 				const fileExtension = fileNameParts[fileNameParts.length - 1].toLowerCase();
 				fileType = `text/${fileExtension}`;
 			}
+
 			if (file?.uri) {
 				const arrayBuffer = BufferMobile.from(file.fileData, 'base64');
 				if (!arrayBuffer) {
 					console.error('Failed to read file data.');
 					return;
 				}
+
 				const { filePath, originalFilename } = createUploadFilePath(session, currentClanId, currentChannelId, filename, true);
-				resolve(uploadFile(client, session, filePath, fileType, file.size, arrayBuffer, true, originalFilename, file?.width, file?.height));
+
+				let attempts = 0;
+				const maxRetries = 3;
+				while (attempts < maxRetries) {
+					try {
+						const result = await uploadFile(
+							client,
+							session,
+							filePath,
+							convertToMimeType(fileType),
+							file.size,
+							arrayBuffer,
+							true,
+							originalFilename,
+							file?.width,
+							file?.height,
+							file?.thumbnail
+						);
+						resolve(result);
+						return;
+					} catch (error) {
+						attempts++;
+						console.warn(`Upload attempt ${attempts} failed: ${error.message}`);
+						if (attempts >= maxRetries) {
+							reject(new Error(`Failed to upload file after ${maxRetries} attempts.`));
+						}
+					}
+				}
 			}
 		} catch (error) {
 			reject(new Error(`${error}`));
@@ -184,7 +254,7 @@ export function createUploadFilePath(
 	if (!currentChannelId) {
 		currentChannelId = '0';
 	}
-	const filePath = `${currentClanId}/${currentChannelId}/${session.user_id}/${filename}`;
+	const filePath = `${currentClanId}/${currentChannelId}/${session?.user_id}/${filename}`;
 	return { filePath, originalFilename };
 }
 

@@ -1,7 +1,6 @@
 import { captureSentryError } from '@mezon/logger';
 import { EmojiStorage, IReaction } from '@mezon/utils';
 import { EntityState, createAsyncThunk, createEntityAdapter, createSelector, createSlice } from '@reduxjs/toolkit';
-import { safeJSONParse } from 'mezon-js';
 import { ApiMessageReaction } from 'mezon-js/api.gen';
 import { ensureSession, getMezonCtx } from '../helpers';
 import { toastActions } from '../toasts';
@@ -16,6 +15,7 @@ export const mapReactionToEntity = (reaction: UpdateReactionMessageArgs) => {
 
 export interface ReactionEntity extends IReaction {
 	id: string;
+	isSending?: boolean;
 }
 
 export type UpdateReactionMessageArgs = {
@@ -187,15 +187,15 @@ export const writeMessageReaction = createAsyncThunk(
 					1000
 				);
 
-				const emojiLastest: EmojiStorage = {
-					emojiId: emoji_id,
-					emoji,
-					messageId,
-					senderId: userId,
-					action: actionDelete,
-					channel_id: channelId
-				};
-				saveRecentEmoji(emojiLastest);
+				// const emojiLastest: EmojiStorage = {
+				// 	emojiId: emoji_id,
+				// 	emoji,
+				// 	messageId,
+				// 	senderId: userId,
+				// 	action: actionDelete,
+				// 	channel_id: channelId
+				// };
+				// saveRecentEmoji(emojiLastest);
 			} catch (error) {
 				console.error('WriteMessageReaction failed:', error);
 				captureSentryError(error, 'messages/writeMessageReaction');
@@ -243,34 +243,34 @@ export const reactionSlice = createSlice({
 	}
 });
 function saveRecentEmoji(emojiLastest: EmojiStorage) {
-	const storedEmojis = localStorage.getItem('recentEmojis');
-	const emojisRecentParse = storedEmojis ? safeJSONParse(storedEmojis) : [];
-
-	if (emojisRecentParse.length > 0) {
-		const lastEmoji = emojisRecentParse[emojisRecentParse.length - 1];
-		if (lastEmoji.emoji === emojiLastest.emoji && lastEmoji.senderId === emojiLastest.senderId) {
-			return;
-		}
-	}
-	const duplicateIndex = emojisRecentParse.findIndex(
-		(item: EmojiStorage) => item.emoji === emojiLastest.emoji && item.senderId === emojiLastest.senderId
-	);
-
-	if (emojiLastest.action === true) {
-		if (duplicateIndex !== -1) {
-			emojisRecentParse.splice(duplicateIndex, 1);
-		}
-	} else {
-		if (duplicateIndex === -1) {
-			emojisRecentParse.push(emojiLastest);
-		}
-	}
-
-	if (emojisRecentParse.length > 20) {
-		emojisRecentParse.splice(0, emojisRecentParse.length - 20);
-	}
-
-	localStorage.setItem('recentEmojis', JSON.stringify(emojisRecentParse));
+	// const storedEmojis = localStorage.getItem('recentEmojis');
+	// const emojisRecentParse = storedEmojis ? safeJSONParse(storedEmojis) : [];
+	//
+	// if (emojisRecentParse.length > 0) {
+	// 	const lastEmoji = emojisRecentParse[emojisRecentParse.length - 1];
+	// 	if (lastEmoji.emoji === emojiLastest.emoji && lastEmoji.senderId === emojiLastest.senderId) {
+	// 		return;
+	// 	}
+	// }
+	// const duplicateIndex = emojisRecentParse.findIndex(
+	// 	(item: EmojiStorage) => item.emoji === emojiLastest.emoji && item.senderId === emojiLastest.senderId
+	// );
+	//
+	// if (emojiLastest.action === true) {
+	// 	if (duplicateIndex !== -1) {
+	// 		emojisRecentParse.splice(duplicateIndex, 1);
+	// 	}
+	// } else {
+	// 	if (duplicateIndex === -1) {
+	// 		emojisRecentParse.push(emojiLastest);
+	// 	}
+	// }
+	//
+	// if (emojisRecentParse.length > 20) {
+	// 	emojisRecentParse.splice(0, emojisRecentParse.length - 20);
+	// }
+	//
+	// localStorage.setItem('recentEmojis', JSON.stringify(emojisRecentParse));
 }
 
 export const reactionReducer = reactionSlice.reducer;

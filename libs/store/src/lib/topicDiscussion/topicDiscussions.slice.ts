@@ -8,9 +8,12 @@ import {
 	LoadingStatus
 } from '@mezon/utils';
 import { createAsyncThunk, createEntityAdapter, createSelector, createSlice, EntityState, PayloadAction } from '@reduxjs/toolkit';
+import { Snowflake } from '@theinternetfolks/snowflake';
+import { ChannelMessage } from 'mezon-js';
 import { ApiMessageAttachment, ApiMessageMention, ApiMessageRef, ApiSdTopic } from 'mezon-js/api.gen';
 import { ApiChannelMessageHeader, ApiSdTopicRequest } from 'mezon-js/dist/api.gen';
 import { ensureSession, ensureSocket, getMezonCtx, MezonValueContext } from '../helpers';
+import { messagesActions } from '../messages/messages.slice';
 import { RootState } from '../store';
 import { threadsActions } from '../threads/threads.slice';
 
@@ -144,17 +147,63 @@ type SendTopicPayload = {
 	isMobile?: boolean;
 	code?: number;
 	topicId: string;
+	senderId?: string;
+	avatar?: string;
+	username?: string;
 };
 
 export const handleSendTopic = createAsyncThunk('topics/sendTopicMessage', async (payload: SendTopicPayload, thunkAPI) => {
-	const { clanId, channelId, mode, isPublic, content, mentions, attachments, references, anonymous, mentionEveryone, isMobile, code, topicId } =
-		payload;
+	const {
+		clanId,
+		channelId,
+		mode,
+		isPublic,
+		content,
+		mentions,
+		attachments,
+		references,
+		anonymous,
+		mentionEveryone,
+		isMobile,
+		code,
+		topicId,
+		senderId,
+		avatar,
+		username
+	} = payload;
 
 	const mezon = await ensureSocket(getMezonCtx(thunkAPI));
 
 	const session = mezon.sessionRef.current;
 	const client = mezon.clientRef.current;
 	const socket = mezon.socketRef.current;
+
+	const id = Snowflake.generate();
+
+	const fakeMessage: ChannelMessage = {
+		id,
+		code: 0,
+		channel_id: topicId?.toString(),
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-expect-error
+		content: content,
+		mentions: mentions,
+		attachments,
+		create_time: new Date().toISOString(),
+		sender_id: senderId || '',
+		username: username || '',
+		avatar: avatar || '',
+		isSending: true,
+		hide_editted: true,
+		isErrorRetry: false,
+		references: references ? references?.filter((item) => item) || [] : [],
+		isMe: true,
+		isAnonymous: false,
+		isMentionEveryone: false,
+		topic_id: topicId?.toString()
+	};
+	const fakeMess = await thunkAPI.dispatch(messagesActions.mapMessageChannelToEntityAction({ message: fakeMessage })).unwrap();
+	await thunkAPI.dispatch(messagesActions.addNewMessage(fakeMess));
 
 	if (!client || !session || !socket || !channelId) {
 		throw new Error('Client is not initialized');

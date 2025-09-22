@@ -1,4 +1,4 @@
-import { selectMemberClanByUserId, useAppSelector } from '@mezon/store';
+import { selectMemberClanByUserId, useAppSelector } from '@mezon/store-mobile';
 import { useMemo } from 'react';
 import { getShowName } from './useShowName';
 

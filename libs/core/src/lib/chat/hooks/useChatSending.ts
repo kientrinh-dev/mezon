@@ -101,7 +101,7 @@ export function useChatSending({ mode, channelOrDirect, fromTopic = false }: Use
 				if (!currentTopicId) {
 					const topic = (await createTopic()) as ApiSdTopic;
 					if (topic) {
-						dispatch(
+						await dispatch(
 							topicsActions.handleSendTopic({
 								clanId: getClanId as string,
 								channelId: channelIdOrDirectId as string,
@@ -115,14 +115,31 @@ export function useChatSending({ mode, channelOrDirect, fromTopic = false }: Use
 								mentionEveryone: mentionEveryone,
 								mentions: mentions,
 								references: references,
+								topicId: topic?.id as string,
+								senderId: currentUserId,
+								avatar: priorityAvatar,
+								username: priorityNameToShow
+							})
+						);
+
+						await dispatch(
+							messagesActions.fetchMessages({
+								channelId: channelIdOrDirectId as string,
+								clanId: getClanId as string,
 								topicId: topic?.id as string
+							})
+						);
+						await dispatch(
+							messagesActions.fetchMessages({
+								channelId: channelIdOrDirectId as string,
+								clanId: getClanId as string
 							})
 						);
 						return;
 					}
 				}
 
-				dispatch(
+				await dispatch(
 					topicsActions.handleSendTopic({
 						clanId: getClanId as string,
 						channelId: channelIdOrDirectId as string,
@@ -136,7 +153,10 @@ export function useChatSending({ mode, channelOrDirect, fromTopic = false }: Use
 						mentionEveryone: mentionEveryone,
 						mentions: mentions,
 						references: references,
-						topicId: currentTopicId as string
+						topicId: currentTopicId as string,
+						senderId: currentUserId,
+						avatar: priorityAvatar,
+						username: priorityNameToShow
 					})
 				);
 				return;

@@ -11,6 +11,7 @@ import type { StatusUserArgs } from '../channelmembers/channel.members';
 import { channelMembersActions } from '../channelmembers/channel.members';
 import { channelsActions, fetchChannelsCached } from '../channels/channels.slice';
 import { hashtagDmActions } from '../channels/hashtagDm.slice';
+import { clansActions } from '../clans/clans.slice';
 import { ensureSession, ensureSocket, getMezonCtx } from '../helpers';
 import { messagesActions } from '../messages/messages.slice';
 import type { RootState } from '../store';
@@ -329,6 +330,7 @@ export const joinDirectMessage = createAsyncThunk<void, JoinDirectMessagePayload
 					messagesActions.fetchMessages({
 						clanId: '0',
 						channelId: directMessageId,
+						noCache,
 						isFetchingLatestMessages,
 						isClearMessage
 					})
@@ -347,7 +349,7 @@ export const joinDirectMessage = createAsyncThunk<void, JoinDirectMessagePayload
 					.then((data) => {
 						const members = (data.payload as any)?.channel_users as members[];
 						if (type === ChannelType.CHANNEL_TYPE_DM && members?.length > 0) {
-							const userIds = members.map((member) => member?.user_id as string);
+							const userIds = members?.map?.((member) => member?.user_id as string);
 							thunkAPI.dispatch(hashtagDmActions.fetchHashtagDm({ userIds, directId: directMessageId }));
 						}
 					});
@@ -357,13 +359,14 @@ export const joinDirectMessage = createAsyncThunk<void, JoinDirectMessagePayload
 				// }
 			}
 			thunkAPI.dispatch(
-				channelsActions.joinChat({
+				channelsActions?.joinChat?.({
 					clanId: '0',
 					channelId: directMessageId,
 					channelType: type ?? 0,
 					isPublic: false
 				})
 			);
+			thunkAPI.dispatch(clansActions.joinClan({ clanId: '0' }));
 		} catch (error) {
 			captureSentryError(error, 'direct/joinDirectMessage');
 			return thunkAPI.rejectWithValue(error);
@@ -704,7 +707,7 @@ export const directSlice = createSlice({
 			if (avatar && dmGroup.channel_avatar) dmGroup.channel_avatar[index] = avatar;
 
 			if (display_name && dmGroup.display_names) {
-				if (dmGroup.channel_label) {
+				if (dmGroup?.channel_label) {
 					const labels = dmGroup.channel_label.split(',');
 					if (labels[index] === dmGroup.display_names[index]) labels[index] = display_name;
 					dmGroup.channel_label = labels.join(',');

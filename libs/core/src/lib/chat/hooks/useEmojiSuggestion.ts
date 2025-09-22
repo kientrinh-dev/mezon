@@ -8,7 +8,7 @@ import {
 	selectTextToSearchEmojiSuggestion,
 	useAppDispatch
 } from '@mezon/store';
-import { IEmoji, getIdSaleItemFromSource } from '@mezon/utils';
+import { FOR_SALE_CATE, IEmoji, getIdSaleItemFromSource } from '@mezon/utils';
 import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -106,8 +106,20 @@ export function useEmojiSuggestion({ isMobile = false }: EmojiSuggestionProps = 
 	}, [categoryEmoji]);
 
 	const categoriesEmoji = useMemo(() => {
-		const defaultCategories = ['Recent', 'Frequency', 'People', 'Nature', 'Food', 'Activities', 'Travel', 'Objects', 'Symbols', 'Flags'];
-		const mergedCategories = [...defaultCategories.slice(0, 2), ...clanNames, ...defaultCategories.slice(2)];
+		const defaultCategories = [
+			'Recent',
+			FOR_SALE_CATE,
+			'Frequency',
+			'People',
+			'Nature',
+			'Food',
+			'Activities',
+			'Travel',
+			'Objects',
+			'Symbols',
+			'Flags'
+		];
+		const mergedCategories = [...defaultCategories.slice(0, 3), ...clanNames, ...defaultCategories.slice(3)];
 		return [...new Set(mergedCategories)];
 	}, [clanNames]);
 

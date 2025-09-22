@@ -1,3 +1,4 @@
+import { reduxPersistStorage as storage } from '@mezon/mobile-components';
 import { MezonContextValue } from '@mezon/transport';
 import { Middleware, ThunkDispatch, UnknownAction, configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -80,7 +81,7 @@ import { USER_STATUS_API_FEATURE_KEY, userStatusAPIReducer } from './userstatus/
 import { VOICE_FEATURE_KEY, voiceReducer } from './voice/voice.slice';
 import { integrationWebhookReducer } from './webhook/webhook.slice';
 // import storage from '@react-native-async-storage/async-storage';
-const storage = {} as any; // ignore in web
+// const storage = {} as any; // ignore in web
 
 const persistedReducer = persistReducer(
 	{
@@ -147,7 +148,7 @@ const persistedDirectReducer = persistReducer(
 	{
 		key: 'directMessage',
 		storage,
-		blacklist: ['currentDirectMessageId', 'statusDMChannelUnread', 'socketStatus', 'loadingStatus']
+		blacklist: ['currentDirectMessageId', 'statusDMChannelUnread', 'socketStatus', 'loadingStatus', 'currentDirectMessageType', 'buzzStateDirect']
 	},
 	directReducer
 );
@@ -427,7 +428,7 @@ const reducer = {
 	[POLICIES_FEATURE_KEY]: persistPoliciesReducer,
 	userClanProfile: userClanProfileReducer,
 	friends: friendsReducer,
-	direct: directReducer,
+	direct: persistedDirectReducer,
 	directmeta: directMetaReducer,
 	roleId: roleIdReducer,
 	policiesDefaultSlice: policiesDefaultReducer,

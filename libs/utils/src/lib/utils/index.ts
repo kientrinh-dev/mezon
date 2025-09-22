@@ -18,12 +18,17 @@ import type { ApiMessageAttachment, ApiMessageMention, ApiMessageRef, ApiRole, C
 import type { RoleUserListRoleUser } from 'mezon-js/dist/api.gen';
 import type React from 'react';
 import Resizer from 'react-image-file-resizer';
+import { Image as ImageCompressor, Video as VideoCompressor } from 'react-native-compressor';
+import RNFS from 'react-native-fs';
 import { electronBridge } from '../bridge';
 import { REQUEST_PERMISSION_CAMERA, REQUEST_PERMISSION_MICROPHONE } from '../bridge/electron/constants';
 import { EVERYONE_ROLE_ID, ID_MENTION_HERE, TIME_COMBINE } from '../constant';
-import { Platform } from '../hooks/platform';
-import type {
+import {
 	ChannelMembersEntity,
+	EBacktickType,
+	EMimeTypes,
+	ETokenMessage,
+	EUserStatus,
 	IAttachmentEntity,
 	IChannel,
 	IEmojiOnMessage,
@@ -44,10 +49,9 @@ import type {
 	SenderInfoOptionals,
 	UsersClanEntity
 } from '../types';
-import { EBacktickType, ETokenMessage, EUserStatus } from '../types';
 import { Foreman } from './foreman';
 import { isMezonCdnUrl, isTenorUrl } from './urlSanitization';
-import { getPlatform } from './windowEnvironment';
+// import { getPlatform } from './windowEnvironment';
 export * from './animateScroll';
 export * from './audio';
 export * from './buildClassName';
@@ -62,7 +66,7 @@ export * from './detectTokenMessage';
 export * from './file';
 export * from './forceReflow';
 export * from './heavyAnimation';
-export * from './mediaDimensions';
+// export * from './mediaDimensions';
 export * from './mergeRefs';
 export * from './message';
 export * from './parseHtmlAsFormattedText';
@@ -73,28 +77,32 @@ export * from './select';
 export * from './signals';
 export * from './toggleSelection';
 export * from './transform';
-export * from './windowEnvironment';
+// export * from './windowEnvironment';
 export * from './windowSize';
 
 export const convertTimeString = (dateString: string) => {
-	if (!dateString) {
+	try {
+		if (!dateString) {
+			return '';
+		}
+		const codeTime = new Date(dateString);
+		const today = startOfDay(new Date());
+		const yesterday = startOfDay(subDays(new Date(), 1));
+		if (isSameDay(codeTime, today)) {
+			// Date is today
+			const formattedTime = format(codeTime, 'HH:mm');
+			return `Today at ${formattedTime}`;
+		} else if (isSameDay(codeTime, yesterday)) {
+			// Date is yesterday
+			const formattedTime = format(codeTime, 'HH:mm');
+			return `Yesterday at ${formattedTime}`;
+		} else {
+			// Date is neither today nor yesterday
+			const formattedDate = format(codeTime, 'dd/MM/yyyy, HH:mm');
+			return formattedDate;
+		}
+	} catch (e) {
 		return '';
-	}
-	const codeTime = new Date(dateString);
-	const today = startOfDay(new Date());
-	const yesterday = startOfDay(subDays(new Date(), 1));
-	if (isSameDay(codeTime, today)) {
-		// Date is today
-		const formattedTime = format(codeTime, 'HH:mm');
-		return `Today at ${formattedTime}`;
-	} else if (isSameDay(codeTime, yesterday)) {
-		// Date is yesterday
-		const formattedTime = format(codeTime, 'HH:mm');
-		return `Yesterday at ${formattedTime}`;
-	} else {
-		// Date is neither today nor yesterday
-		const formattedDate = format(codeTime, 'dd/MM/yyyy, HH:mm');
-		return formattedDate;
 	}
 };
 
@@ -148,8 +156,8 @@ export const uniqueUsers = (
 		)
 	);
 
-	const allRoleUsers = rolesClan.reduce<RoleUserListRoleUser[]>((acc, role) => {
-		const isMentionedRole = mentions.some((mention) => mention.role_id === role.id && mention.role_id !== EVERYONE_ROLE_ID);
+	const allRoleUsers = rolesClan?.reduce<RoleUserListRoleUser[]>((acc, role) => {
+		const isMentionedRole = mentions?.some((mention) => mention.role_id === role.id && mention.role_id !== EVERYONE_ROLE_ID);
 		if (isMentionedRole && role.role_user_list?.role_users) {
 			acc.push(...role.role_user_list.role_users);
 		}
@@ -158,7 +166,7 @@ export const uniqueUsers = (
 
 	const uniqueUserId2s = Array.from(
 		new Set(
-			allRoleUsers.reduce<string[]>((acc, roleUser) => {
+			allRoleUsers?.reduce<string[]>((acc, roleUser) => {
 				if (roleUser?.id) {
 					acc.push(roleUser.id);
 				}
@@ -194,7 +202,11 @@ export const calculateTotalCount = (senders: SenderInfoOptionals[]) => {
 };
 
 export const notImplementForGifOrStickerSendFromPanel = (data: ApiMessageAttachment) => {
-	if (isTenorUrl(data.url) || data.filetype === 'image/gif') {
+	if (
+		data.url?.includes('tenor.com') ||
+		data.url?.includes('cdn.mezon.vn/stickers') ||
+		data.url?.includes('cdn.mezon.ai/stickers')
+	) {
 		return true;
 	} else {
 		return false;
@@ -754,6 +766,29 @@ export async function getWebUploadedAttachments(payload: {
 	}));
 }
 
+const compressImage = async (image: string) => {
+	try {
+		return await ImageCompressor.compress(image, {
+			compressionMethod: 'auto',
+			quality: 1
+		});
+	} catch (error) {
+		console.error('log  => error compressImage', error);
+		return image;
+	}
+};
+
+const compressVideo = async (video: string) => {
+	try {
+		return await VideoCompressor.compress(video, {
+			compressionMethod: 'auto'
+		});
+	} catch (error) {
+		console.error('log  => error compressVideo', error);
+		return video;
+	}
+};
+
 export async function getMobileUploadedAttachments(payload: {
 	attachments: ApiMessageAttachment[];
 	client: Client;
@@ -761,30 +796,55 @@ export async function getMobileUploadedAttachments(payload: {
 	clanId: string;
 	channelId: string;
 }): Promise<ApiMessageAttachment[]> {
-	const { attachments, client, session, clanId, channelId } = payload;
-	if (!attachments || attachments?.length === 0) {
-		return [];
-	}
-	const directLinks = attachments.filter((att) => isTenorUrl(att.url) || isMezonCdnUrl(att.url));
-	const nonDirectAttachments = attachments.filter((att) => !isTenorUrl(att.url) && !isMezonCdnUrl(att.url));
+	try {
+		const { attachments, client, session, clanId, channelId } = payload;
+		if (!attachments || attachments?.length === 0) {
+			return [];
+		}
+		const directLinks = attachments.filter(
+			(att) =>
+				att.url?.includes(EMimeTypes.tenor) ||
+				att.url?.includes(EMimeTypes.cdnmezon) ||
+				att.url?.includes(EMimeTypes.cdnmezon2) ||
+				att.url?.includes(EMimeTypes.cdnmezon3) ||
+				att.url?.includes(EMimeTypes.cdnmezon4)
+		);
+		const nonDirectAttachments = attachments.filter(
+			(att) =>
+				!att.url?.includes(EMimeTypes.tenor) &&
+				!att.url?.includes(EMimeTypes.cdnmezon) &&
+				!att.url?.includes(EMimeTypes.cdnmezon2) &&
+				!att.url?.includes(EMimeTypes.cdnmezon3) &&
+				!att.url?.includes(EMimeTypes.cdnmezon4)
+		);
 
-	if (nonDirectAttachments.length > 0) {
-		const uploadPromises = nonDirectAttachments.map(async (att) => {
-			// const fileData = await RNFS.readFile(att?.url || '', 'base64');
-			const fileData = att;
-			const formattedFile = {
-				type: att?.filetype,
-				uri: att?.url,
-				size: att?.size,
-				height: att?.height,
-				width: att?.width,
-				fileData
-			};
-			return await handleUploadFileMobile(client, session, clanId, channelId, att?.filename || '', formattedFile);
-		});
-		return await Promise.all(uploadPromises);
+		if (nonDirectAttachments.length > 0) {
+			const uploadPromises = nonDirectAttachments.map(async (att) => {
+				const pathCompressed =
+					att?.filetype && att?.filetype.startsWith('video')
+						? await compressVideo(att?.url as string)
+						: att?.filetype && att?.filetype.startsWith('image') && att?.filetype !== 'image/gif'
+							? await compressImage(att?.url as string)
+							: att?.url;
+
+				const fileData = await RNFS.readFile(pathCompressed?.replace?.('%20', ' ') || '', 'base64');
+				// const fileData = att;
+				const formattedFile = {
+					type: att?.filetype,
+					uri: att?.url,
+					size: att?.size,
+					height: att?.height,
+					width: att?.width,
+					fileData
+				};
+				return await handleUploadFileMobile(client, session, clanId, channelId, att?.filename || '', formattedFile);
+			});
+			return await Promise.all(uploadPromises);
+		}
+		return directLinks.map((link) => ({ url: link.url, filetype: link.filetype }));
+	} catch (error) {
+		console.error('log  => error getMobileUploadedAttachments', error);
 	}
-	return directLinks.map((link) => ({ url: link.url, filetype: link.filetype }));
 }
 
 export const blankReferenceObj: ApiMessageRef = {
@@ -857,7 +917,8 @@ export const handleShowShortProfile = (
 };
 
 export const sortNotificationsByDate = (notifications: NotificationEntity[]) => {
-	return notifications.sort((a, b) => {
+	const uniqueNotifications = Array.from(new Map(notifications.map((item) => [item.id, item])).values());
+	return uniqueNotifications.sort((a, b) => {
 		const dateA = a.create_time ? new Date(a.create_time).getTime() : 0;
 		const dateB = b.create_time ? new Date(b.create_time).getTime() : 0;
 		return dateB - dateA;
@@ -881,9 +942,9 @@ export const checkIsThread = (channel?: IChannel) => {
 	return channel?.parent_id !== '0' && channel?.parent_id !== '';
 };
 
-export const isWindowsDesktop = getPlatform() === Platform.WINDOWS && isElectron();
-export const isMacDesktop = getPlatform() === Platform.MACOS && isElectron();
-export const isLinuxDesktop = getPlatform() === Platform.LINUX && isElectron();
+// export const isWindowsDesktop = getPlatform() === Platform.WINDOWS && isElectron();
+// export const isMacDesktop = getPlatform() === Platform.MACOS && isElectron();
+// export const isLinuxDesktop = getPlatform() === Platform.LINUX && isElectron();
 
 type ImgproxyOptions = {
 	width?: number;
@@ -893,14 +954,15 @@ type ImgproxyOptions = {
 
 export const createImgproxyUrl = (sourceImageUrl: string, options: ImgproxyOptions = { width: 100, height: 100, resizeType: 'fit' }) => {
 	if (!sourceImageUrl) return '';
-	if (!sourceImageUrl.startsWith('https://cdn.mezon')) {
+	const extension = sourceImageUrl?.split?.('.')?.pop()?.toLowerCase();
+	if (extension === 'gif' || extension === 'webp' || !sourceImageUrl.startsWith('https://cdn.mezon')) {
 		return sourceImageUrl;
 	}
 	const { width, height, resizeType } = options;
 	const processingOptions = `rs:${resizeType}:${width}:${height}:1/mb:2097152`;
 	const path = `/${processingOptions}/plain/${sourceImageUrl}@webp`;
 
-	return `${process.env.NX_IMGPROXY_BASE_URL}/${process.env.NX_IMGPROXY_KEY}${path}`;
+	return `https://imgproxy.mezon.ai/K0YUZRIosDOcz5lY6qrgC6UIXmQgWzLjZv7VJ1RAA8c${path}`;
 };
 
 export function copyChannelLink(clanId: string, channelId: string) {

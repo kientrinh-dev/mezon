@@ -195,8 +195,8 @@ export const attachmentSlice = createSlice({
 					(attachment) => attachment.message_id !== messageId
 				);
 
-				if (state.listAttachmentsByChannel[channelId].attachments.length === 0) {
-					delete state.listAttachmentsByChannel[channelId];
+				if (state?.listAttachmentsByChannel[channelId].attachments.length === 0) {
+					delete state?.listAttachmentsByChannel[channelId];
 				}
 			}
 		}
@@ -211,7 +211,7 @@ export const attachmentSlice = createSlice({
 				(state: AttachmentState, action: PayloadAction<{ attachments: AttachmentEntity[]; channelId: string; fromCache?: boolean; append?: boolean }>) => {
 					const { attachments, channelId, fromCache } = action.payload;
 
-					if (!state.listAttachmentsByChannel[channelId]) {
+					if (!state?.listAttachmentsByChannel[channelId]) {
 						state.listAttachmentsByChannel[channelId] = getInitialChannelState();
 					}
 
@@ -260,7 +260,7 @@ export const attachmentActions = {
 };
 
 /*
- * Export selectors to query state. For use with the `useSelector` hook.
+ * Export selectors to query state?. For use with the `useSelector` hook.
  *
  * e.g.
  * ```
@@ -276,30 +276,31 @@ export const attachmentActions = {
 
 export const getAttachmentState = (rootState: { [ATTACHMENT_FEATURE_KEY]: AttachmentState }): AttachmentState => rootState[ATTACHMENT_FEATURE_KEY];
 
-export const selectAttachment = createSelector(getAttachmentState, (state: AttachmentState) => state.attachment);
+export const selectAttachment = createSelector(getAttachmentState, (state: AttachmentState) => state?.attachment);
 
-export const selectCurrentAttachmentShowImage = createSelector(getAttachmentState, (state: AttachmentState) => state.currentAttachment);
+export const selectCurrentAttachmentShowImage = createSelector(getAttachmentState, (state: AttachmentState) => state?.currentAttachment);
 
-export const selectOpenModalAttachment = createSelector(getAttachmentState, (state: AttachmentState) => state.openModalAttachment);
+export const selectOpenModalAttachment = createSelector(getAttachmentState, (state: AttachmentState) => state?.openModalAttachment);
 
-export const selectModeAttachment = createSelector(getAttachmentState, (state: AttachmentState) => state.mode);
+export const selectModeAttachment = createSelector(getAttachmentState, (state: AttachmentState) => state?.mode);
 
-export const selectMessageIdAttachment = createSelector(getAttachmentState, (state: AttachmentState) => state.messageId);
+export const selectMessageIdAttachment = createSelector(getAttachmentState, (state: AttachmentState) => state?.messageId);
 
 export const selectAllListAttachmentByChannel = createSelector([getAttachmentState, (state, channelId: string) => channelId], (state, channelId) => {
-	if (!Object.prototype.hasOwnProperty.call(state.listAttachmentsByChannel, channelId)) {
+	if (!Object.prototype.hasOwnProperty.call(state?.listAttachmentsByChannel, channelId)) {
 		return undefined;
 	}
-	return state.listAttachmentsByChannel[channelId]?.attachments?.filter((att) => att?.filetype?.startsWith(ETypeLinkMedia.IMAGE_PREFIX));
+	return state?.listAttachmentsByChannel[channelId]?.attachments?.filter((att) => att?.filetype?.startsWith(ETypeLinkMedia.IMAGE_PREFIX));
 });
 
 export const selectAllListDocumentByChannel = createSelector([getAttachmentState, (state, channelId: string) => channelId], (state, channelId) => {
-	if (!Object.prototype.hasOwnProperty.call(state.listAttachmentsByChannel, channelId)) {
+	if (!state?.listAttachmentsByChannel) return [];
+	if (!Object.prototype.hasOwnProperty.call(state?.listAttachmentsByChannel, channelId)) {
 		return [];
 	}
 
 	return (
-		state.listAttachmentsByChannel[channelId]?.attachments?.reduce<AttachmentEntity[]>((result, att) => {
+		state?.listAttachmentsByChannel[channelId]?.attachments?.reduce<AttachmentEntity[]>((result, att) => {
 			const { filetype, filename } = att || {};
 			if (!filetype?.startsWith(ETypeLinkMedia.IMAGE_PREFIX) && !filetype?.startsWith(ETypeLinkMedia.VIDEO_PREFIX)) {
 				result.push({

@@ -1,4 +1,5 @@
 import { Client, Session, Socket } from 'mezon-js';
+import { STORAGE_SESSION_KEY, remove, save } from '@mezon/mobile-components';
 import { WebSocketAdapterPb } from 'mezon-js-protobuf';
 import { ApiConfirmLoginRequest, ApiLinkAccountConfirmRequest, ApiLoginIDResponse } from 'mezon-js/dist/api.gen';
 import React, { useCallback } from 'react';
@@ -12,15 +13,15 @@ const FAST_RETRY_ATTEMPTS = 5;
 export const SESSION_STORAGE_KEY = 'mezon_session';
 
 const waitForNetworkAndDelay = async (delayMs: number): Promise<void> => {
-	if (!navigator.onLine) {
-		return new Promise((resolve) => {
-			const handleOnline = () => {
-				window.removeEventListener('online', handleOnline);
-				resolve();
-			};
-			window.addEventListener('online', handleOnline);
-		});
-	}
+	// if (!navigator.onLine) {
+	// 	return new Promise((resolve) => {
+	// 		const handleOnline = () => {
+	// 			window.removeEventListener('online', handleOnline);
+	// 			resolve();
+	// 		};
+	// 		window.addEventListener('online', handleOnline);
+	// 	});
+	// }
 	return new Promise((resolve) => {
 		setTimeout(() => {
 			resolve();
@@ -50,14 +51,22 @@ type Sessionlike = {
 
 const saveMezonConfigToStorage = (host: string, port: string, useSSL: boolean) => {
 	try {
-		localStorage.setItem(
-			SESSION_STORAGE_KEY,
+		save(
+			STORAGE_SESSION_KEY,
 			JSON.stringify({
 				host,
 				port,
 				ssl: useSSL
 			})
 		);
+		// localStorage.setItem(
+		// 	SESSION_STORAGE_KEY,
+		// 	JSON.stringify({
+		// 		host,
+		// 		port,
+		// 		ssl: useSSL
+		// 	})
+		// );
 	} catch (error) {
 		console.error('Failed to save Mezon config to local storage:', error);
 	}
@@ -65,7 +74,8 @@ const saveMezonConfigToStorage = (host: string, port: string, useSSL: boolean) =
 
 export const clearSessionFromStorage = () => {
 	try {
-		localStorage.removeItem(SESSION_STORAGE_KEY);
+		remove(STORAGE_SESSION_KEY);
+		// localStorage.removeItem(SESSION_STORAGE_KEY);
 	} catch (error) {
 		console.error('Failed to clear session from local storage:', error);
 	}
@@ -96,17 +106,17 @@ export const getMezonConfig = (): CreateMezonClientOptions => {
 };
 
 export const extractAndSaveConfig = (session: Session | null, isFromMobile?: boolean) => {
-	if (!session || !session.api_url) return null;
+	if (!session) return null;
 	try {
-		const url = new URL(session.api_url);
+		const url = new URL(session?.api_url || 'https:' + process.env.NX_CHAT_APP_API_HOST);
 		const host = url.hostname;
-		const port = url.port;
+		const port = url?.port || process.env.NX_CHAT_APP_API_GW_PORT;
 		const useSSL = url.protocol === 'https:';
 
 		// mobile will use AsyncStorage to save in source mobile app
-		if (!isFromMobile) {
-			saveMezonConfigToStorage(host, port, useSSL);
-		}
+		// if (!isFromMobile) {
+		saveMezonConfigToStorage(host, port, useSSL);
+		// }
 
 		return { host, port, useSSL };
 	} catch (error) {
@@ -186,42 +196,51 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 	}, []);
 
 	const confirmLoginRequest = useCallback(async (confirmRequest: ApiConfirmLoginRequest) => {
-		if (!clientRef.current) {
-			throw new Error('Mezon client not initialized');
+		try {
+			if (!clientRef.current) {
+				throw new Error('Mezon client not initialized');
+			}
+			if (!sessionRef.current) {
+				throw new Error('Mezon session not initialized');
+			}
+			const useSSL = process.env.NX_CHAT_APP_API_SECURE === 'true';
+			const scheme = useSSL ? 'https://' : 'http://';
+			const basePath = `${scheme}${process.env.NX_CHAT_APP_API_GW_HOST}:${process.env.NX_CHAT_APP_API_GW_PORT}`;
+
+			const session = await clientRef.current.confirmLogin(sessionRef.current, basePath, confirmRequest);
+			return session;
+		} catch (err) {
+			console.error('log  => err', err);
 		}
-		if (!sessionRef.current) {
-			throw new Error('Mezon session not initialized');
-		}
-		const useSSL = process.env.NX_CHAT_APP_API_SECURE === 'true';
-		const scheme = useSSL ? 'https://' : 'http://';
-		const basePath = `${scheme}${process.env.NX_CHAT_APP_API_GW_HOST}:${process.env.NX_CHAT_APP_API_GW_PORT}`;
-		const session = await clientRef.current.confirmLogin(sessionRef.current, basePath, confirmRequest);
-		return session;
 	}, []);
 
 	const authenticateMezon = useCallback(
 		async (token: string, isRemember?: boolean) => {
-			if (!clientRef.current) {
-				throw new Error('Mezon client not initialized');
-			}
-			const session = await clientRef.current.authenticateMezon(token, undefined, undefined, isFromMobile ? true : (isRemember ?? false));
-			sessionRef.current = session;
+			try {
+				if (!clientRef.current) {
+					throw new Error('Mezon client not initialized');
+				}
+				const session = await clientRef.current.authenticateMezon(token, undefined, undefined, isFromMobile ? true : (isRemember ?? false));
+				sessionRef.current = session;
 
-			const config = extractAndSaveConfig(session, isFromMobile);
-			if (config) {
-				clientRef.current.setBasePath(config.host, config.port, config.useSSL);
-			}
+				const config = extractAndSaveConfig(session, isFromMobile);
+				if (config) {
+					clientRef.current.setBasePath(config.host, config.port, config.useSSL);
+				}
 
-			const socket = await createSocket(); // Create socket after authentication
-			socketRef.current = socket;
+				const socket = await createSocket(); // Create socket after authentication
+				socketRef.current = socket;
 
-			if (!socketRef.current) {
+				if (!socketRef.current) {
+					return session;
+				}
+
+				await socketRef.current.connect(session, true, isFromMobile ? '1' : '0');
+
 				return session;
+			} catch (e) {
+				console.error('log  => authenticateMezon', e);
 			}
-
-			await socketRef.current.connect(session, true, isFromMobile ? '1' : '0');
-
-			return session;
 		},
 		[createSocket, isFromMobile]
 	);
@@ -325,7 +344,6 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 			if (!clientRef.current) {
 				throw new Error('Mezon client not initialized');
 			}
-
 			const sessionObj = new Session(session.token, session.refresh_token, session.created, session.api_url, session.is_remember);
 
 			if (session.expires_at) {
@@ -348,6 +366,7 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 			const newSession = await clientRef.current.sessionRefresh(
 				new Session(session.token, session.refresh_token, session.created, session.api_url, session.is_remember)
 			);
+			// alert('sessionRefresh 2')
 
 			sessionRef.current = newSession;
 			extractAndSaveConfig(newSession, isFromMobile);
@@ -407,19 +426,16 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 						}
 
 						const socket = await createSocket();
-
-						let newSession = null;
-						if (sessionRef.current.refresh_token && sessionRef.current.isexpired(Date.now() / 1000)) {
-							newSession = await clientRef.current.sessionRefresh(
-								new Session(
-									sessionRef.current.token,
-									sessionRef.current.refresh_token,
-									sessionRef.current.created,
-									sessionRef.current.api_url,
-									sessionRef.current.is_remember ?? false
-								)
-							);
-						}
+						
+						const newSession = await clientRef.current.sessionRefresh(
+							new Session(
+								sessionRef.current.token,
+								sessionRef.current.refresh_token,
+								sessionRef.current.created,
+								sessionRef.current.api_url,
+								sessionRef.current.is_remember ?? false
+							)
+						);
 
 						const connectedSession = await socket.connect(newSession || sessionRef.current, true, isFromMobile ? '1' : '0');
 						await socket.joinClanChat(clanId);
@@ -456,7 +472,7 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 				reconnectingRef.current = false;
 			}
 		},
-		[createSocket, isFromMobile]
+		[createSocket, socketRef.current, isFromMobile]
 	);
 
 	const value = React.useMemo<MezonContextValue>(
