@@ -1,7 +1,7 @@
 import { Middleware, ThunkDispatch, UnknownAction, configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { persistReducer, persistStore } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
+import { reduxPersistStorage as storage } from '@mezon/mobile-components';
 import { accountReducer } from './account/account.slice';
 import { appReducer } from './app/app.slice';
 import { authReducer } from './auth/auth.slice';
@@ -145,7 +145,7 @@ const persistedChannelReducer = persistReducer(
 	{
 		key: 'channels',
 		storage,
-		blacklist: ['request', 'previousChannels', 'scrollOffset', 'showScrollDownButton']
+		blacklist: ['request', 'previousChannels', 'scrollOffset', 'showScrollDownButton', 'currentChannelId']
 	},
 	channelsReducer
 );

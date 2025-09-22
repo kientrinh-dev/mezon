@@ -89,11 +89,12 @@ export const clansAdapter = createEntityAdapter<ClansEntity>();
 export type ChangeCurrentClanArgs = {
 	clanId: string;
 	noCache?: boolean;
+	isNotSetCurrentClanId?: boolean;
 };
 
 export const changeCurrentClan = createAsyncThunk<void, ChangeCurrentClanArgs>(
 	'clans/changeCurrentClan',
-	async ({ clanId, noCache = false }: ChangeCurrentClanArgs, thunkAPI) => {
+	async ({ clanId, noCache = false, isNotSetCurrentClanId = false }: ChangeCurrentClanArgs, thunkAPI) => {
 		try {
 			const state = thunkAPI.getState() as RootState;
 			const targetClan = state.clans.entities[clanId];
@@ -105,8 +106,9 @@ export const changeCurrentClan = createAsyncThunk<void, ChangeCurrentClanArgs>(
 
 			batch(() => {
 				thunkAPI.dispatch(clansActions.setCurrentClanId(clanId as string));
-				thunkAPI.dispatch(channelsActions.setCurrentChannelId({ clanId, channelId: '' }));
-				thunkAPI.dispatch(channelsActions.fetchChannels({ clanId }));
+				// thunkAPI.dispatch(channelsActions.setCurrentChannelId({ clanId, channelId: '' }));
+				if (!isNotSetCurrentClanId)
+					thunkAPI.dispatch(channelsActions.fetchChannels({ clanId, noCache: true, isMobile: true }));
 
 				thunkAPI.dispatch(usersClanActions.fetchUsersClan({ clanId }));
 				thunkAPI.dispatch(rolesClanActions.fetchRolesClan({ clanId }));

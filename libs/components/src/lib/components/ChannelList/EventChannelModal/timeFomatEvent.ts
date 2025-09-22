@@ -1,9 +1,11 @@
+import { load } from '../../../../../../mobile-components/src';
+
 export const timeFomat = (start: string, locale?: string) => {
 	const date = new Date(start);
 	const timezoneOffsetMinutes = -date.getTimezoneOffset();
 	date.setUTCMinutes(date.getUTCMinutes() + timezoneOffsetMinutes);
 
-	const currentLocale = locale || (typeof window !== 'undefined' ? localStorage.getItem('i18nextLng') || 'en' : 'en');
+	const currentLocale = locale || (typeof window !== 'undefined' ? load('i18nextLng') || 'en' : 'en');
 
 	const localeMap: Record<string, string> = {
 		vi: 'vi-VN',
@@ -98,7 +100,7 @@ export const formatEventTime = (
 	const { locale, includeYear = false, timeZone = 'UTC', format = 'short' } = options;
 
 	const date = new Date(start);
-	const currentLocale = locale || (typeof window !== 'undefined' ? localStorage.getItem('i18nextLng') || 'en' : 'en');
+	const currentLocale = locale || (typeof window !== 'undefined' ? load('i18nextLng') || 'en' : 'en');
 
 	const localeMap: Record<string, string> = {
 		vi: 'vi-VN',

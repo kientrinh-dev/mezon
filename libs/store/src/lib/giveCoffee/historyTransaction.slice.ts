@@ -17,7 +17,7 @@ export const fetchListWalletLedger = createAsyncThunk(
 	'walletLedger/fetchList',
 	async ({ page, filter }: { page?: number; filter?: number }, thunkAPI) => {
 		const mezon = await ensureSession(getMezonCtx(thunkAPI));
-		const response = await mezon.client.listWalletLedger(mezon.session, 8, filter, '', page);
+		const response = await mezon.client.listWalletLedger(mezon.session, 15, filter, '', page);
 		return {
 			ledgers: response.wallet_ledger || [],
 			count: response.count || 0,
@@ -57,9 +57,11 @@ export const walletLedgerSlice = createSlice({
 				state.loadingStatus = 'loading';
 			})
 			.addCase(fetchListWalletLedger.fulfilled, (state: WalletLedgerState, action) => {
-				const { ledgers, count, page } = action.payload;
-				state.walletLedger = state.walletLedger && page !== 1 ? [...state.walletLedger, ...ledgers] : ledgers;
-				state.count = count;
+				const all = [...(state.walletLedger || []), ...action.payload.ledgers];
+				const merged = Array.from(new Map(all.map((item) => [item.id, item])).values());
+				merged?.sort((a, b) => new Date(b?.create_time ?? 0).getTime() - new Date(a?.create_time ?? 0).getTime());
+				state.walletLedger = merged;
+				state.count = action.payload.count;
 				state.loadingStatus = 'loaded';
 			})
 			.addCase(fetchListWalletLedger.rejected, (state: WalletLedgerState, action) => {

@@ -4,7 +4,6 @@ import { Icons } from '@mezon/ui';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import ListEventManagement from './ListEventManagement';
-import { generateE2eId } from '@mezon/utils';
 
 type StartEventModalProps = {
 	onClose: () => void;
@@ -32,7 +31,7 @@ export const StartEventModal = (props: StartEventModalProps) => {
 						</h4>
 					</div>
 					<div className="w-[0.1px] h-4 bg-gray-400"></div>
-					<div className="btn-primary btn-primary-hover  px-2 py-1 rounded-lg text-white font-medium cursor-pointer" onClick={onOpenCreate} data-e2e={generateE2eId('clan_page.modal.create_event.button_create')}>
+					<div className="btn-primary btn-primary-hover  px-2 py-1 rounded-lg text-white font-medium cursor-pointer" onClick={onOpenCreate}>
 						{t('actions.create')}
 					</div>
 				</div>

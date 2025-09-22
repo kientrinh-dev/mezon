@@ -11,7 +11,6 @@ import {
 	useAppSelector
 } from '@mezon/store';
 import { Icons } from '@mezon/ui';
-import { generateE2eId } from '@mezon/utils';
 import type { ClanSticker } from 'mezon-js';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -109,7 +108,6 @@ const SettingSoundEffect = () => {
 						setSelectedSound(null);
 						setShowModal(true);
 					}}
-					data-e2e={generateE2eId('clan_page.settings.voice_sticker.button_upload')}
 				>
 					<span className="flex items-center gap-2">{t('main.uploadSound')}</span>
 				</button>

@@ -3,7 +3,6 @@ import type React from 'react';
 import { MediaType, selectCurrentClanId, soundEffectActions, useAppDispatch } from '@mezon/store';
 import { handleUploadEmoticon, useMezon } from '@mezon/transport';
 import { Icons, Modal } from '@mezon/ui';
-import { generateE2eId } from '@mezon/utils';
 import { Snowflake } from '@theinternetfolks/snowflake';
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -215,7 +214,6 @@ const ModalUploadSound = ({ sound, onSuccess, onClose }: ModalUploadSoundProps) 
 											accept="audio/mp3,audio/mpeg,audio/wav"
 											className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
 											onChange={handleFileChange}
-											data-e2e={generateE2eId('clan_page.settings.upload.voice_sticker_input')}
 										/>
 
 										<div
@@ -294,7 +292,7 @@ const ModalUploadSound = ({ sound, onSuccess, onClose }: ModalUploadSoundProps) 
 										<Icons.AppHelpIcon className="w-4 h-4 text-[#f04747]" />
 									</div>
 									<div>
-										<p className="text-xs text-[#f04747]" data-e2e={generateE2eId('clan_page.settings.upload.voice_sticker_input.error')}>{error}</p>
+										<p className="text-xs text-[#f04747]">{error}</p>
 									</div>
 								</div>
 							)}

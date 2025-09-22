@@ -24,6 +24,11 @@ const NewLoginScreen = ({ navigation }) => {
 	const REDIRECT_URI = encodeURIComponent(process.env.NX_CHAT_APP_OAUTH2_REDIRECT_URI as string);
 	const RESPONSE_TYPE = process.env.NX_CHAT_APP_OAUTH2_RESPONSE_TYPE;
 	const SCOPE = process.env.NX_CHAT_APP_OAUTH2_SCOPE;
+
+	console.log(OAUTH2_AUTHORIZE_URL)
+	console.log(CLIENT_ID)
+	console.log(REDIRECT_URI)
+	console.log(RESPONSE_TYPE)
 	const STATE = useMemo(() => {
 		return Math.random().toString(36).substring(2, 15);
 	}, []);

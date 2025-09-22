@@ -36,36 +36,36 @@ export class KeyStore {
 	}
 
 	static async open(): Promise<KeyStore> {
-		if (navigator.storage && navigator.storage.persist) {
-			await navigator.storage.persist();
-		}
+		// if (navigator.storage && navigator.storage.persist) {
+		// 	await navigator.storage.persist();
+		// }
 		return new Promise((fulfill, reject) => {
-			if (!window.indexedDB) {
-				reject(new Error('IndexedDB is not supported by this browser.'));
-			}
+			// if (!window.indexedDB) {
+			// 	reject(new Error('IndexedDB is not supported by this browser.'));
+			// }
 
 			const objectStoreName = 'keys';
 
-			const req = indexedDB.open(dbName, 2);
-			req.onsuccess = (evt) => {
-				const db = req.result;
-				fulfill(new KeyStore(db, objectStoreName));
-			};
-			req.onerror = (evt) => {
-				reject(req.error);
-			};
-			req.onblocked = () => {
-				reject(new Error('Database already open'));
-			};
-
-			// If the database is being created or upgraded to a new version,
-			// see if the object store and its indexes need to be created.
-			req.onupgradeneeded = (evt) => {
-				const db = req.result;
-				if (!db.objectStoreNames.contains(objectStoreName)) {
-					db.createObjectStore(objectStoreName, { keyPath: 'name' });
-				}
-			};
+			// const req = indexedDB?.open?.(dbName, 2);
+			// req.onsuccess = (evt) => {
+			// 	const db = req.result;
+			// 	fulfill(new KeyStore(db, objectStoreName));
+			// };
+			// req.onerror = (evt) => {
+			// 	reject(req.error);
+			// };
+			// req.onblocked = () => {
+			// 	reject(new Error('Database already open'));
+			// };
+			//
+			// // If the database is being created or upgraded to a new version,
+			// // see if the object store and its indexes need to be created.
+			// req.onupgradeneeded = (evt) => {
+			// 	const db = req.result;
+			// 	if (!db.objectStoreNames.contains(objectStoreName)) {
+			// 		db.createObjectStore(objectStoreName, { keyPath: 'name' });
+			// 	}
+			// };
 		});
 	}
 

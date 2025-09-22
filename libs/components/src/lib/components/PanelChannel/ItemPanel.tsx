@@ -1,5 +1,4 @@
 import { Icons } from '@mezon/ui';
-import { generateE2eId } from '@mezon/utils';
 
 type ItemPanelProps = {
 	children: string;
@@ -37,7 +36,6 @@ const ItemPanel = ({
 			disabled={disabled}
 			onClick={onClick}
 			className={`flex flex-col justify-center w-full rounded-sm bg-item-hover pr-2 ${danger ? 'hover:bg-[#f67e882a]' : ''}`}
-			data-e2e={generateE2eId('clan_page.channel_list.panel.item')}
 		>
 			<div className={'flex flex-row items-center justify-between w-full'}>
 				<li

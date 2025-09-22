@@ -2,8 +2,7 @@ import { ChannelStreamMode, ChannelType } from 'mezon-js';
 import { selectChannelByChannelId, selectCurrentChannel } from '../channels/channels.slice';
 import { selectClanView } from '../clans/clans.slice';
 import { selectDmGroupCurrent, selectDmGroupCurrentId } from '../direct/direct.slice';
-import type { RootState } from '../store';
-import { getStore } from '../store';
+import { RootState, getStore } from '../store-mobile';
 
 export const getActiveMode = (channelId?: string): ChannelStreamMode => {
 	const store = getStore();

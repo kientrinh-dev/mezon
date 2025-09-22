@@ -30,7 +30,7 @@ export const IS_MULTITAB_SUPPORTED = true;
 export const IS_TOUCH_ENV = typeof window !== 'undefined' ? window.matchMedia('(pointer: coarse)').matches : false;
 
 export const IS_SERVICE_WORKER_SUPPORTED = 'serviceWorker' in navigator;
-const chromeVersion = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./)?.[2];
+const chromeVersion = '';
 const hasBrokenServiceWorkerStreaming = chromeVersion && Number(chromeVersion) >= 132; // TODO: Update constraint when bug is fixed
 export const IS_OPFS_SUPPORTED = Boolean(navigator.storage?.getDirectory);
 export const IS_OPUS_SUPPORTED = typeof window !== 'undefined' ? Boolean(new Audio().canPlayType('audio/ogg; codecs=opus')) : false;

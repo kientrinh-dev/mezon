@@ -1,4 +1,4 @@
-import { getStore, selectCurrentClanId, selectMaxPermissionForChannel, selectUserMaxPermissionLevel } from '@mezon/store';
+import { getStore, selectCurrentClanId, selectMaxPermissionForChannel, selectUserMaxPermissionLevel } from '@mezon/store-mobile';
 import { EOverriddenPermission, EPermission } from '@mezon/utils';
 import React, { ReactNode, createContext, useCallback, useContext, useMemo } from 'react';
 import { useSelector } from 'react-redux';

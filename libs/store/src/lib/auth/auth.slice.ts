@@ -4,7 +4,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 import type { Session } from 'mezon-js';
 import { clearApiCallTracker } from '../cache-metadata';
-import { ensureClientAsync, ensureSession, getMezonCtx, restoreLocalStorage } from '../helpers';
+import { ensureClientAsync, ensureSession, getMezonCtx } from '../helpers';
 export const AUTH_FEATURE_KEY = 'auth';
 
 export interface AuthState {
@@ -84,6 +84,12 @@ export const authenticateMezon = createAsyncThunk('auth/authenticateMezon', asyn
 
 export const refreshSession = createAsyncThunk('auth/refreshSession', async (_, thunkAPI) => {
 	const mezon = await ensureClientAsync(getMezonCtx(thunkAPI));
+	if (mezon.client.host === 'gw.mezon.ai') {
+		mezon.client.host = 'api.mezon.ai';
+	}
+	if (mezon.clientRef?.current?.host === 'gw.mezon.ai') {
+		mezon.clientRef.current.host = 'api.mezon.ai';
+	}
 	const sessionState = selectSession(thunkAPI.getState() as unknown as { [AUTH_FEATURE_KEY]: AuthState });
 
 	if (!sessionState) {
@@ -101,6 +107,7 @@ export const refreshSession = createAsyncThunk('auth/refreshSession', async (_, 
 			is_remember: sessionState.is_remember ?? false
 		});
 	} catch (error: any) {
+		console.error('log  => error', error);
 		return thunkAPI.rejectWithValue(error);
 	}
 
@@ -145,19 +152,19 @@ export const logOut = createAsyncThunk('auth/logOut', async ({ device_id, platfo
 	await mezon?.logOutMezon(device_id, platform, !sessionState);
 	thunkAPI.dispatch(authActions.setLogout());
 	clearApiCallTracker();
-	const restoreKey = [
-		'persist:apps',
-		'persist:categories',
-		'persist:clans',
-		'current-theme',
-		'hideNotificationContent',
-		'remember_channel',
-		'i18nextLng'
-	];
-	if (sessionState) {
-		restoreKey.push('mezon_session');
-	}
-	restoreLocalStorage(restoreKey);
+	// const restoreKey = [
+	// 	'persist:apps',
+	// 	'persist:categories',
+	// 	'persist:clans',
+	// 	'current-theme',
+	// 	'hideNotificationContent',
+	// 	'remember_channel',
+	// 	'i18nextLng'
+	// ];
+	// if (sessionState) {
+	// 	restoreKey.push('mezon_session');
+	// }
+	// restoreLocalStorage(restoreKey);
 });
 
 export const createQRLogin = createAsyncThunk('auth/getQRCode', async (_, thunkAPI) => {
@@ -195,14 +202,14 @@ export const confirmLoginRequest = createAsyncThunk('auth/confirmLoginRequest', 
 
 export const registrationPassword = createAsyncThunk(
 	`auth/registrationPassword`,
-	async ({ email, password }: { email: string; password: string }, thunkAPI) => {
+	async ({ email, password, oldPassword }: { email: string; password: string; oldPassword?: string }, thunkAPI) => {
 		if (!email || !password || !email.trim() || !password.trim()) {
 			return thunkAPI.rejectWithValue('Invalid input');
 		}
 
 		try {
 			const mezon = await ensureSession(getMezonCtx(thunkAPI));
-			const response = await mezon.client.registrationPassword(mezon.session, email, password);
+			const response = await mezon.client.registrationPassword(mezon.session, email, password, oldPassword || '');
 
 			if (!response) {
 				return thunkAPI.rejectWithValue('Failed to register password');

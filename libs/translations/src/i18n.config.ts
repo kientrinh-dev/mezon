@@ -3,6 +3,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';
 import { initReactI18next } from 'react-i18next';
 import * as languages from './languages';
+import { load, save } from '@mezon/mobile-components';
 
 const ns = Object.keys(Object.values(languages)[0]);
 export const defaultNS = ns[0];
@@ -18,7 +19,7 @@ const resources = Object.entries(languages).reduce(
 const timezoneDetector = {
 	name: 'timezone',
 	lookup() {
-		const storedLang = localStorage.getItem('i18nextLng');
+		const storedLang = load('i18nextLng');
 
 		if (storedLang && (storedLang === 'vi' || storedLang === 'en')) {
 			return undefined;
@@ -35,7 +36,7 @@ const timezoneDetector = {
 	},
 	cacheUserLanguage(lng: string) {
 		if (lng && (lng === 'vi' || lng === 'en')) {
-			localStorage.setItem('i18nextLng', lng);
+			save('i18nextLng', lng);
 		}
 	}
 };

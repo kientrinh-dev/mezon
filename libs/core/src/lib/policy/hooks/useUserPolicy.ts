@@ -1,4 +1,10 @@
-import { policiesActions, selectAllPermissionsDefault, selectAllPermissionsUser, selectUserMaxPermissionLevel, useAppDispatch } from '@mezon/store';
+import {
+	policiesActions,
+	selectAllPermissionsDefault,
+	selectAllPermissionsUser,
+	selectUserMaxPermissionLevel,
+	useAppDispatch
+} from '@mezon/store-mobile';
 import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useAuth } from '../../auth/hooks/useAuth';

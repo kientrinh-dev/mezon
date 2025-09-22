@@ -61,7 +61,7 @@ export const AuthenticationLoader = () => {
 	const currentLanguage = useAppSelector(selectCurrentLanguage);
 	const { i18n } = useTranslation();
 
-	useCheckUpdatedVersion();
+	// useCheckUpdatedVersion();
 
 	useEffect(() => {
 		const eventDeeplink = DeviceEventEmitter.addListener(ActionEmitEvent.ON_NAVIGATION_DEEPLINK, (path) => onNavigationDeeplink(path));

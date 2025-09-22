@@ -1,4 +1,5 @@
 import { captureSentryError } from '@mezon/logger';
+import { load } from '@mezon/mobile-components';
 import type { LoadingStatus } from '@mezon/utils';
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 import isElectron from 'is-electron';
@@ -50,7 +51,7 @@ export interface AppState {
 
 const getInitialLanguage = (): 'en' | 'vi' => {
 	if (typeof window !== 'undefined') {
-		const storedLang = localStorage.getItem('i18nextLng');
+		const storedLang = load('i18nextLng');
 		if (storedLang === 'vi' || storedLang === 'en') {
 			return storedLang;
 		}
