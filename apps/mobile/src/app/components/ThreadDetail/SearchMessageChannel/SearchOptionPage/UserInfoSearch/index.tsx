@@ -7,6 +7,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import MezonAvatar from '../../../../../componentUI/MezonAvatar';
 import { getUserStatusByMetadata } from '../../../../../utils/helpers';
 import { style } from '../SearchOptionPage.styles';
+import { testProperties } from '../../../../../configs/testProperties';
 
 interface UserInfoSearchProps {
 	onSelectUserInfo: (user: IUserMention) => void;
@@ -20,7 +21,11 @@ export default function UserInfoSearch({ onSelectUserInfo, userData }: UserInfoS
 	const user = useAppSelector((state) => selectMemberClanByUserId(state, (userData?.id as string) || ''));
 	const status = getUserStatusByMetadata(user?.user?.metadata);
 	return (
-		<TouchableOpacity onPress={() => onSelectUserInfo(userData)} style={styles.userInfoBox}>
+		<TouchableOpacity
+			onPress={() => onSelectUserInfo(userData)}
+			style={styles.userInfoBox}
+			{...testProperties(`searchMessageChannel.option.userItem.${userData?.id}`)}
+		>
 			<MezonAvatar
 				userStatus={userStatus}
 				customStatus={status}

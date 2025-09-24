@@ -7,6 +7,7 @@ import Images from '../../../assets/Images';
 import ImageNative from '../../components/ImageNative';
 import { IconCDN } from '../../constants/icon_cdn';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 interface IMezonClanAvatarProps {
 	image?: string;
@@ -47,17 +48,18 @@ export default memo(function MezonClanAvatar({
 
 	if (alt && !image && alt !== 'Anonymous') {
 		return (
-			<View style={styles.avatarMessageBoxDefault}>
-				<Text style={styles.textAvatarMessageBoxDefault}>{alt?.charAt?.(0)?.toUpperCase()}</Text>
+			<View style={styles.avatarMessageBoxDefault} {...testProperties('mezonClanAvatar.avatarMessageBoxDefault')}>
+				<Text style={styles.textAvatarMessageBoxDefault} {...testProperties('mezonClanAvatar.textAvatarMessageBoxDefault')}>{alt?.charAt?.(0)?.toUpperCase()}</Text>
 			</View>
 		);
 	}
 	return (
-		<View style={[styles.fakeBox, { backgroundColor: defaultColor || themeValue.colorAvatarDefault }]}>
+		<View style={[styles.fakeBox, { backgroundColor: defaultColor || themeValue.colorAvatarDefault }]} {...testProperties('mezonClanAvatar.fakeBox')}>
 			{!noDefaultText ? (
 				<FastImage
 					source={alt === 'Anonymous' ? IconCDN.anonymousAvatar : Images.ANONYMOUS_AVATAR}
 					style={{ width: '100%', height: '100%', borderRadius: size.s_100 }}
+					{...testProperties('mezonClanAvatar.anonymousAvatar')}
 				/>
 			) : null}
 		</View>

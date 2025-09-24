@@ -22,20 +22,23 @@ import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../constants/icon_cdn';
 import ModalQuickMenu from './ModalQuickMenu';
 import { style } from './quickAction.style';
+import { testProperties } from '../../../configs/testProperties';
 
-const TabButton = React.memo(({ tab, selectedTab, onPress, styles }: {
-	tab: { title: string; type: QuickMenuType };
-	selectedTab: QuickMenuType;
-	onPress: (type: QuickMenuType) => void;
-	styles: any;
+const TabButton = React.memo(({ tab, selectedTab, onPress, styles, testProps }: {
+    tab: { title: string; type: QuickMenuType };
+    selectedTab: QuickMenuType;
+    onPress: (type: QuickMenuType) => void;
+    styles: any;
+    testProps?: any;
 }) => {
 	const isActive = selectedTab === tab.type;
 
-	return (
-		<Pressable
-			onPress={() => onPress(tab.type)}
-			style={[styles.tab, isActive && styles.activeTab]}
-		>
+    return (
+        <Pressable
+            onPress={() => onPress(tab.type)}
+            style={[styles.tab, isActive && styles.activeTab]}
+            {...testProps}
+        >
 			<Text style={[styles.tabTitle, isActive && styles.activeTabTitle]}>{tab.title}</Text>
 		</Pressable>
 	);
@@ -49,8 +52,8 @@ const HeaderTitle = React.memo(({ title, themeValue }: { title: string; themeVal
 	</View>
 ));
 
-const AddButton = React.memo(({ onPress, themeValue }: { onPress: () => void; themeValue: any }) => (
-	<TouchableOpacity style={style(themeValue).addButton} onPress={onPress}>
+const AddButton = React.memo(({ onPress, themeValue, testProps }: { onPress: () => void; themeValue: any; testProps?: any }) => (
+    <TouchableOpacity style={style(themeValue).addButton} onPress={onPress} {...testProps}>
 		<MezonIconCDN icon={IconCDN.addAction} height={size.s_40} width={size.s_40} color={themeValue.textStrong} />
 	</TouchableOpacity>
 ));
@@ -145,24 +148,25 @@ export function QuickAction({ navigation, route }) {
 	}, [navigation, headerTitle, themeValue]);
 
 	return (
-		<View style={{ flex: 1, backgroundColor: themeValue.primary, paddingHorizontal: size.s_12 }}>
+		<View style={{ flex: 1, backgroundColor: themeValue.primary, paddingHorizontal: size.s_12 }} {...testProperties('quickAction.screen', true)}>
 			<View style={styles.toggleWrapper}>
-				{quickActionTabs.map((tab) => (
-					<TabButton
-						key={tab.type}
-						tab={tab}
-						selectedTab={selectedTab}
-						onPress={handleTabPress}
-						styles={styles}
-					/>
-				))}
+            {quickActionTabs.map((tab) => (
+                <TabButton
+                    key={tab.type}
+                    tab={tab}
+                    selectedTab={selectedTab}
+                    onPress={handleTabPress}
+                    styles={styles}
+                    testProps={testProperties(`quickAction.tab.${tab.type}`)}
+                />
+            ))}
 			</View>
 			{isLoading === 'loading' ? (
 				<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
 					<LoadingModal isVisible={true} />
 				</View>
 			) : (
-				<QuickActionList
+                <QuickActionList
 					data={listQuickActions}
 					themeValue={themeValue}
 					openModal={openModal}
@@ -170,7 +174,7 @@ export function QuickAction({ navigation, route }) {
 					selectedTab={selectedTab}
 				/>
 			)}
-			<AddButton onPress={handleAddPress} themeValue={themeValue} />
+            <AddButton onPress={handleAddPress} themeValue={themeValue} testProps={testProperties('quickAction.addButton')} />
 		</View>
 	);
 }

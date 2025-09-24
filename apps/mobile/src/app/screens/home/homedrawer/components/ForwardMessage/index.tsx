@@ -21,6 +21,7 @@ import { ChannelStreamMode, ChannelType } from 'mezon-js';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { testProperties } from '../../../../../configs/testProperties';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-toast-message';
@@ -252,6 +253,7 @@ const ForwardMessageScreen = () => {
 			behavior="padding"
 			keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight}
 			style={{ flex: 1, paddingHorizontal: size.s_16, paddingTop: size.s_16 }}
+			{...testProperties('forwardMessage.screen', true)}
 		>
 			<StatusBarHeight />
 			<LinearGradient
@@ -259,10 +261,11 @@ const ForwardMessageScreen = () => {
 				end={{ x: 0, y: 0 }}
 				colors={[themeValue.primary, themeValue?.primaryGradiant || themeValue.primary]}
 				style={[StyleSheet.absoluteFillObject]}
+				{...testProperties('forwardMessage.gradient', true)}
 			/>
-			<View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: size.s_18 }}>
+			<View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: size.s_18 }} {...testProperties('forwardMessage.header', true)}>
 				<View style={{ flex: 1 }}>
-					<TouchableOpacity onPress={onClose}>
+					<TouchableOpacity onPress={onClose} {...testProperties('forwardMessage.header.close')}>
 						<MezonIconCDN icon={IconCDN.closeLargeIcon} color={themeValue.textStrong} />
 					</TouchableOpacity>
 				</View>
@@ -271,6 +274,7 @@ const ForwardMessageScreen = () => {
 						fontSize: verticalScale(20),
 						color: themeValue.white
 					}}
+					{...testProperties('forwardMessage.header.title')}
 				>
 					{t('forwardTo')}
 				</Text>
@@ -283,9 +287,10 @@ const ForwardMessageScreen = () => {
 				value={searchText}
 				prefixIcon={<MezonIconCDN icon={IconCDN.magnifyingIcon} color={themeValue.text} height={20} width={20} />}
 				inputWrapperStyle={{ backgroundColor: themeValue.primary, paddingHorizontal: size.s_6 }}
+				{...testProperties('forwardMessage.search')}
 			/>
 
-			<View style={{ marginTop: size.s_12, marginBottom: size.s_12, flex: 1 }}>
+			<View style={{ marginTop: size.s_12, marginBottom: size.s_12, flex: 1 }} {...testProperties('forwardMessage.list', true)}>
 				<FlashList
 					keyExtractor={(item) => `${item.channelId}_${item.type}`}
 					estimatedItemSize={70}
@@ -298,8 +303,9 @@ const ForwardMessageScreen = () => {
 			<TouchableOpacity
 				style={[styles.btn, !selectedForwardObjectsRef.current?.length && { backgroundColor: themeValue.textDisabled }]}
 				onPress={handleForward}
+				{...testProperties('forwardMessage.confirm')}
 			>
-				<Text style={styles.btnText}>
+				<Text style={styles.btnText} {...testProperties('forwardMessage.confirm.text')}>
 					{t('buzz.confirmText')}
 					{count}
 				</Text>

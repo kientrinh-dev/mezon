@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSelector } from 'react-redux';
+import { testProperties } from '../../../../configs/testProperties';
 import Images from '../../../../../assets/Images';
 import CreateClanModal from '../components/CreateClanModal';
 import JoinClanModal from '../components/JoinClanModal';
@@ -37,7 +38,7 @@ const UserEmptyClan = () => {
 
 	if (clansLoadingStatus === 'loaded' && !clans?.length) {
 		return (
-			<View style={styles.wrapper}>
+			<View style={styles.wrapper} {...testProperties('userEmptyClan', true)}>
 				<LinearGradient
 					start={{ x: 1, y: 0 }}
 					end={{ x: 0, y: 0 }}
@@ -55,10 +56,14 @@ const UserEmptyClan = () => {
 						marginTop: size.s_20
 					}}
 				>
-					<TouchableOpacity onPress={() => setIsVisibleJoinClanModal(!isVisibleJoinClanModal)} style={styles.joinClan}>
+					<TouchableOpacity
+						onPress={() => setIsVisibleJoinClanModal(!isVisibleJoinClanModal)}
+						style={styles.joinClan}
+						{...testProperties('userEmptyClan.joinClan')}
+					>
 						<Text style={[styles.textJoinClan, { color: baseColor.white }]}>{t('emptyClans.joinClan')}</Text>
 					</TouchableOpacity>
-					<TouchableOpacity onPress={onCreateClanModal} style={styles.createClan}>
+					<TouchableOpacity onPress={onCreateClanModal} style={styles.createClan} {...testProperties('userEmptyClan.createClan')}>
 						<Text style={[styles.textCreateClan, { color: themeValue?.text }]}>{t('emptyClans.createClan')}</Text>
 					</TouchableOpacity>
 				</View>

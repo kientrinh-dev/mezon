@@ -6,6 +6,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import { useSelector } from 'react-redux';
 import MezonDateTimePicker from '../../componentUI/MezonDateTimePicker';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 const AgeRestrictedForm = ({ onClose }: { onClose: () => void }) => {
 	const { themeValue } = useTheme();
@@ -34,15 +35,15 @@ const AgeRestrictedForm = ({ onClose }: { onClose: () => void }) => {
 		onClose();
 	};
 	return (
-		<View style={{ backgroundColor: themeValue.secondary, borderRadius: size.s_10, padding: size.s_20 }}>
-			<View>
-				<Text style={styles.title}>{t('ageRestrictedForm.title')}</Text>
-				<Text style={styles.description}>{t('ageRestrictedForm.description')}</Text>
+		<View style={{ backgroundColor: themeValue.secondary, borderRadius: size.s_10, padding: size.s_20 }} {...testProperties('ageRestrictedForm.container')}>
+			<View {...testProperties('ageRestrictedForm.viewTitle')}>
+				<Text style={styles.title} {...testProperties('ageRestrictedForm.title')}>{t('ageRestrictedForm.title')}</Text>
+				<Text style={styles.description} {...testProperties('ageRestrictedForm.description')}>{t('ageRestrictedForm.description')}</Text>
 			</View>
 			<MezonDateTimePicker value={date} onChange={handleDatePicked} containerStyle={styles.datePicker} display={'inline'} />
-			<View>
-				<TouchableOpacity style={styles.buttonSubmit} onPress={handleSubmit}>
-					<Text style={styles.btnText}>{t('ageRestrictedForm.submit')}</Text>
+			<View {...testProperties('ageRestrictedForm.viewButton')}>
+				<TouchableOpacity style={styles.buttonSubmit} onPress={handleSubmit} {...testProperties('ageRestrictedForm.buttonSubmit')}>
+					<Text style={styles.btnText} {...testProperties('ageRestrictedForm.btnText')}>{t('ageRestrictedForm.submit')}</Text>
 				</TouchableOpacity>
 			</View>
 		</View>

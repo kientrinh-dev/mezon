@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/react-native';
 import React, { memo } from 'react';
 import { Platform, ViewProps, requireNativeComponent } from 'react-native';
 import CachedImageWithRetryIOS from './CachedImageWithRetryIOS';
+import { testProperties } from '../../configs/testProperties';
 
 interface CustomImageProps extends ViewProps {
 	url: string;
@@ -22,7 +23,7 @@ const CustomImageView = requireNativeComponent<CustomImageProps>('CustomImageVie
 const ImageNative = ({ url, urlOriginal, style, resizeMode }: CustomImageProps) => {
 	try {
 		if (Platform.OS === 'android') {
-			return <CustomImageView url={url?.toString()} resizeMode={resizeMode} style={style} />;
+			return <CustomImageView url={url?.toString()} resizeMode={resizeMode} style={style} {...testProperties('imageNative.customImageView')} />;
 		} else {
 			return (
 				<CachedImageWithRetryIOS

@@ -13,6 +13,7 @@ import MessageActivity from './MessageActivity';
 import MessageHeader from './MessageHeader';
 import MessagesScreenEmpty from './MessagesScreenEmpty';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 const MessagesScreenRender = memo(({ chatList }: { chatList: string }) => {
 	const dmGroupChatList: string[] = useMemo(() => {
@@ -50,7 +51,7 @@ const MessagesScreenRender = memo(({ chatList }: { chatList: string }) => {
 	}, []);
 
 	return (
-		<View style={styles.container}>
+		<View style={styles.container} {...testProperties('messages.container', true)}>
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
 				end={{ x: 0, y: 0 }}
@@ -75,11 +76,11 @@ const MessagesScreenRender = memo(({ chatList }: { chatList: string }) => {
 					return <MessageActivity />;
 				}}
 				keyboardShouldPersistTaps={'handled'}
-				refreshControl={<RefreshControl refreshing={refreshingRef?.current} onRefresh={handleRefresh} />}
+				refreshControl={<RefreshControl refreshing={refreshingRef?.current} onRefresh={handleRefresh} {...testProperties('messages.refreshControl')} />}
 				disableVirtualization
 				ListEmptyComponent={() => <MessagesScreenEmpty />}
 			/>
-			<Pressable style={styles.addMessage} onPress={() => navigateToNewMessageScreen()}>
+			<Pressable style={styles.addMessage} onPress={() => navigateToNewMessageScreen()} {...testProperties('messages.addNewMessage')}>
 				<MezonIconCDN icon={IconCDN.messagePlusIcon} width={size.s_22} height={size.s_22} />
 			</Pressable>
 		</View>

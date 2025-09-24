@@ -25,6 +25,7 @@ import ChannelListSection from '../components/ChannelList/ChannelListSection';
 import { ChannelOnboarding } from '../components/ChannelList/ChannelOnboarding';
 import ButtonNewUnread from './ButtonNewUnread';
 import { style } from './styles';
+import { testProperties } from '../../../../configs/testProperties';
 
 const ChannelList = () => {
 	const { themeValue } = useTheme();
@@ -83,18 +84,38 @@ const ChannelList = () => {
 	const renderItem = useCallback(
 		({ item, index }) => {
 			if (index === 0) {
-				return <ChannelListBackground />;
+				return (
+					<View {...testProperties('channelList.backgroundHeader', true)}>
+						<ChannelListBackground />
+					</View>
+				);
 			} else if (index === 1) {
-				return <ChannelListHeader key={`header-${index}`} />;
+				return (
+					<View key={`header-${index}`} {...testProperties('channelList.header', true)}>
+						<ChannelListHeader />
+					</View>
+				);
 			} else if (index === 2) {
-				return <ChannelOnboarding key={`onBoarding-${index}`} />;
+				return (
+					<View key={`onBoarding-${index}`} {...testProperties('channelList.onBoarding', true)}>
+						<ChannelOnboarding />
+					</View>
+				);
 			} else if (item.channels) {
-				return <ChannelListSection data={item} />;
+				return (
+					<View {...testProperties(`channelList.section.${item?.id}`, true)}>
+						<ChannelListSection data={item} />
+					</View>
+				);
 			} else {
 				const isActive = item?.id === currentChannelId;
 				const isHaveParentActive = item?.threadIds?.includes(currentChannelId);
 				return (
-					<View key={`${item?.id}_${item?.isFavor}_${index}_ItemChannel}`} style={[item?.threadIds && { zIndex: 1 }]}>
+					<View
+						key={`${item?.id}_${item?.isFavor}_${index}_ItemChannel}`}
+						style={[item?.threadIds && { zIndex: 1 }]}
+						{...testProperties(`channelList.item.${item?.id}`, true)}
+					>
 						<ChannelListItem data={item} isChannelActive={isActive} isHaveParentActive={isHaveParentActive} />
 					</View>
 				);
@@ -133,12 +154,13 @@ const ChannelList = () => {
 	}, []);
 
 	return (
-		<View style={styles.mainList}>
+		<View style={styles.mainList} {...testProperties('channelList', true)}>
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
 				end={{ x: 0, y: 0 }}
 				colors={[themeValue.secondary, themeValue?.primaryGradiant || themeValue.secondary]}
 				style={[StyleSheet.absoluteFillObject]}
+				{...testProperties('channelList.gradient', true)}
 			/>
 			<ChannelListScroll data={data} flashListRef={flashListRef} />
 			<FlatList
@@ -163,8 +185,9 @@ const ChannelList = () => {
 				contentContainerStyle={{
 					paddingBottom: size.s_6
 				}}
+				{...testProperties('channelList.flatList', true)}
 			/>
-			{!isTabletLandscape && <View style={{ height: 80 }} />}
+			{!isTabletLandscape && <View style={{ height: 80 }} {...testProperties('channelList.bottomSpacer', true)} />}
 			<ButtonNewUnread />
 		</View>
 	);

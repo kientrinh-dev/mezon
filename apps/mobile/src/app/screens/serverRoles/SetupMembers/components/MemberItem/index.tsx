@@ -10,6 +10,7 @@ import Toast from 'react-native-toast-message';
 import MezonAvatar from '../../../../../componentUI/MezonAvatar';
 import MezonIconCDN from '../../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../../constants/icon_cdn';
+import { testProperties } from '../../../../../configs/testProperties';
 
 interface IMemberItemProps {
 	member: UsersClanEntity;
@@ -64,7 +65,7 @@ export const MemberItem = memo((props: IMemberItemProps) => {
 	}, [role, member?.id, updateRole, memberName, t]);
 
 	return (
-		<TouchableOpacity onPress={onPressMemberItem}>
+		<TouchableOpacity onPress={onPressMemberItem} {...testProperties(`memberItem.btn.${member?.id}`)}>
 			<View
 				style={{
 					flexDirection: 'row',
@@ -74,15 +75,17 @@ export const MemberItem = memo((props: IMemberItemProps) => {
 					padding: size.s_12,
 					gap: size.s_10
 				}}
+				{...testProperties(`memberItem.container.${member?.id}`, true)}
 			>
-				<View style={{ flex: 1, flexDirection: 'row', gap: size.s_10, alignItems: 'center' }}>
+				<View style={{ flex: 1, flexDirection: 'row', gap: size.s_10, alignItems: 'center' }} {...testProperties(`memberItem.info.${member?.id}`, true)}>
 					<MezonAvatar avatarUrl={member?.user?.avatar_url} username={member?.user?.username} />
-					<View style={{ width: '80%' }}>
+					<View style={{ width: '80%' }} {...testProperties(`memberItem.texts.${member?.id}`, true)}>
 						{memberName ? (
 							<Text
 								style={{
 									color: themeValue.white
 								}}
+								{...testProperties(`memberItem.displayName.${member?.id}`)}
 							>
 								{memberName}
 							</Text>
@@ -91,6 +94,7 @@ export const MemberItem = memo((props: IMemberItemProps) => {
 							style={{
 								color: themeValue.text
 							}}
+							{...testProperties(`memberItem.username.${member?.id}`)}
 						>
 							{member?.user?.username}
 						</Text>
@@ -115,7 +119,7 @@ export const MemberItem = memo((props: IMemberItemProps) => {
 							textStyle={{ fontFamily: 'JosefinSans-Regular' }}
 						/>
 					) : (
-						<TouchableOpacity onPress={onDeleteMember} disabled={disabled}>
+						<TouchableOpacity onPress={onDeleteMember} disabled={disabled} {...testProperties(`memberItem.deleteBtn.${member?.id}`)}>
 							<MezonIconCDN icon={IconCDN.closeIcon} color={disabled ? themeValue.textDisabled : themeValue.white} />
 						</TouchableOpacity>
 					)}

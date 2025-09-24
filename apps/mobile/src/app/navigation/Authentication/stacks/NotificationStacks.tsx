@@ -5,6 +5,7 @@ import { size, useTheme } from '@mezon/mobile-ui';
 import { Platform } from 'react-native';
 import Notifications from '../../../screens/Notifications';
 import { APP_SCREEN } from '../../ScreenTypes';
+import { testProperties } from '../../../configs/testProperties';
 
 // eslint-disable-next-line no-empty-pattern
 export const NotificationStacks = ({}: any) => {
@@ -43,6 +44,7 @@ export const NotificationStacks = ({}: any) => {
 				options={{
 					headerShown: false
 				}}
+				{...testProperties('notification.home')}
 			/>
 			{/* <Stack.Screen
 				name={APP_SCREEN.NOTIFICATION.DETAIL}

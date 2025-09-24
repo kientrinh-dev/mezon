@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { BackHandler, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import useTabletLandscape from '../../hooks/useTabletLandscape';
+import { testProperties } from '../../configs/testProperties';
 
 const UpdateGateScreen = ({ route }) => {
 	const { t } = useTranslation(['setting']);
@@ -21,7 +22,7 @@ const UpdateGateScreen = ({ route }) => {
 	const onPress = () => Linking.openURL(storeUrl);
 
 	return (
-		<View style={styles.container}>
+		<View style={styles.container} {...testProperties('updateGate.screen', true)}>
 			<View />
 			<View
 				style={{
@@ -29,18 +30,24 @@ const UpdateGateScreen = ({ route }) => {
 					maxHeight: '70%',
 					marginBottom: size.s_50
 				}}
+				{...testProperties('updateGate.content', true)}
 			>
 				<FastImage
 					source={require('../../../assets/images/bgRocket.png')}
 					style={{ width: size.s_300, height: size.s_300, maxHeight: '80%' }}
 					resizeMode={'cover'}
+					{...testProperties('updateGate.image')}
 				/>
 				<View>
-					<Text style={styles.title}>{t('updateGate.outOfDateVersion')}</Text>
-					<Text style={styles.subTitle}>{t('updateGate.updateExperience')}</Text>
+					<Text style={styles.title} {...testProperties('updateGate.title')}>
+						{t('updateGate.outOfDateVersion')}
+					</Text>
+					<Text style={styles.subTitle} {...testProperties('updateGate.subtitle')}>
+						{t('updateGate.updateExperience')}
+					</Text>
 				</View>
 			</View>
-			<TouchableOpacity onPress={onPress}>
+			<TouchableOpacity onPress={onPress} {...testProperties('updateGate.updateButton')}>
 				<View
 					style={{
 						backgroundColor: 'white',
@@ -54,7 +61,9 @@ const UpdateGateScreen = ({ route }) => {
 						alignSelf: 'center'
 					}}
 				>
-					<Text style={styles.titleBtn}>{t('updateGate.updateNow')}</Text>
+					<Text style={styles.titleBtn} {...testProperties('updateGate.updateButton.text')}>
+						{t('updateGate.updateNow')}
+					</Text>
 				</View>
 			</TouchableOpacity>
 		</View>

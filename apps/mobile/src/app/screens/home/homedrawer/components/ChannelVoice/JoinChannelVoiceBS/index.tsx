@@ -22,6 +22,7 @@ import { APP_SCREEN } from '../../../../../../navigation/ScreenTypes';
 import InviteToChannel from '../../InviteToChannel';
 import { style } from './JoinChannelVoiceBS.styles';
 import VoiceChannelAvatar from './VoiceChannelAvatar';
+import { testProperties } from '../../../../../../configs/testProperties';
 function JoinChannelVoiceBS({ channel }: { channel: IChannel }) {
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
@@ -72,7 +73,7 @@ function JoinChannelVoiceBS({ channel }: { channel: IChannel }) {
 	};
 
 	return (
-		<View style={{ width: '100%', paddingVertical: size.s_10, paddingHorizontal: size.s_10 }}>
+		<View style={{ width: '100%', paddingVertical: size.s_10, paddingHorizontal: size.s_10 }} {...testProperties('channelVoice.joinVoiceBS', true)}>
 			<View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
 				<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexGrow: 1, flexShrink: 1 }}>
 					<TouchableOpacity
@@ -80,6 +81,7 @@ function JoinChannelVoiceBS({ channel }: { channel: IChannel }) {
 							DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: true });
 						}}
 						style={styles.buttonCircle}
+						{...testProperties('channelVoice.joinVoiceBS.close', true)}
 					>
 						<MezonIconCDN icon={IconCDN.chevronDownSmallIcon} color={themeValue.textStrong} />
 					</TouchableOpacity>
@@ -100,6 +102,7 @@ function JoinChannelVoiceBS({ channel }: { channel: IChannel }) {
 						padding: size.s_8,
 						borderRadius: size.s_22
 					}}
+					{...testProperties('channelVoice.joinVoiceBS.invite', true)}
 				>
 					<MezonIconCDN icon={IconCDN.userPlusIcon} color={themeValue.textStrong} />
 				</TouchableOpacity>
@@ -117,7 +120,7 @@ function JoinChannelVoiceBS({ channel }: { channel: IChannel }) {
 							<MezonIconCDN icon={IconCDN.channelVoice} width={size.s_36} height={size.s_36} color={themeValue.textStrong} />
 						</View>
 					) : (
-						<View style={{ flexDirection: 'row' }}>
+						<View style={{ flexDirection: 'row' }} {...testProperties('channelVoice.joinVoiceBS.members', true)}>
 							{voiceChannelMembers?.slice?.(0, 3)?.map((m) => {
 								return <VoiceChannelAvatar key={`${m.user_id}_user_join_voice`} userId={m.user_id} />;
 							})}
@@ -155,11 +158,11 @@ function JoinChannelVoiceBS({ channel }: { channel: IChannel }) {
 						}}
 					></View>
 					<View style={{ flexDirection: 'column', flex: 1 }}>
-						<TouchableOpacity style={styles.btnJoinVoice} onPress={handleJoinVoice}>
+						<TouchableOpacity style={styles.btnJoinVoice} onPress={handleJoinVoice} {...testProperties('channelVoice.joinVoiceBS.joinVoice', true)}>
 							<Text style={styles.textBtnJoinVoice}>{t('joinChannelVoiceBS.joinVoice')}</Text>
 						</TouchableOpacity>
 					</View>
-					<TouchableOpacity onPress={handleShowChat}>
+					<TouchableOpacity onPress={handleShowChat} {...testProperties('channelVoice.joinVoiceBS.openChat', true)}>
 						<View
 							style={{
 								justifyContent: 'center',

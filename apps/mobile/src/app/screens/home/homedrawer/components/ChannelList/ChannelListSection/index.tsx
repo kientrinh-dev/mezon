@@ -4,6 +4,7 @@ import { categoriesActions, selectCategoryExpandStateByCategoryId, useAppDispatc
 import { ICategoryChannel } from '@mezon/utils';
 import React, { memo, useCallback } from 'react';
 import { DeviceEventEmitter, Text, TouchableOpacity, View } from 'react-native';
+import { testProperties } from '../../../../../../configs/testProperties';
 import MezonIconCDN from '../../../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../../../constants/icon_cdn';
 import CategoryMenu from '../../CategoryMenu';
@@ -44,12 +45,13 @@ const ChannelListSection = memo(({ data }: IChannelListSectionProps) => {
 	}
 
 	return (
-		<View style={styles.channelListSection}>
+		<View style={styles.channelListSection} {...testProperties(`channelList.section.container.${data?.id}`, true)}>
 			<TouchableOpacity
 				activeOpacity={0.8}
 				onPress={() => toggleCollapse(data)}
 				onLongPress={onLongPressHeader}
 				style={styles.channelListHeader}
+				{...testProperties(`channelList.section.header.${data?.id}`)}
 			>
 				<View style={styles.channelListHeaderItem}>
 					<MezonIconCDN

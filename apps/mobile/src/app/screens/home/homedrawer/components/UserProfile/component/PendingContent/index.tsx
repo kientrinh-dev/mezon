@@ -12,6 +12,7 @@ import MezonAvatar from '../../../../../../../componentUI/MezonAvatar';
 import MezonIconCDN from '../../../../../../../componentUI/MezonIconCDN';
 import { SeparatorWithLine } from '../../../../../../../components/Common';
 import { IconCDN } from '../../../../../../../constants/icon_cdn';
+import { testProperties } from '../../../../../../../configs/testProperties';
 interface IPendingContentProps {
 	targetUser: FriendsEntity;
 	onClose?: () => void;
@@ -73,8 +74,11 @@ export const PendingContent = memo((props: IPendingContentProps) => {
 	];
 
 	return (
-		<View>
-			<View style={{ flexDirection: 'row', marginTop: size.s_15, padding: size.s_20, alignItems: 'center' }}>
+		<View {...testProperties('pendingContent', true)}>
+			<View
+				style={{ flexDirection: 'row', marginTop: size.s_15, padding: size.s_20, alignItems: 'center' }}
+				{...testProperties('pendingContent.header', true)}
+			>
 				<MezonAvatar
 					width={size.s_34}
 					height={size.s_34}
@@ -100,11 +104,14 @@ export const PendingContent = memo((props: IPendingContentProps) => {
 					</Text>
 				</View>
 
-				<TouchableOpacity onPress={() => onClose()}>
+				<TouchableOpacity onPress={() => onClose()} {...testProperties('pendingContent.closeBtn')}>
 					<MezonIconCDN icon={IconCDN.closeIcon} height={size.s_32} width={size.s_32} color={themeValue.text} />
 				</TouchableOpacity>
 			</View>
-			<View style={{ marginHorizontal: size.s_10, backgroundColor: themeValue.secondary, borderRadius: size.s_10 }}>
+			<View
+				style={{ marginHorizontal: size.s_10, backgroundColor: themeValue.secondary, borderRadius: size.s_10 }}
+				{...testProperties('pendingContent.actionList', true)}
+			>
 				<FlatList
 					data={actionList}
 					keyExtractor={(item) => item.id.toString()}
@@ -113,7 +120,7 @@ export const PendingContent = memo((props: IPendingContentProps) => {
 						const { text, isWarning, action, isShow } = item;
 						if (!isShow) return null;
 						return (
-							<TouchableOpacity onPress={action}>
+							<TouchableOpacity onPress={action} {...testProperties(`pendingContent.action.${item.id}`)}>
 								<View style={{ padding: size.s_14 }}>
 									<Text
 										style={{

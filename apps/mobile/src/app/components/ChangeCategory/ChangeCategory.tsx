@@ -9,6 +9,7 @@ import MezonIconCDN from '../../componentUI/MezonIconCDN';
 import MezonMenu, { IMezonMenuItemProps, IMezonMenuSectionProps } from '../../componentUI/MezonMenu';
 import { IconCDN } from '../../constants/icon_cdn';
 import { APP_SCREEN, MenuChannelScreenProps } from '../../navigation/ScreenTypes';
+import { testProperties } from '../../configs/testProperties';
 
 type ChangeCategory = typeof APP_SCREEN.MENU_CHANNEL.CHANGE_CATEGORY;
 export const ChangeCategory = ({ navigation, route }: MenuChannelScreenProps<ChangeCategory>) => {
@@ -104,8 +105,8 @@ export const ChangeCategory = ({ navigation, route }: MenuChannelScreenProps<Cha
 	}, [navigation, t, themeValue.white]);
 
 	return (
-		<View style={{ flex: 1, backgroundColor: themeValue.primary, paddingHorizontal: size.s_12 }}>
-			<MezonMenu menu={menu} />
+		<View style={{ flex: 1, backgroundColor: themeValue.primary, paddingHorizontal: size.s_12 }} {...testProperties('changeCategory.screen', true)}>
+			<MezonMenu menu={menu} {...testProperties('changeCategory.menu')} />
 		</View>
 	);
 };

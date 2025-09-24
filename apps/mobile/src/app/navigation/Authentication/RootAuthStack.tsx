@@ -30,6 +30,7 @@ import { NotificationStacks } from './stacks/NotificationStacks';
 import { ServersStacks } from './stacks/ServersStacks';
 import { SettingStacks } from './stacks/SettingStacks';
 import { ShopStack } from './stacks/ShopStack';
+import { testProperties } from '../../configs/testProperties';
 const RootStack = createStackNavigator();
 registerGlobals();
 
@@ -59,7 +60,7 @@ export const RootAuthStack = memo(
 		};
 
 		return (
-			<View style={{ flex: 1 }}>
+			<View style={{ flex: 1 }} {...testProperties('rootAuth.stack', true)}>
 				<RootStack.Navigator
 					initialRouteName={APP_SCREEN.BOTTOM_BAR}
 					screenOptions={{

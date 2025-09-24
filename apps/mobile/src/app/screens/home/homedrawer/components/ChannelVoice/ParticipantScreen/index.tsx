@@ -22,6 +22,7 @@ import MezonAvatar from '../../../../../../componentUI/MezonAvatar';
 import MezonConfirm from '../../../../../../componentUI/MezonConfirm';
 import useTabletLandscape from '../../../../../../hooks/useTabletLandscape';
 import { style } from '../styles';
+import { testProperties } from '../../../../../../configs/testProperties';
 
 const ParticipantItem = memo(
 	({
@@ -68,7 +69,7 @@ const ParticipantItem = memo(
 
 		const renderSoundEffectIcon = () => {
 			return (
-				<View style={styles.soundEffectIcon}>
+				<View style={styles.soundEffectIcon} {...testProperties(`channelVoice.participantScreen.soundEffectBadge.${username}`, true)}>
 					<MezonIconCDN icon={IconCDN.activityIcon} height={size.s_16} width={size.s_16} color="#fff" />
 				</View>
 			);
@@ -116,12 +117,12 @@ const ParticipantItem = memo(
 			return (
 				<View style={styles.muteOptions}>
 					{isMicrophoneEnabled && (
-						<TouchableOpacity style={styles.muteIcon} onPress={handleMuteparticipant}>
+						<TouchableOpacity style={styles.muteIcon} onPress={handleMuteparticipant} {...testProperties(`channelVoice.participantScreen.mute.${username}`, true)}>
 							<MezonIconCDN icon={IconCDN.microphoneSlashIcon} height={size.s_16} width={size.s_16} color={themeValue.textStrong} />
 						</TouchableOpacity>
 					)}
 
-					<TouchableOpacity style={styles.muteIcon} onPress={handleKickparticipant}>
+					<TouchableOpacity style={styles.muteIcon} onPress={handleKickparticipant} {...testProperties(`channelVoice.participantScreen.kick.${username}`, true)}>
 						<MezonIconCDN icon={IconCDN.closeSmallBold} height={size.s_16} width={size.s_16} color={themeValue.textStrong} />
 					</TouchableOpacity>
 				</View>
@@ -142,6 +143,7 @@ const ParticipantItem = memo(
 								marginBottom: size.s_100
 							}
 						]}
+						{...testProperties(`channelVoice.participantScreen.focusShare.${username}`, true)}
 					>
 						<VideoTrack
 							objectFit={'contain'}
@@ -174,6 +176,7 @@ const ParticipantItem = memo(
 							isPiPMode && { height: size.s_60 * 2, width: '45%', marginHorizontal: size.s_4 },
 							isSpeaking && { borderWidth: 1, borderColor: themeValue.textLink }
 						]}
+						{...testProperties(`channelVoice.participantScreen.video.${username}`, true)}
 					>
 						<VideoTrack
 							trackRef={videoTrackRef}
@@ -201,6 +204,7 @@ const ParticipantItem = memo(
 							isPiPMode && { height: size.s_60 * 2, width: '45%', marginHorizontal: size.s_4 },
 							isSpeaking && { borderWidth: 1, borderColor: themeValue.textLink }
 						]}
+						{...testProperties(`channelVoice.participantScreen.avatar.${username}`, true)}
 					>
 						{hasActiveSoundReaction && renderSoundEffectIcon()}
 						{isShowMuteMenu && renderMuteOption(isMicrophoneEnabled)}

@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import React, { memo, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { testProperties } from '../../../../../../configs/testProperties';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSelector } from 'react-redux';
 import MezonIconCDN from '../../../../../../../app/componentUI/MezonIconCDN';
@@ -72,15 +73,16 @@ const ChannelListHeader = () => {
 	};
 
 	return (
-		<View style={styles.container}>
+		<View style={styles.container} {...testProperties('channelList.header.container', true)}>
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
 				end={{ x: 0, y: 0 }}
 				colors={[themeValue.secondary, themeValue?.primaryGradiant || themeValue.secondary]}
 				style={[StyleSheet.absoluteFillObject]}
+				{...testProperties('channelList.header.gradient', true)}
 			/>
 			{!!clanName && (
-				<TouchableOpacity onPressIn={handlePress} style={styles.listHeader}>
+				<TouchableOpacity onPressIn={handlePress} style={styles.listHeader} {...testProperties('channelList.header.title')}>
 					<View style={styles.titleNameWrapper}>
 						<Text numberOfLines={1} style={styles.titleServer}>
 							{clanName}
@@ -100,8 +102,8 @@ const ChannelListHeader = () => {
 					</View>
 				</TouchableOpacity>
 			)}
-			<View style={styles.navigationBar}>
-				<TouchableOpacity onPressIn={navigateToSearchPage} style={styles.wrapperSearch}>
+			<View style={styles.navigationBar} {...testProperties('channelList.header.navbar', true)}>
+				<TouchableOpacity onPressIn={navigateToSearchPage} style={styles.wrapperSearch} {...testProperties('channelList.header.search')}>
 					<LinearGradient
 						start={{ x: 1, y: 0 }}
 						end={{ x: 0, y: 0 }}
@@ -111,10 +113,10 @@ const ChannelListHeader = () => {
 					<MezonIconCDN icon={IconCDN.magnifyingIcon} height={size.s_18} width={size.s_18} color={themeValue.text} />
 					<Text style={styles.placeholderSearchBox}>{t('common.search')}</Text>
 				</TouchableOpacity>
-				<TouchableOpacity onPressIn={onOpenScanQR} style={styles.iconWrapper}>
+				<TouchableOpacity onPressIn={onOpenScanQR} style={styles.iconWrapper} {...testProperties('channelList.header.scanQR')}>
 					<MezonIconCDN icon={IconCDN.scanQR} height={size.s_18} width={size.s_18} color={themeValue.text} />
 				</TouchableOpacity>
-				<TouchableOpacity onPressIn={onOpenEvent} style={styles.iconWrapper}>
+				<TouchableOpacity onPressIn={onOpenEvent} style={styles.iconWrapper} {...testProperties('channelList.header.event')}>
 					<MezonIconCDN icon={IconCDN.calendarIcon} height={size.s_18} width={size.s_18} color={themeValue.text} />
 				</TouchableOpacity>
 			</View>

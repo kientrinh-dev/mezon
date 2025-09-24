@@ -5,6 +5,7 @@ import { Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native
 import { IconCDN } from '../../constants/icon_cdn';
 import MezonIconCDN from '../MezonIconCDN';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 interface MezonInputProps {
 	onChangeText?: (text: string) => void;
@@ -51,28 +52,30 @@ export default function MezonSearch({
 	}, []);
 
 	return (
-		<View style={styles.container}>
+		<View style={styles.container} {...testProperties('mezonSearch.container')}>
 			<View style={[styles.inputWrapper, { backgroundColor: hasBackground ? themeValue.primary : themeValue.secondary }]}>
-				<MezonIconCDN icon={IconCDN.magnifyingIcon} color={themeValue.text} height={size.s_20} width={size.s_20} />
+				<MezonIconCDN icon={IconCDN.magnifyingIcon} color={themeValue.text} height={size.s_20} width={size.s_20} {...testProperties('mezonSearch.magnifyingIcon')} />
 				<TextInput
 					ref={inputRef}
 					style={styles.input}
+					{...testProperties('mezonSearch.input')}
 					placeholderTextColor={themeValue.textDisabled}
 					placeholder={t('search')}
 					value={value}
 					onChangeText={onChangeText}
 					onFocus={onFocusText}
+					{...testProperties('mezonSearch.input')}
 				/>
 				{!!value?.length && (
-					<Pressable onPress={clearTextInput}>
-						<MezonIconCDN icon={IconCDN.circleXIcon} height={18} width={18} color={themeValue.text} />
+					<Pressable onPress={clearTextInput} {...testProperties('mezonSearch.clearTextInput')}>
+						<MezonIconCDN icon={IconCDN.circleXIcon} height={18} width={18} color={themeValue.text} {...testProperties('mezonSearch.circleXIcon')} />
 					</Pressable>
 				)}
 			</View>
 
 			{isShowCancel && (
-				<TouchableOpacity onPress={handleCancelPress}>
-					<Text style={styles.textCancel}>{t('cancel')}</Text>
+				<TouchableOpacity onPress={handleCancelPress} {...testProperties('mezonSearch.handleCancelPress')}>
+					<Text style={styles.textCancel} {...testProperties('mezonSearch.textCancel')}>{t('cancel')}</Text>
 				</TouchableOpacity>
 			)}
 		</View>

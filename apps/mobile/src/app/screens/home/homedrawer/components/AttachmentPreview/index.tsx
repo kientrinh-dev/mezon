@@ -5,6 +5,7 @@ import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
 import MezonIconCDN from '../../../../../componentUI/MezonIconCDN';
+import { testProperties } from '../../../../../configs/testProperties';
 import { IconCDN } from '../../../../../constants/icon_cdn';
 import AttachmentFilePreview from '../AttachmentFilePreview';
 import { style } from './styles';
@@ -35,7 +36,7 @@ const AttachmentPreview = memo(({ channelId }: IProps) => {
 	}
 
 	return (
-		<View style={styles.container}>
+		<View style={styles.container} {...testProperties('attachmentPreview.container', true)}>
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
 				end={{ x: 0, y: 0 }}
@@ -54,24 +55,34 @@ const AttachmentPreview = memo(({ channelId }: IProps) => {
 					alignItems: 'center'
 				}}
 				style={{ flex: 1 }}
+				{...testProperties('attachmentPreview.scroll', true)}
 			>
 				{attachmentFilteredByChannelId.files.map((attachment, index) => {
 					const isFile = !attachment?.filetype?.includes?.('video') && !attachment?.filetype?.includes?.('image');
 					const isVideo = attachment?.filetype?.includes?.('video');
 					return (
-						<View key={`${index}_${attachment.filename}`} style={styles.attachmentItem}>
+						<View
+							key={`${index}_${attachment.filename}`}
+							style={styles.attachmentItem}
+							{...testProperties(`attachmentPreview.item.${attachment.filename}`, true)}
+						>
 							{isFile ? (
 								<AttachmentFilePreview attachment={attachment} />
 							) : (
 								<Image source={{ uri: attachment?.thumbnail ?? attachment?.url }} style={styles.attachmentItemImage} />
 							)}
 
-							<TouchableOpacity style={styles.iconClose} activeOpacity={0.8} onPress={() => handleRemoveAttachment(index)}>
+							<TouchableOpacity
+								style={styles.iconClose}
+								activeOpacity={0.8}
+								onPress={() => handleRemoveAttachment(index)}
+								{...testProperties('attachmentPreview.item.remove')}
+							>
 								<MezonIconCDN icon={IconCDN.closeSmallBold} width={size.s_18} height={size.s_18} color={baseColor.white} />
 							</TouchableOpacity>
 
 							{isVideo && (
-								<View style={styles.videoOverlay}>
+								<View style={styles.videoOverlay} {...testProperties('attachmentPreview.item.videoOverlay', true)}>
 									<MezonIconCDN icon={IconCDN.playIcon} width={size.s_20} height={size.s_20} />
 								</View>
 							)}

@@ -31,6 +31,8 @@ import { ServerRoles } from '../../../screens/serverRoles/ServerRoles';
 import { SetupMembers } from '../../../screens/serverRoles/SetupMembers';
 import { SetupPermissions } from '../../../screens/serverRoles/SetupPermissions';
 import TransferOwnershipScreen from '../../../screens/TransferOwnershipScreen';
+import { testProperties } from '../../../configs/testProperties';
+
 import { APP_SCREEN } from '../../ScreenTypes';
 
 // eslint-disable-next-line no-empty-pattern
@@ -40,7 +42,7 @@ export const MenuClanStacks = ({ }: any) => {
 	const { t } = useTranslation(['screenStack']);
 
 	return (
-		<Stack.Navigator
+		<Stack.Navigator 
 			screenOptions={{
 				headerShown: true,
 				headerShadowVisible: false,
@@ -75,6 +77,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.categoryCreator')
 				}}
+				{...testProperties('menuClan.createCategory')}
 			/>
 
 			<Stack.Screen
@@ -83,6 +86,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.channelCreator')
 				}}
+				{...testProperties('menuClan.createChannel')}
 			/>
 
 			<Stack.Screen
@@ -92,6 +96,7 @@ export const MenuClanStacks = ({ }: any) => {
 					headerTitle: t('menuClanStack.eventCreator'),
 					headerLeftLabelVisible: false
 				}}
+				{...testProperties('menuClan.createEvent')}
 			/>
 
 			<Stack.Screen
@@ -101,6 +106,7 @@ export const MenuClanStacks = ({ }: any) => {
 					headerTitle: t('menuClanStack.eventCreator'),
 					headerLeftLabelVisible: false
 				}}
+				{...testProperties('menuClan.createEventDetails')}
 			/>
 
 			<Stack.Screen
@@ -110,6 +116,7 @@ export const MenuClanStacks = ({ }: any) => {
 					headerTitle: t('menuClanStack.eventCreator'),
 					headerLeftLabelVisible: false
 				}}
+				{...testProperties('menuClan.createEventPreview')}
 			/>
 
 			<Stack.Screen
@@ -118,6 +125,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.clanSetting')
 				}}
+				{...testProperties('menuClan.settings')}
 			/>
 
 			<Stack.Screen
@@ -126,6 +134,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.clanOverviewSetting')
 				}}
+				{...testProperties('menuClan.overviewSetting')}
 			/>
 
 			<Stack.Screen
@@ -134,6 +143,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.clanEmojiSetting')
 				}}
+				{...testProperties('menuClan.emojiSetting')}
 			/>
 			<Stack.Screen
 				name={APP_SCREEN.MENU_CLAN.STICKER_SETTING}
@@ -141,6 +151,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.sticker')
 				}}
+				{...testProperties('menuClan.stickerSetting')}
 			/>
 
 			<Stack.Screen
@@ -149,6 +160,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.member')
 				}}
+				{...testProperties('menuClan.memberSetting')}
 			/>
 
 			<Stack.Screen
@@ -157,6 +169,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.serverRoles')
 				}}
+				{...testProperties('menuClan.roleSetting')}
 			/>
 
 			<Stack.Screen
@@ -166,6 +179,7 @@ export const MenuClanStacks = ({ }: any) => {
 					headerLeftLabelVisible: false,
 					headerShown: false
 				}}
+				{...testProperties('menuClan.createNewRole')}
 			/>
 
 			<Stack.Screen
@@ -174,6 +188,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.categorySetting')
 				}}
+				{...testProperties('menuClan.categorySetting')}
 			/>
 
 			<Stack.Screen
@@ -183,6 +198,7 @@ export const MenuClanStacks = ({ }: any) => {
 					headerLeftLabelVisible: false,
 					headerShown: false
 				}}
+				{...testProperties('menuClan.setupPermissions')}
 			/>
 
 			<Stack.Screen
@@ -192,6 +208,7 @@ export const MenuClanStacks = ({ }: any) => {
 					headerLeftLabelVisible: false,
 					headerShown: false
 				}}
+				{...testProperties('menuClan.setupRoleMembers')}
 			/>
 
 			<Stack.Screen
@@ -200,6 +217,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerLeftLabelVisible: false
 				}}
+				{...testProperties('menuClan.roleDetail')}
 			/>
 
 			<Stack.Screen
@@ -208,6 +226,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.notificationSetting')
 				}}
+				{...testProperties('menuClan.notificationSetting')}
 			/>
 
 			<Stack.Screen
@@ -216,6 +235,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.newOverride')
 				}}
+				{...testProperties('menuClan.notificationOverrides')}
 			/>
 			<Stack.Screen
 				name={APP_SCREEN.MENU_CLAN.NOTIFICATION_SETTING_DETAIL}
@@ -223,6 +243,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.notificationSetting')
 				}}
+				{...testProperties('menuClan.notificationSettingDetail')}
 			/>
 			<Stack.Screen
 				name={APP_SCREEN.MENU_CLAN.INTEGRATIONS}
@@ -230,6 +251,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.integrations')
 				}}
+				{...testProperties('menuClan.integrations')}
 			/>
 			<Stack.Screen
 				name={APP_SCREEN.MENU_CLAN.WEBHOOKS}
@@ -238,8 +260,9 @@ export const MenuClanStacks = ({ }: any) => {
 					headerTitle: route?.params?.isClanIntegration ? t('menuClanStack.clanWebhooks') : t('menuClanStack.webhooks'),
 					headerLeftLabelVisible: false
 				})}
+				{...testProperties('menuClan.webhooks')}
 			/>
-			<Stack.Screen name={APP_SCREEN.MENU_CLAN.AUDIT_LOG} component={AuditLogComponent} />
+			<Stack.Screen name={APP_SCREEN.MENU_CLAN.AUDIT_LOG} component={AuditLogComponent} {...testProperties('menuClan.auditLog')} />
 			<Stack.Screen
 				name={APP_SCREEN.MENU_CLAN.FILTER_BY_USER}
 				component={FilterUserAuditLog}
@@ -247,6 +270,7 @@ export const MenuClanStacks = ({ }: any) => {
 					headerTitle: t('menuClanStack.filterByUser'),
 					headerLeftLabelVisible: false
 				}}
+				{...testProperties('menuClan.filterByUser')}
 			/>
 			<Stack.Screen
 				name={APP_SCREEN.MENU_CLAN.FILTER_BY_ACTION}
@@ -255,14 +279,16 @@ export const MenuClanStacks = ({ }: any) => {
 					headerTitle: t('menuClanStack.filterByAction'),
 					headerLeftLabelVisible: false
 				}}
+				{...testProperties('menuClan.filterByAction')}
 			/>
-			<Stack.Screen name={APP_SCREEN.MENU_CLAN.WEBHOOKS_EDIT} component={WebhooksEdit} />
+			<Stack.Screen name={APP_SCREEN.MENU_CLAN.WEBHOOKS_EDIT} component={WebhooksEdit} {...testProperties('menuClan.webhooksEdit')} />
 			<Stack.Screen
 				name={APP_SCREEN.MENU_CLAN.SOUND_STICKER}
 				component={SoundBoardSetting}
 				options={{
 					headerTitle: t('menuClanStack.sound')
 				}}
+				{...testProperties('menuClan.sound')}
 			/>
 			<Stack.Screen
 				name={APP_SCREEN.MENU_CLAN.CREATE_SOUND}
@@ -270,6 +296,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.createSound')
 				}}
+				{...testProperties('menuClan.createSound')}
 			/>
 			<Stack.Screen
 				name={APP_SCREEN.MENU_CLAN.TRANSFER_OWNERSHIP}
@@ -277,6 +304,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.transferOwnership')
 				}}
+				{...testProperties('menuClan.transferOwnership')}
 			/>
 			<Stack.Screen
 				name={APP_SCREEN.MENU_CLAN.MANAGE_USER}
@@ -284,6 +312,7 @@ export const MenuClanStacks = ({ }: any) => {
 				options={{
 					headerTitle: t('menuClanStack.manageUser')
 				}}
+				{...testProperties('menuClan.manageUser')}
 			/>
 		</Stack.Navigator>
 	);

@@ -12,6 +12,7 @@ import { EFriendRequest } from '../RequestFriend';
 import { EmptyFriendRequest } from '../RequestFriend/EmptyFriendRequest';
 import { AddFriendModal } from './components/AddFriendModal';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 export const AddFriendScreen = () => {
 	const { themeValue } = useTheme();
@@ -52,9 +53,9 @@ export const AddFriendScreen = () => {
 	}, []);
 
 	return (
-		<View style={styles.addFriendContainer}>
+		<View style={styles.addFriendContainer} {...testProperties('friends.addFriend.root', true)}>
 			<View style={styles.groupWrapper}>
-				<TouchableOpacity onPress={() => setCurrentAddFriendShow(true)} style={styles.addFriendItem}>
+				<TouchableOpacity onPress={() => setCurrentAddFriendShow(true)} style={styles.addFriendItem} {...testProperties('friends.addFriend.openModal')}>
 					<Text style={styles.addFriendText}>{t('addFriend.addByUserName')}</Text>
 				</TouchableOpacity>
 			</View>

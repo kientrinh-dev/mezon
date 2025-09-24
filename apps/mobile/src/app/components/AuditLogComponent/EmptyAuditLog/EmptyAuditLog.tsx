@@ -2,13 +2,14 @@ import { size, useTheme, verticalScale } from '@mezon/mobile-ui';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
+import { testProperties } from '../../../configs/testProperties';
 
 export default function EmptyAuditLog() {
 	const { themeValue } = useTheme();
 	const { t } = useTranslation('auditLog');
 
 	return (
-		<View style={{ width: '100%', height: '100%', gap: size.s_10, alignItems: 'center', paddingTop: size.s_50 }}>
+		<View style={{ width: '100%', height: '100%', gap: size.s_10, alignItems: 'center', paddingTop: size.s_50 }} {...testProperties('emptyAuditLog.container')}>
 			<Text
 				style={{
 					fontSize: verticalScale(16),
@@ -17,6 +18,7 @@ export default function EmptyAuditLog() {
 					fontWeight: 'bold',
 					color: themeValue.white
 				}}
+				{...testProperties('emptyAuditLog.textNoLogsYet')}
 			>
 				{t('emptyAuditLog.noLogsYet')}
 			</Text>
@@ -26,6 +28,7 @@ export default function EmptyAuditLog() {
 					color: themeValue.white,
 					textAlign: 'center'
 				}}
+				{...testProperties('emptyAuditLog.textDescription')}
 			>
 				{t('emptyAuditLog.description')}
 			</Text>

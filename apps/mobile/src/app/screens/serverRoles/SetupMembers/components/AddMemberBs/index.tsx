@@ -5,6 +5,7 @@ import { UsersClanEntity } from '@mezon/utils';
 import Backdrop from 'apps/mobile/src/app/components/BottomSheetRootListener/backdrop';
 import { RefObject, memo } from 'react';
 import { AddMemberBsContent } from './AddMemberBsContent';
+import { testProperties } from '../../../../../configs/testProperties';
 
 interface IAddMemberBSProps {
 	memberList?: UsersClanEntity[];
@@ -28,6 +29,7 @@ export const AddMemberBS = memo((props: IAddMemberBSProps) => {
 			}}
 			backdropComponent={Backdrop}
 			backgroundStyle={{ backgroundColor: themeValue.primary }}
+			{...testProperties('addMemberBS.container', true)}
 		>
 			<AddMemberBsContent memberList={memberList} role={role} onClose={onClose} />
 		</BottomSheetModal>

@@ -6,6 +6,7 @@ import { ApiCreateChannelDescRequest } from 'mezon-js/api.gen';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Keyboard, Pressable, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
+import { testProperties } from '../../../configs/testProperties';
 import Feather from 'react-native-vector-icons/Feather';
 import { useThrottledCallback } from 'use-debounce';
 import MezonIconCDN from '../../../componentUI/MezonIconCDN';
@@ -143,24 +144,24 @@ export const NewGroupScreen = ({ navigation, route }: { navigation: any; route: 
 
 	const typingSearchDebounce = useThrottledCallback((text) => setSearchText(text), 500);
 	return (
-		<View style={{ flex: 1, backgroundColor: themeValue.primary }}>
+		<View style={{ flex: 1, backgroundColor: themeValue.primary }} {...testProperties('newGroup.screen', true)}>
 			<StatusBarHeight />
 			<TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-				<View style={styles.newGroupContainer}>
-					<View style={styles.headerWrapper}>
-						<Pressable onPress={() => navigation.goBack()} style={{ width: size.s_70, height: '100%' }}>
+				<View style={styles.newGroupContainer} {...testProperties('newGroup.container', true)}>
+					<View style={styles.headerWrapper} {...testProperties('newGroup.header', true)}>
+						<Pressable onPress={() => navigation.goBack()} style={{ width: size.s_70, height: '100%' }} {...testProperties('newGroup.header.back')}>
 							<MezonIconCDN icon={IconCDN.arrowLargeLeftIcon} height={20} width={20} color={themeValue.text} />
 						</Pressable>
-						<View style={styles.screenTitleWrapper}>
-							<Text style={styles.screenTitle}>
+						<View style={styles.screenTitleWrapper} {...testProperties('newGroup.header.titleWrapper', true)}>
+							<Text style={styles.screenTitle} {...testProperties('newGroup.header.title')}>
 								{directMessage?.type === ChannelType.CHANNEL_TYPE_GROUP
 									? t('screen:headerTitle.addMembers')
 									: t('screen:headerTitle.newGroup')}
 							</Text>
 						</View>
-						<View style={styles.actions}>
-							<Pressable onPress={() => createNewGroup()}>
-								<Text style={styles.actionText}>
+						<View style={styles.actions} {...testProperties('newGroup.header.actions')}>
+							<Pressable onPress={() => createNewGroup()} {...testProperties('newGroup.header.actions.create')}>
+								<Text style={styles.actionText} {...testProperties('newGroup.header.actions.create.text')}>
 									{directMessage?.type === ChannelType.CHANNEL_TYPE_GROUP
 										? t('message:newMessage.add')
 										: t('message:newMessage.create')}
@@ -169,19 +170,20 @@ export const NewGroupScreen = ({ navigation, route }: { navigation: any; route: 
 						</View>
 					</View>
 
-					<View style={styles.contentWrapper}>
+					<View style={styles.contentWrapper} {...testProperties('newGroup.content', true)}>
 						{/* TODO: update later - autocomplete input */}
-						<View style={styles.searchFriend}>
+						<View style={styles.searchFriend} {...testProperties('newGroup.search', true)}>
 							<Feather size={18} name="search" style={{ color: themeValue.text }} />
 							<TextInput
 								placeholder={t('common:searchPlaceHolder')}
 								placeholderTextColor={themeValue.textDisabled}
 								style={styles.searchInput}
 								onChangeText={(text) => typingSearchDebounce(text)}
+								{...testProperties('newGroup.search.input')}
 							/>
 						</View>
 
-						<View style={styles.friendListWrapper}>
+						<View style={styles.friendListWrapper} {...testProperties('newGroup.friendList', true)}>
 							<FriendListByAlphabet
 								isSearching={Boolean(searchText?.trim()?.length)}
 								friendList={filteredFriendList}
@@ -193,7 +195,13 @@ export const NewGroupScreen = ({ navigation, route }: { navigation: any; route: 
 						</View>
 					</View>
 
-					<UserInformationBottomSheet user={selectedUser} onClose={onClose} showAction={false} showRole={false} />
+					<UserInformationBottomSheet
+						user={selectedUser}
+						onClose={onClose}
+						showAction={false}
+						showRole={false}
+						{...testProperties('newGroup.bottomSheet')}
+					/>
 				</View>
 			</TouchableWithoutFeedback>
 		</View>

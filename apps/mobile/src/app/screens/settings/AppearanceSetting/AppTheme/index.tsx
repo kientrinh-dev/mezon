@@ -6,6 +6,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import MezonSlideOption, { IMezonSlideOptionsData } from '../../../../componentUI/MezonSlideOption';
 import { APP_SCREEN, SettingScreenProps } from '../../../../navigation/ScreenTypes';
 import { style } from './styles';
+import { testProperties } from '../../../../configs/testProperties';
 
 type AppThemeScreen = typeof APP_SCREEN.SETTINGS.APP_THEME;
 export default function AppThemeSetting({ navigation }: SettingScreenProps<AppThemeScreen>) {
@@ -114,8 +115,8 @@ export default function AppThemeSetting({ navigation }: SettingScreenProps<AppTh
 	}
 
 	return (
-		<LinearGradient colors={[themeValue.primary, themeValue?.primaryGradiant || themeValue.primary]} style={styles.container}>
-			<View style={styles.main}>
+		<LinearGradient colors={[themeValue.primary, themeValue?.primaryGradiant || themeValue.primary]} style={styles.container} {...testProperties('settings.appTheme.screen', true)}>
+			<View style={styles.main} {...testProperties('settings.appTheme.main', true)}>
 				<MezonSlideOption data={themeOptions} onChange={handleThemeChange} initialIndex={themeIndex} />
 			</View>
 		</LinearGradient>

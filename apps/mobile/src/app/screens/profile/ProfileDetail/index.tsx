@@ -23,6 +23,7 @@ import { APP_SCREEN } from '../../../navigation/ScreenTypes';
 import { checkNotificationPermissionAndNavigate } from '../../../utils/notificationPermissionHelper';
 import { DirectMessageCallMain } from '../../messages/DirectMessageCall';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 enum UserRelationshipStatus {
 	NOT_FRIENDS = 'not_friends',
@@ -226,16 +227,23 @@ export const ProfileDetail = memo(() => {
 
 	if (!username || !profileData || userRelationshipStatus === UserRelationshipStatus.BLOCKED) {
 		return (
-			<View style={styles.container}>
-				<View style={styles.profileContainer}>
-					<Text style={styles.profileTitle}>{t('userProfile', 'USER PROFILE')}</Text>
-					<View style={styles.userInfo}>
-						<Text style={styles.username}>{t('userNotFound', 'User not found')}</Text>
-						<Text style={styles.userStatus}>
+			<View style={styles.container} {...testProperties('profileDetail.screen', true)}>
+				<View style={styles.profileContainer} {...testProperties('profileDetail.container', true)}>
+					<Text style={styles.profileTitle} {...testProperties('profileDetail.title')}>{t('userProfile', 'USER PROFILE')}</Text>
+
+					<View style={styles.userInfo} {...testProperties('profileDetail.notFound.userInfo', true)}>
+						<Text style={styles.username} {...testProperties('profileDetail.notFound.username')}>
+							{t('userNotFound', 'User not found')}
+						</Text>
+						<Text style={styles.userStatus} {...testProperties('profileDetail.notFound.status')}>
 							{t('userNotFoundMessage', 'The user with username @{{username}} could not be found.', { username })}
 						</Text>
 					</View>
-					<TouchableOpacity style={[styles.actionButton, styles.dismissButton]} onPress={handleDismiss}>
+					<TouchableOpacity
+						style={[styles.actionButton, styles.dismissButton]}
+						onPress={handleDismiss}
+						{...testProperties('profileDetail.btnDismiss')}
+					>
 						<Text style={styles.actionButtonText}>{t('goBack', 'Go Back')}</Text>
 					</TouchableOpacity>
 				</View>
@@ -244,35 +252,40 @@ export const ProfileDetail = memo(() => {
 	}
 
 	return (
-		<View style={styles.container}>
-			<View style={styles.profileContainer}>
-				<Text style={styles.profileTitle}>{t('userProfile', 'USER PROFILE')}</Text>
+		<View style={styles.container} {...testProperties('profileDetail.screen', true)}>
+			<View style={styles.profileContainer} {...testProperties('profileDetail.container', true)}>
+				<Text style={styles.profileTitle} {...testProperties('profileDetail.title')}>{t('userProfile', 'USER PROFILE')}</Text>
 
-				<View style={styles.userInfo}>
+				<View style={styles.userInfo} {...testProperties('profileDetail.userInfo', true)}>
 					{profileData.avatar_url ? (
 						<FastImage
 							source={{
 								uri: createImgproxyUrl(profileData.avatar_url, { width: 200, height: 200, resizeType: 'fit' })
 							}}
 							style={styles.profileImage}
+							{...testProperties('profileDetail.avatar')}
 						/>
 					) : (
-						<View style={styles.defaultAvatar}>
-							<Text style={styles.defaultAvatarText}>
+						<View style={styles.defaultAvatar} {...testProperties('profileDetail.defaultAvatar', true)}>
+							<Text style={styles.defaultAvatarText} {...testProperties('profileDetail.defaultAvatarText')}>
 								{profileData.display_name?.charAt(0)?.toUpperCase() || profileData.username?.charAt(0)?.toUpperCase()}
 							</Text>
 						</View>
 					)}
 
-					<Text style={styles.username} numberOfLines={1}>
+					<Text style={styles.username} numberOfLines={1} {...testProperties('profileDetail.displayName')}>
 						{profileData.display_name}
 					</Text>
 				</View>
 
 				{!youSelf && (
-					<View>
+					<View {...testProperties('profileDetail.actions', true)}>
 						{userRelationshipStatus === UserRelationshipStatus.NOT_FRIENDS && (
-							<TouchableOpacity style={styles.actionButton} onPress={handleAddFriend}>
+							<TouchableOpacity
+								style={styles.actionButton}
+								onPress={handleAddFriend}
+								{...testProperties('profileDetail.btnAddFriend')}
+							>
 								<Text style={styles.actionButtonText}>{t('addFriend', 'Add Friend')}</Text>
 							</TouchableOpacity>
 						)}
@@ -280,30 +293,50 @@ export const ProfileDetail = memo(() => {
 						{(userRelationshipStatus === UserRelationshipStatus.FRIENDS ||
 							userRelationshipStatus === UserRelationshipStatus.SAME_CLAN) && (
 							<>
-								<TouchableOpacity style={styles.actionButton} onPress={navigateToMessageDetail}>
+								<TouchableOpacity
+									style={styles.actionButton}
+									onPress={navigateToMessageDetail}
+									{...testProperties('profileDetail.btnMessage')}
+								>
 									<Text style={styles.actionButtonText}>{t('message', 'Message')}</Text>
 								</TouchableOpacity>
-								<TouchableOpacity style={styles.actionButton} onPress={handleCallUser}>
+								<TouchableOpacity
+									style={styles.actionButton}
+									onPress={handleCallUser}
+									{...testProperties('profileDetail.btnCall')}
+								>
 									<Text style={styles.actionButtonText}>{t('call', 'Call')}</Text>
 								</TouchableOpacity>
 							</>
 						)}
 
 						{userRelationshipStatus === UserRelationshipStatus.MY_PENDING && (
-							<TouchableOpacity style={[styles.actionButton, styles.acceptButton]} onPress={handleAcceptRequest}>
+							<TouchableOpacity
+								style={[styles.actionButton, styles.acceptButton]}
+								onPress={handleAcceptRequest}
+								{...testProperties('profileDetail.btnAcceptRequest')}
+							>
 								<Text style={styles.actionButtonText}>{t('acceptRequest', 'Accept Request')}</Text>
 							</TouchableOpacity>
 						)}
 
 						{userRelationshipStatus === UserRelationshipStatus.PENDING_REQUEST && (
-							<TouchableOpacity style={[styles.actionButton, styles.cancelButton]} onPress={handleCancelRequest}>
+							<TouchableOpacity
+								style={[styles.actionButton, styles.cancelButton]}
+								onPress={handleCancelRequest}
+								{...testProperties('profileDetail.btnCancelRequest')}
+							>
 								<Text style={styles.actionButtonText}>{t('cancelRequest', 'Cancel Request')}</Text>
 							</TouchableOpacity>
 						)}
 					</View>
 				)}
 
-				<TouchableOpacity style={[styles.actionButton, styles.dismissButton]} onPress={handleDismiss}>
+				<TouchableOpacity
+					style={[styles.actionButton, styles.dismissButton]}
+					onPress={handleDismiss}
+					{...testProperties('profileDetail.btnDismiss')}
+				>
 					<Text style={styles.actionButtonText}>{youSelf ? t('goBack', 'Go Back') : t('noThanks', 'No, Thanks')}</Text>
 				</TouchableOpacity>
 			</View>

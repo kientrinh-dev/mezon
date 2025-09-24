@@ -25,6 +25,7 @@ import ThreadAddButton from './ThreadAddButton';
 import ThreadItem from './ThreadItem';
 import { getActiveThreads, getJoinedThreadsWithinLast30Days, getThreadsOlderThan30Days } from './helper';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 type CreateThreadModalScreen = typeof APP_SCREEN.MENU_THREAD.CREATE_THREAD;
 export default function CreateThreadModal({ navigation, route }: MenuThreadScreenProps<CreateThreadModalScreen>) {
@@ -128,7 +129,7 @@ export default function CreateThreadModal({ navigation, route }: MenuThreadScree
 
 	return (
 		// TODO: MezonMenu??
-		<View style={styles.createChannelContainer}>
+		<View style={styles.createChannelContainer} {...testProperties('threadDetail.createThreadModal', true)}>
 			{isLoading ? (
 				<SkeletonThread numberSkeleton={12} />
 			) : showEmpty ? (

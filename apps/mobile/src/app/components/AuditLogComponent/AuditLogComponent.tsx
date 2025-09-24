@@ -25,6 +25,7 @@ import { APP_SCREEN, MenuClanScreenProps } from '../../navigation/ScreenTypes';
 import { AuditLogItem } from './AuditLogItem/AuditLogItem';
 import EmptyAuditLog from './EmptyAuditLog/EmptyAuditLog';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 type ClanSettingsScreen = typeof APP_SCREEN.MENU_CLAN.AUDIT_LOG;
 
 export default function AuditLogComponent({ navigation }: MenuClanScreenProps<ClanSettingsScreen>) {
@@ -140,7 +141,7 @@ export default function AuditLogComponent({ navigation }: MenuClanScreenProps<Cl
 	const handleOnPressFilter = () => {
 		const data = {
 			children: (
-				<View style={{ paddingHorizontal: size.s_20 }}>
+				<View style={{ paddingHorizontal: size.s_20 }} {...testProperties('auditLogComponent.viewFilter')}>
 					<MezonMenu menu={menu} />
 				</View>
 			)
@@ -155,8 +156,8 @@ export default function AuditLogComponent({ navigation }: MenuClanScreenProps<Cl
 
 	const renderAditLogItem = ({ item }) => <AuditLogItem data={item} />;
 	return (
-		<View style={{ paddingVertical: size.s_10, width: '100%', height: '100%', backgroundColor: themeValue.primary }}>
-			<TouchableOpacity onPress={handleOnPressFilter} activeOpacity={0.5} style={styles.filterBtn}>
+		<View style={{ paddingVertical: size.s_10, width: '100%', height: '100%', backgroundColor: themeValue.primary }} {...testProperties('auditLogComponent.container')}>
+			<TouchableOpacity onPress={handleOnPressFilter} activeOpacity={0.5} style={styles.filterBtn} {...testProperties('auditLogComponent.filterBtn')}>
 				<View style={{ gap: size.s_10, alignItems: 'center', flexDirection: 'row', marginRight: size.s_10 }}>
 					<View
 						style={{
@@ -166,20 +167,20 @@ export default function AuditLogComponent({ navigation }: MenuClanScreenProps<Cl
 							padding: size.s_6,
 							borderRadius: size.s_6
 						}}
-					>
-						<Text style={styles.textFilterBtn} numberOfLines={1}>
+						>
+						<Text style={styles.textFilterBtn} numberOfLines={1} {...testProperties('auditLogComponent.textFilterBtn.displayName')}>
 							{displayUserName}
 						</Text>
 					</View>
-					<View style={{ maxWidth: 200, backgroundColor: themeValue.tertiary, padding: size.s_6, borderRadius: size.s_6 }}>
-						<Text style={styles.textFilterBtn} numberOfLines={1}>
+					<View style={{ maxWidth: 200, backgroundColor: themeValue.tertiary, padding: size.s_6, borderRadius: size.s_6 }} {...testProperties('auditLogComponent.filterBtn.actionLog')}>
+						<Text style={styles.textFilterBtn} numberOfLines={1} {...testProperties('auditLogComponent.textFilterBtn.actionLog')}>
 							{displayActionLog}
 						</Text>
 					</View>
 					<MezonIconCDN icon={IconCDN.chevronSmallRightIcon} width={size.s_18} height={size.s_18} color={themeValue.text} />
 				</View>
 			</TouchableOpacity>
-			<View style={{ paddingHorizontal: size.s_10 }}>
+			<View style={{ paddingHorizontal: size.s_10 }} {...testProperties('auditLogComponent.filterBtn.dateTimePicker')}>
 				<MezonDateTimePicker
 					value={selectDate}
 					onChange={handleDatePicked}
@@ -189,7 +190,7 @@ export default function AuditLogComponent({ navigation }: MenuClanScreenProps<Cl
 				/>
 			</View>
 
-			<View style={{ flex: 1, paddingHorizontal: size.s_10, paddingVertical: size.s_10 }}>
+			<View style={{ flex: 1, paddingHorizontal: size.s_10, paddingVertical: size.s_10 }} {...testProperties('auditLogComponent.auditLog')}>
 				{loadingStatus === 'loaded' && !auditLogData?.logs?.length ? (
 					<EmptyAuditLog />
 				) : (
@@ -199,6 +200,7 @@ export default function AuditLogComponent({ navigation }: MenuClanScreenProps<Cl
 						renderItem={renderAditLogItem}
 						removeClippedSubviews={true}
 						keyExtractor={(item) => item?.id?.toString()}
+						{...testProperties('auditLogComponent.auditLog.flashList')}
 						estimatedItemSize={size.s_50}
 					/>
 				)}

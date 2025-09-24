@@ -15,6 +15,7 @@ import { ListClanPopup } from '../components/ListClanPopup';
 import { UnreadDMBadgeList } from '../components/UnreadDMBadgeList';
 import BadgeFriendRequest from './BadgeFriendRequest';
 import { style } from './styles';
+import { testProperties } from '../../../../configs/testProperties';
 
 const ServerList = React.memo(() => {
 	const { themeValue } = useTheme();
@@ -27,14 +28,15 @@ const ServerList = React.memo(() => {
 	};
 
 	return (
-		<View>
+		<View {...testProperties('serverList', true)}>
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
 				end={{ x: 0, y: 0 }}
 				colors={[themeValue.primary, themeValue?.primaryGradiant || themeValue.primary]}
 				style={[StyleSheet.absoluteFillObject]}
+				{...testProperties('serverList.gradient', true)}
 			/>
-			<TouchableOpacity style={styles.wrapperLogo} onPress={() => navigateToDM()}>
+			<TouchableOpacity style={styles.wrapperLogo} onPress={() => navigateToDM()} {...testProperties('serverList.logoButton')}>
 				{logoCustom ? (
 					<MezonAvatar width={size.s_42} height={size.s_42} avatarUrl={logoCustom} username="" />
 				) : (
@@ -43,7 +45,7 @@ const ServerList = React.memo(() => {
 				<BadgeFriendRequest />
 			</TouchableOpacity>
 			<SeparatorWithLine style={styles.separatorLine} />
-			<NestableScrollContainer removeClippedSubviews={true} contentContainerStyle={styles.contentScroll} showsVerticalScrollIndicator={false}>
+			<NestableScrollContainer removeClippedSubviews={true} contentContainerStyle={styles.contentScroll} showsVerticalScrollIndicator={false} {...testProperties('serverList.scroll', true)}>
 				<UnreadDMBadgeList />
 				<ListClanPopup />
 			</NestableScrollContainer>

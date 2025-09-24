@@ -13,6 +13,7 @@ import { useDispatch } from 'react-redux';
 import MezonButton from '../../../../../componentUI/MezonButton';
 import { MezonModal } from '../../../../../componentUI/MezonModal';
 import { style } from './styles';
+import { testProperties } from '../../../../../configs/testProperties';
 interface IAddFriendModal {
 	isShow: boolean;
 	onClose: () => void;
@@ -135,6 +136,7 @@ export const AddFriendModal = React.memo((props: IAddFriendModal) => {
 									style={styles.searchInput}
 									onChangeText={handleTextChange}
 									autoCapitalize="none"
+									{...testProperties('friends.addFriend.modal.input')}
 								/>
 							</View>
 							<View style={styles.byTheWayText}>
@@ -149,6 +151,7 @@ export const AddFriendModal = React.memo((props: IAddFriendModal) => {
 									containerStyle={[styles.sendButton, !firstUsername?.length && { backgroundColor: themeValue.textDisabled }]}
 									title={t('addFriend.sendRequestButton')}
 									titleStyle={{ color: baseColor.white, fontSize: size.medium }}
+									{...testProperties('friends.addFriend.modal.send')}
 								/>
 							</View>
 						</View>

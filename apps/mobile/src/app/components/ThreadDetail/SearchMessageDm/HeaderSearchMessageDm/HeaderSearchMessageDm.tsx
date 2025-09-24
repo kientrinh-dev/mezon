@@ -6,6 +6,7 @@ import { Pressable, TextInput, TouchableOpacity, View } from 'react-native';
 import MezonIconCDN from '../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../constants/icon_cdn';
 import { style } from './styles';
+import { testProperties } from '../../../../configs/testProperties';
 
 interface HeaderSearchMessageDmProps {
 	initialSearchText?: string;
@@ -38,8 +39,8 @@ export default function HeaderSearchMessageDm({ initialSearchText, onClearStoreI
 	};
 
 	return (
-		<View style={{ paddingHorizontal: size.s_10, paddingVertical: size.s_20, flexDirection: 'row', alignItems: 'center', gap: size.s_20 }}>
-			<TouchableOpacity onPress={onGoBack}>
+		<View style={{ paddingHorizontal: size.s_10, paddingVertical: size.s_20, flexDirection: 'row', alignItems: 'center', gap: size.s_20 }} {...testProperties('searchMessageDm.header', true)}>
+			<TouchableOpacity onPress={onGoBack} {...testProperties('searchMessageDm.backButton')}>
 				<MezonIconCDN icon={IconCDN.backArrowLarge} width={20} height={20} color={themeValue.text} />
 			</TouchableOpacity>
 			<View style={styles.searchBox}>
@@ -53,9 +54,10 @@ export default function HeaderSearchMessageDm({ initialSearchText, onClearStoreI
 					placeholderTextColor={themeValue.textDisabled}
 					placeholder={t('search')}
 					autoFocus
+					{...testProperties('searchMessageDm.searchInput')}
 				/>
 				{textInput?.length ? (
-					<Pressable onPress={() => clearTextInput()}>
+					<Pressable onPress={() => clearTextInput()} {...testProperties('searchMessageDm.clearSearch')}>
 						<MezonIconCDN icon={IconCDN.circleXIcon} height={18} width={18} color={themeValue.text} />
 					</Pressable>
 				) : null}

@@ -38,6 +38,7 @@ import NotificationOption from './NotificationOption';
 import { style } from './Notifications.styles';
 import SkeletonNotification from './SkeletonNotification';
 import { ENotifyBsToShow } from './types';
+import { testProperties } from '../../configs/testProperties';
 
 export const InboxType = {
 	INDIVIDUAL: 'individual',
@@ -325,7 +326,7 @@ const Notifications = () => {
 
 	const ViewLoadMore = useCallback(
 		() => (
-			<View style={styles.loadMoreChannelMessage}>
+			<View style={styles.loadMoreChannelMessage} {...testProperties('notifications.loadMore', true)}>
 				<ActivityIndicator size="large" color={'#ccc'} />
 			</View>
 		),
@@ -385,26 +386,26 @@ const Notifications = () => {
 		[t]
 	);
 	return (
-		<View style={styles.notifications}>
+		<View style={styles.notifications} {...testProperties('notifications', true)}>
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
 				end={{ x: 0, y: 0 }}
 				colors={[themeValue.primary, themeValue?.primaryGradiant || themeValue.primary]}
 				style={[StyleSheet.absoluteFillObject]}
 			/>
-			<View>
+			<View {...testProperties('notifications.header', true)}>
 				{isTabletLandscape && (
-					<Pressable onPress={handleGoback}>
+					<Pressable onPress={handleGoback} {...testProperties('notifications.header.back')}>
 						<View style={styles.notificationHeaderIcon}>
 							<MezonIconCDN icon={IconCDN.chevronSmallLeftIcon} height={size.s_20} width={size.s_20} color={themeValue.textStrong} />
 						</View>
 					</Pressable>
 				)}
 				<View style={styles.wrapperTitleHeader}>
-					<Text style={styles.notificationHeaderTitle}>{t('headerTitle')}</Text>
+					<Text {...testProperties('notifications.header.title')} style={styles.notificationHeaderTitle}>{t('headerTitle')}</Text>
 					<BadgeFriendRequestNoti />
 				</View>
-				<View style={styles.wrapperTabType}>
+				<View style={styles.wrapperTabType} {...testProperties('notifications.header.tabs', true)}>
 					{notificationMenu.map((item, index) => (
 						<Pressable
 							key={index}
@@ -416,6 +417,7 @@ const Notifications = () => {
 									borderColor: selectedTabs === item.type ? baseColor.blurple : themeValue.borderDim
 								}
 							]}
+							{...testProperties(`notifications.header.tabs.item.${item.type}`)}
 						>
 							<View style={{ flexDirection: 'row', alignItems: 'center', gap: size.s_4 }}>
 								<MezonIconCDN
@@ -441,7 +443,7 @@ const Notifications = () => {
 			</View>
 
 			{firstLoading ? (
-				<SkeletonNotification numberSkeleton={8} />
+				<SkeletonNotification numberSkeleton={8} {...testProperties('notifications.skeleton')} />
 			) : notificationsFilter?.length ? (
 				<FlatList
 					showsVerticalScrollIndicator={false}
@@ -459,6 +461,7 @@ const Notifications = () => {
 					onEndReached={fetchMoreData}
 					onEndReachedThreshold={0.5}
 					ListFooterComponent={ListFooterComponent}
+					{...testProperties('notifications.flatList')}
 				/>
 			) : (
 				<EmptyNotification />

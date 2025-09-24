@@ -31,6 +31,7 @@ import { APP_SCREEN, MenuChannelScreenProps } from '../../navigation/ScreenTypes
 import { AddMemberOrRoleBS } from '../../screens/channelPermissionSetting/components/AddMemberOrRoleBS';
 import { validInput } from '../../utils/validate';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 interface IChannelSettingValue {
 	channelName: string;
@@ -360,7 +361,7 @@ export function ChannelSetting({ navigation, route }: MenuChannelScreenProps<Scr
 	};
 
 	return (
-		<ScrollView style={styles.container}>
+		<ScrollView style={styles.container} {...testProperties('channelSetting.screen', true)}>
 			<View style={styles.inputWrapper}>
 				<MezonInput
 					label={t('fields.channelName.title')}

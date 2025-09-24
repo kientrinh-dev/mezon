@@ -1,7 +1,7 @@
 import { Fonts, size, useTheme } from '@mezon/mobile-ui';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { Settings } from '../../../screens/settings';
 import { AccountSetting } from '../../../screens/settings/AccountSetting';
 import { BlockedUsers } from '../../../screens/settings/AccountSetting/BlockedUsers';
@@ -14,6 +14,7 @@ import { QRScanner } from '../../../screens/settings/QRScanner';
 import SetPassword from '../../../screens/settings/SetPassword';
 import { Sharing } from '../../../screens/settings/Sharing';
 import { APP_SCREEN } from '../../ScreenTypes';
+import { testProperties } from '../../../configs/testProperties';
 
 // eslint-disable-next-line no-empty-pattern
 export const SettingStacks = ({ }: any) => {
@@ -22,7 +23,8 @@ export const SettingStacks = ({ }: any) => {
 	const { themeValue } = useTheme();
 
 	return (
-		<Stack.Navigator
+		<View style={{ flex: 1 }} {...testProperties('settings.stack', true)}>
+			<Stack.Navigator
 			screenOptions={{
 				headerShown: true,
 				headerBackTitleVisible: false,
@@ -49,7 +51,7 @@ export const SettingStacks = ({ }: any) => {
 				},
 				animationEnabled: Platform.OS === 'ios'
 			}}
-		>
+			>
 			<Stack.Screen
 				name={APP_SCREEN.SETTINGS.HOME}
 				component={Settings}
@@ -146,6 +148,7 @@ export const SettingStacks = ({ }: any) => {
 					}
 				}}
 			/>
-		</Stack.Navigator>
+			</Stack.Navigator>
+		</View>
 	);
 };

@@ -4,6 +4,7 @@ import { StyleProp, Text, TextStyle, TouchableOpacity, View, ViewStyle } from 'r
 import { IconCDN } from '../../../constants/icon_cdn';
 import MezonIconCDN from '../../MezonIconCDN';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 export interface IMezonMenuItemProps {
 	isShow?: boolean;
@@ -44,16 +45,17 @@ export default function MezonMenuItem({
 					onPress && onPress();
 				}}
 				style={[styles.btn, styleBtn]}
+                {...testProperties(`mezonMenuItem.btn.${title}`)}
 			>
 				{icon}
 				<View style={[styles.btnTitleWrapper, disabled && styles.disable, !isLast && styles.borderBottom]}>
-					<View style={styles.btnTextWrapper}>
+                    <View style={styles.btnTextWrapper} {...testProperties(`mezonMenuItem.btnTextWrapper.${title}`)}>
 						<Text style={[styles.btnTitle, textStyle]}>{title}</Text>
-						{description && <Text style={[styles.btnDescription]}>{description}</Text>}
+                        {description && <Text style={[styles.btnDescription]} {...testProperties(`mezonMenuItem.btnDescription.${title}`)}>{description}</Text>}
 					</View>
 					{component}
-					{previewValue && <Text style={styles.previewValue}>{previewValue}</Text>}
-					{expandable && <MezonIconCDN icon={IconCDN.chevronSmallRightIcon} height={size.s_18} width={size.s_18} color={themeValue.text} />}
+                    {previewValue && <Text style={styles.previewValue} {...testProperties(`mezonMenuItem.previewValue.${title}`)}>{previewValue}</Text>}
+					{expandable && <MezonIconCDN icon={IconCDN.chevronSmallRightIcon} height={size.s_18} width={size.s_18} color={themeValue.text}/>}
 				</View>
 			</TouchableOpacity>
 		)

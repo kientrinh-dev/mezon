@@ -13,6 +13,7 @@ import MezonInput from '../../../componentUI/MezonInput';
 import { IconCDN } from '../../../constants/icon_cdn';
 import { APP_SCREEN, MenuClanScreenProps } from '../../../navigation/ScreenTypes';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 type CreateNewRoleScreen = typeof APP_SCREEN.MENU_CLAN.CREATE_NEW_ROLE;
 export const CreateNewRole = ({ navigation }: MenuClanScreenProps<CreateNewRoleScreen>) => {
@@ -54,36 +55,49 @@ export const CreateNewRole = ({ navigation }: MenuClanScreenProps<CreateNewRoleS
 			behavior={'padding'}
 			keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight + 5}
 			style={styles.container}
+			{...testProperties('createNewRole.container', true)}
 		>
 			<StatusBarHeight />
-			<View style={styles.header}>
-				<Pressable style={styles.backButton} onPress={() => navigation.navigate(APP_SCREEN.MENU_CLAN.ROLE_SETTING)}>
+			<View style={styles.header} {...testProperties('createNewRole.header', true)}>
+				<Pressable
+					style={styles.backButton}
+					onPress={() => navigation.navigate(APP_SCREEN.MENU_CLAN.ROLE_SETTING)}
+					{...testProperties('createNewRole.backBtn')}
+				>
 					<MezonIconCDN icon={IconCDN.closeSmallBold} height={20} width={20} color={themeValue.textStrong} />
 				</Pressable>
-				<Text style={styles.title}>{t('createNewRole.title')}</Text>
+				<Text style={styles.title} {...testProperties('createNewRole.headerTitle')}>
+					{t('createNewRole.title')}
+				</Text>
 			</View>
 
-			<View style={styles.wrapper}>
+			<View style={styles.wrapper} {...testProperties('createNewRole.wrapper', true)}>
 				<View>
-					<View style={styles.desciptionWrapper}>
-						<Text style={styles.newRole}>{t('createNewRole.createANewRole')}</Text>
-						<Text style={styles.description}>{t('createNewRole.description')}</Text>
+					<View style={styles.desciptionWrapper} {...testProperties('createNewRole.descriptionWrapper', true)}>
+						<Text style={styles.newRole} {...testProperties('createNewRole.newRoleTitle')}>
+							{t('createNewRole.createANewRole')}
+						</Text>
+						<Text style={styles.description} {...testProperties('createNewRole.newRoleDescription')}>
+							{t('createNewRole.description')}
+						</Text>
 					</View>
-					<View style={styles.input}>
+					<View style={styles.input} {...testProperties('createNewRole.inputWrapper', true)}>
 						<MezonInput
 							value={roleName}
 							onTextChange={onRoleNameChange}
 							placeHolder={t('createNewRole.newRole')}
 							label={t('createNewRole.roleName')}
+							{...testProperties('createNewRole.roleNameInput')}
 						/>
 					</View>
 				</View>
-				<View style={styles.bottom}>
+				<View style={styles.bottom} {...testProperties('createNewRole.bottom', true)}>
 					<TouchableOpacity
 						onPress={() => {
 							if (roleName?.trim()?.length === 0) return;
 							createNewRole();
 						}}
+						{...testProperties('createNewRole.createBtn')}
 					>
 						<View
 							style={[
@@ -93,7 +107,9 @@ export const CreateNewRole = ({ navigation }: MenuClanScreenProps<CreateNewRoleS
 								styles.button
 							]}
 						>
-							<Text style={styles.buttonText}>{t('createNewRole.create')}</Text>
+							<Text style={styles.buttonText} {...testProperties('createNewRole.createBtn.text')}>
+								{t('createNewRole.create')}
+							</Text>
 						</View>
 					</TouchableOpacity>
 				</View>

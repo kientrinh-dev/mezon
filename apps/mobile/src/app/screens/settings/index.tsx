@@ -30,6 +30,7 @@ import MezonSearch from '../../componentUI/MezonSearch';
 import { IconCDN } from '../../constants/icon_cdn';
 import { APP_SCREEN } from '../../navigation/ScreenTypes';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 export const Settings = ({ navigation }: { navigation: any }) => {
 	const { t, i18n } = useTranslation(['setting']);
@@ -242,14 +243,15 @@ export const Settings = ({ navigation }: { navigation: any }) => {
   `;
 
 	return (
-		<View style={styles.settingContainer}>
-			<ScrollView contentContainerStyle={styles.settingScroll} keyboardShouldPersistTaps={'handled'}>
+		<View style={styles.settingContainer} {...testProperties('settings.screen', true)}>
+			<ScrollView contentContainerStyle={styles.settingScroll} keyboardShouldPersistTaps={'handled'} {...testProperties('settings.scroll', true)}>
 				<MezonSearch
 					value={searchText}
 					isShowCancel={isShowCancel}
 					onChangeText={handleSearchChange}
 					onFocusText={handleSearchFocus}
 					onCancelButton={handleCancelButton}
+					{...testProperties('settings.search')}
 				/>
 
 				<MezonMenu menu={renderedMenu} />
@@ -268,6 +270,7 @@ export const Settings = ({ navigation }: { navigation: any }) => {
 						await sleep(1000);
 						await logout();
 					}}
+					{...testProperties('settings.logoutWebView', true)}
 				/>
 			)}
 		</View>

@@ -21,6 +21,7 @@ import { APP_SCREEN } from '../../navigation/ScreenTypes';
 import { checkNotificationPermissionAndNavigate } from '../../utils/notificationPermissionHelper';
 import { validInput } from '../../utils/validate';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 type CreateChannelScreen = typeof APP_SCREEN.MENU_CLAN.CREATE_CHANNEL;
 export function ChannelCreator({ navigation, route }: MenuClanScreenProps<CreateChannelScreen>) {
@@ -38,8 +39,8 @@ export function ChannelCreator({ navigation, route }: MenuClanScreenProps<Create
 	useEffect(() => {
 		navigation.setOptions({
 			headerStatusBarHeight: Platform.OS === 'android' ? 0 : undefined,
-			headerRight: () => (
-				<Pressable onPress={handleCreateChannel}>
+            headerRight: () => (
+                <Pressable onPress={handleCreateChannel} {...testProperties('channelCreator.header.create')}>
 					<Text
 						style={{
 							color: baseColor.blurple,
@@ -53,8 +54,8 @@ export function ChannelCreator({ navigation, route }: MenuClanScreenProps<Create
 				</Pressable>
 			),
 
-			headerLeft: () => (
-				<Pressable style={{ padding: size.s_20 }} onPress={handleClose}>
+            headerLeft: () => (
+                <Pressable style={{ padding: size.s_20 }} onPress={handleClose} {...testProperties('channelCreator.header.close')}>
 					<MezonIconCDN icon={IconCDN.closeLargeIcon} height={size.s_16} width={size.s_16} color={themeValue.text} />
 				</Pressable>
 			)
@@ -156,9 +157,9 @@ export function ChannelCreator({ navigation, route }: MenuClanScreenProps<Create
 		setChannelType(value);
 	}
 
-	return (
-		<View style={styles.wrapper}>
-			<ScrollView contentContainerStyle={styles.container}>
+    return (
+        <View style={styles.wrapper} {...testProperties('channelCreator.screen', true)}>
+            <ScrollView contentContainerStyle={styles.container} {...testProperties('channelCreator.scroll')}>
 				<MezonInput
 					value={channelName}
 					maxCharacter={64}

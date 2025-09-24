@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import ConversationCard from './ConversationCard';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 export interface IMezonSlideOptionsData {
 	element: ReactNode;
@@ -68,13 +69,13 @@ export default function MezonSlideOption({ data, onChange, height = 90, width = 
 	}
 
 	return (
-		<View>
+		<View {...testProperties('mezonSlideOption.container')}>
 			<ConversationCard />
 			<View>
-				<Text style={styles.title}>{title}</Text>
+				<Text style={styles.title} {...testProperties('mezonSlideOption.title')}>{title}</Text>
 				<View style={{ position: 'relative' }}>
 					<View style={[styles.boxSelect]}>
-						<View style={[styles.boxBorder, { height, width }]} onLayout={handleLayout}></View>
+						<View style={[styles.boxBorder, { height, width }]} onLayout={handleLayout} {...testProperties('mezonSlideOption.boxBorder')}></View>
 					</View>
 
 					<ScrollView
@@ -85,6 +86,7 @@ export default function MezonSlideOption({ data, onChange, height = 90, width = 
 						horizontal={true}
 						showsHorizontalScrollIndicator={false}
 						style={styles.selectListWrapper}
+						{...testProperties('mezonSlideOption.selectListWrapper')}
 						scrollEventThrottle={50}
 						onScroll={handleScroll}
 						contentContainerStyle={[
@@ -96,14 +98,14 @@ export default function MezonSlideOption({ data, onChange, height = 90, width = 
 						]}
 					>
 						{data.map((item, index) => (
-							<View key={index.toString()}>
-								<Pressable onPress={() => handlePressItem(index)}>{item.element}</Pressable>
+							<View key={index.toString()} {...testProperties(`mezonSlideOption.item.${item.title}`)}>
+								<Pressable onPress={() => handlePressItem(index)} {...testProperties(`mezonSlideOption.item.${item.title}.pressable`)}>{item.element}</Pressable>
 							</View>
 						))}
 					</ScrollView>
 				</View>
 			</View>
-			<Text style={styles.desc}>{t('desc')}</Text>
+			<Text style={styles.desc} {...testProperties('mezonSlideOption.desc')}>{t('desc')}</Text>
 		</View>
 	);
 }

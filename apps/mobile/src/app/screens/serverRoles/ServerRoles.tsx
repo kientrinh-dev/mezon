@@ -12,6 +12,7 @@ import ImageNative from '../../components/ImageNative';
 import { IconCDN } from '../../constants/icon_cdn';
 import { APP_SCREEN, MenuClanScreenProps } from '../../navigation/ScreenTypes';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 type ClanSettingsScreen = typeof APP_SCREEN.MENU_CLAN.ROLE_SETTING;
 export const ServerRoles = ({ navigation }: MenuClanScreenProps<ClanSettingsScreen>) => {
@@ -52,20 +53,20 @@ export const ServerRoles = ({ navigation }: MenuClanScreenProps<ClanSettingsScre
 		navigation.navigate(APP_SCREEN.MENU_CLAN.ROLE_DETAIL, { role: clanRole });
 	};
 	return (
-		<View style={styles.container}>
-			<View style={styles.header}>
+		<View style={styles.container} {...testProperties('serverRoles.container', true)}>
+			<View style={styles.header} {...testProperties('serverRoles.header', true)}>
 				<Text style={styles.description}>{t('roleDescription')}</Text>
 			</View>
 
-			<TouchableOpacity onPress={navigateToRoleEveryone}>
-				<View style={styles.everyOneRole}>
+			<TouchableOpacity onPress={navigateToRoleEveryone} {...testProperties('serverRoles.everyone.btn')}>
+				<View style={styles.everyOneRole} {...testProperties('serverRoles.everyone.container', true)}>
 					<View style={styles.editButton}>
-						<View style={styles.leadIcon}>
+						<View style={styles.leadIcon} {...testProperties('serverRoles.everyone.iconWrapper', true)}>
 							<MezonIconCDN icon={IconCDN.groupIcon} color={themeValue.text} />
 						</View>
-						<View style={styles.flex}>
-							<Text style={styles.text}>@everyone</Text>
-							<Text style={styles.normalText} numberOfLines={1}>
+						<View style={styles.flex} {...testProperties('serverRoles.everyone.textWrapper', true)}>
+							<Text style={styles.text} {...testProperties('serverRoles.everyone.title')}>@everyone</Text>
+							<Text style={styles.normalText} numberOfLines={1} {...testProperties('serverRoles.everyone.subtitle')}>
 								{t('defaultRole')}
 							</Text>
 						</View>
@@ -74,13 +75,13 @@ export const ServerRoles = ({ navigation }: MenuClanScreenProps<ClanSettingsScre
 				</View>
 			</TouchableOpacity>
 
-			<View style={styles.roles}>
-				<Text style={styles.normalText}>
+			<View style={styles.roles} {...testProperties('serverRoles.roles', true)}>
+				<Text style={styles.normalText} {...testProperties('serverRoles.roles.count')}>
 					{t('roles')} - {allClanRoles?.length - 1 || '0'}
 				</Text>
 				{allClanRoles.length ? (
-					<View style={styles.listRolePanel}>
-						<View style={styles.roleList}>
+					<View style={styles.listRolePanel} {...testProperties('serverRoles.roleListPanel', true)}>
+						<View style={styles.roleList} {...testProperties('serverRoles.roleList', true)}>
 							<FlatList
 								data={allClanRoles}
 								scrollEnabled
@@ -89,10 +90,11 @@ export const ServerRoles = ({ navigation }: MenuClanScreenProps<ClanSettingsScre
 								initialNumToRender={1}
 								maxToRenderPerBatch={1}
 								windowSize={2}
+								{...testProperties('serverRoles.roleList.flatList', true)}
 								renderItem={({ item, index }) => {
 									return (
-										<TouchableOpacity onPress={() => navigateToRoleDetail(item)}>
-											<View style={styles.roleItem}>
+										<TouchableOpacity onPress={() => navigateToRoleDetail(item)} {...testProperties(`serverRoles.roleItem.btn.${item.id}`)}>
+											<View style={styles.roleItem} {...testProperties(`serverRoles.roleItem.container.${item.id}`)}>
 												<MezonIconCDN
 													icon={IconCDN.shieldUserIcon}
 													color={item?.color || baseColor.gray}
@@ -102,9 +104,9 @@ export const ServerRoles = ({ navigation }: MenuClanScreenProps<ClanSettingsScre
 												{!!item?.role_icon && (
 													<ImageNative url={item?.role_icon} style={{ height: size.s_32, width: size.s_32 }} />
 												)}
-												<View style={styles.flex}>
-													<View style={styles.itemTitle}>
-														<Text style={styles.text}>{item.title}</Text>
+												<View style={styles.flex} {...testProperties(`serverRoles.roleItem.textArea.${item.id}`, true)}>
+													<View style={styles.itemTitle} {...testProperties(`serverRoles.roleItem.titleRow.${item.id}`, true)}>
+														<Text style={styles.text} {...testProperties(`serverRoles.roleItem.title.${item.id}`)}>{item.title}</Text>
 														{item?.isView && (
 															<MezonIconCDN
 																icon={IconCDN.lockIcon}
@@ -114,7 +116,7 @@ export const ServerRoles = ({ navigation }: MenuClanScreenProps<ClanSettingsScre
 															/>
 														)}
 													</View>
-													<Text style={styles.normalText}>
+													<Text style={styles.normalText} {...testProperties(`serverRoles.roleItem.memberCount.${item.id}`)}>
 														{item?.id === everyoneRole?.id
 															? t('allMembers')
 															: `${item?.role_user_list?.role_users?.length || '0'} - ${t('members')}`}
@@ -132,8 +134,8 @@ export const ServerRoles = ({ navigation }: MenuClanScreenProps<ClanSettingsScre
 						</View>
 					</View>
 				) : (
-					<View style={styles.emptyRole}>
-						<Text style={styles.emptyText}>{t('noRole')}</Text>
+					<View style={styles.emptyRole} {...testProperties('serverRoles.empty', true)}>
+						<Text style={styles.emptyText} {...testProperties('serverRoles.empty.text')}>{t('noRole')}</Text>
 					</View>
 				)}
 			</View>

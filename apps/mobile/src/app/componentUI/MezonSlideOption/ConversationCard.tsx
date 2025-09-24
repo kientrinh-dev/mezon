@@ -3,6 +3,7 @@ import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 interface IConversationCard {
 	id: string;
@@ -48,7 +49,7 @@ const ConversationCard = () => {
 	];
 
 	const renderConversationCard = (item: IConversationCard) => (
-		<View key={item.id} style={styles.conversationCard}>
+		<View key={item.id} style={styles.conversationCard} {...testProperties('mezonSlideOption.conversationCard')}>
 			<View style={styles.avatarContainer}>
 				<Image source={{ uri: item.avatar }} style={styles.avatar} resizeMode="cover" />
 				<View style={styles.onlineIndicator} />
@@ -56,13 +57,13 @@ const ConversationCard = () => {
 
 			<View style={styles.conversationContent}>
 				<View style={styles.conversationHeader}>
-					<Text style={styles.userName} numberOfLines={1}>
+					<Text style={styles.userName} numberOfLines={1} {...testProperties('mezonSlideOption.userName')}>
 						{item.name}
 					</Text>
-					<Text style={styles.timestamp}>{item.date}</Text>
+					<Text style={styles.timestamp} {...testProperties('mezonSlideOption.timestamp')}>{item.date}</Text>
 				</View>
 
-				<Text style={styles.lastMessage} numberOfLines={2}>
+				<Text style={styles.lastMessage} numberOfLines={2} {...testProperties('mezonSlideOption.lastMessage')}>
 					{item.message}
 				</Text>
 			</View>
@@ -70,7 +71,7 @@ const ConversationCard = () => {
 	);
 
 	return (
-		<View style={styles.containerConversation}>
+		<View style={styles.containerConversation} {...testProperties('mezonSlideOption.containerConversation')}>
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
 				end={{ x: 0, y: 0 }}
@@ -78,10 +79,10 @@ const ConversationCard = () => {
 				style={[StyleSheet.absoluteFillObject]}
 			/>
 			<View style={styles.header}>
-				<Text style={styles.headerTitle}>Messages</Text>
+				<Text style={styles.headerTitle} {...testProperties('mezonSlideOption.headerTitle')}>Messages</Text>
 			</View>
 
-			<View style={styles.conversationsList}>{conversationCards.map((item) => renderConversationCard(item))}</View>
+			<View style={styles.conversationsList} {...testProperties('mezonSlideOption.conversationsList')}>{conversationCards.map((item) => renderConversationCard(item))}</View>
 		</View>
 	);
 };

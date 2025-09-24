@@ -1,6 +1,7 @@
 import { size } from '@mezon/mobile-ui';
 import { Image, ImageStyle } from 'react-native';
 import { IconCDN } from '../../constants/icon_cdn';
+import { testProperties } from '../../configs/testProperties';
 
 type IconComponentProps = {
 	icon: IconCDN;
@@ -18,7 +19,7 @@ const MezonIconCDN = ({ icon, height = size.s_24, width = size.s_24, color = 'wh
 		customStyle
 	].filter(Boolean);
 
-	return <Image source={icon} style={imageStyle} resizeMode="contain" />;
+	return <Image source={icon} style={imageStyle} resizeMode="contain" {...testProperties(`mezonIconCDN.${icon}`)} />;
 };
 
 export default MezonIconCDN;

@@ -11,6 +11,7 @@ import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import MezonOption from '../../../componentUI/MezonOption';
 import { IconCDN } from '../../../constants/icon_cdn';
 import InputSearchAuditLog from '../InputSearchAuditLog/InputSearchAuditLog';
+import { testProperties } from '../../../configs/testProperties';
 
 export default function FilterUserAuditLog() {
 	const { themeValue } = useTheme();
@@ -62,15 +63,17 @@ export default function FilterUserAuditLog() {
 	return (
 		<View
 			style={{ width: '100%', height: '100%', backgroundColor: themeValue.primary, paddingHorizontal: size.s_10, paddingVertical: size.s_10 }}
+			{...testProperties('filterUserAuditLog.container')}
 		>
-			<InputSearchAuditLog onChangeText={handleSearchTerm} placeHolder={t('filterUserAuditLog.placeholder')} />
-			<View style={{ marginVertical: size.s_10 }}>
+			<InputSearchAuditLog onChangeText={handleSearchTerm} placeHolder={t('filterUserAuditLog.placeholder')} {...testProperties('filterUserAuditLog.inputSearch')} />
+			<View style={{ marginVertical: size.s_10 }} {...testProperties('filterUserAuditLog.view')}>
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					scrollEventThrottle={16}
 					removeClippedSubviews={false}
 					nestedScrollEnabled={true}
 					bounces={false}
+					{...testProperties('filterUserAuditLog.scrollView')}
 				>
 					<MezonOption data={userOptions} onChange={handleOptionChange} value={userOption} />
 				</ScrollView>

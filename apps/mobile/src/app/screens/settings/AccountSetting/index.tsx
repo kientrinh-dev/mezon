@@ -28,6 +28,7 @@ import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../constants/icon_cdn';
 import { APP_SCREEN, SettingScreenProps } from '../../../navigation/ScreenTypes';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 enum EAccountSettingType {
 	UserName,
@@ -196,19 +197,19 @@ export const AccountSetting = ({ navigation }: SettingScreenProps<AccountSetting
 	}, [t, userProfile?.user?.username, userProfile?.user?.display_name, blockedUsersCount]);
 
 	return (
-		<View style={styles.container}>
-			<View style={styles.settingGroup}>
+		<View style={styles.container} {...testProperties('settings.account.screen', true)}>
+			<View style={styles.settingGroup} {...testProperties('settings.account.group.accountInformation', true)}>
 				<Text style={styles.settingGroupTitle}>{t('accountInformation')}</Text>
-				<View style={styles.optionListWrapper}>
+				<View style={styles.optionListWrapper} {...testProperties('settings.account.group.accountInformation.list', true)}>
 					<FlatList
 						data={settingOptions.accountInformationOptions}
 						keyExtractor={(item) => item.type.toString()}
 						ItemSeparatorComponent={SeparatorWithLine}
 						renderItem={({ item }) => {
 							return (
-								<TouchableOpacity onPress={() => handleSettingOption(item.type)} style={styles.optionItem}>
-									<Text style={styles.optionTitle}>{item.title}</Text>
-									<View style={styles.optionRightSide}>
+								<TouchableOpacity onPress={() => handleSettingOption(item.type)} style={styles.optionItem} {...testProperties(`settings.account.group.accountInformation.item.${item.type}`)}>
+									<Text style={styles.optionTitle} {...testProperties(`settings.account.group.accountInformation.item.${item.type}.title`)}>{item.title}</Text>
+									<View style={styles.optionRightSide} {...testProperties(`settings.account.group.accountInformation.item.${item.type}.rightSide`, true)}>
 										{item?.description ? <Text style={styles.optionDescription}>{item.description}</Text> : null}
 										<MezonIconCDN icon={IconCDN.chevronSmallRightIcon} height={15} width={15} color={themeValue?.text} />
 									</View>
@@ -219,18 +220,18 @@ export const AccountSetting = ({ navigation }: SettingScreenProps<AccountSetting
 				</View>
 			</View>
 
-			<View style={styles.settingGroup}>
+			<View style={styles.settingGroup} {...testProperties('settings.account.group.users', true)}>
 				<Text style={styles.settingGroupTitle}>{t('users')}</Text>
-				<View style={styles.optionListWrapper}>
+				<View style={styles.optionListWrapper} {...testProperties('settings.account.group.users.list', true)}>
 					<FlatList
 						data={settingOptions.usersOptions}
 						keyExtractor={(item) => item.type.toString()}
 						ItemSeparatorComponent={SeparatorWithLine}
 						renderItem={({ item }) => {
 							return (
-								<TouchableOpacity onPress={() => handleSettingOption(item.type)} style={styles.optionItem}>
-									<Text style={styles.optionTitle}>{item.title}</Text>
-									<View style={styles.optionRightSide}>
+								<TouchableOpacity onPress={() => handleSettingOption(item.type)} style={styles.optionItem} {...testProperties(`settings.account.group.users.item.${item.type}`)}>
+									<Text style={styles.optionTitle} {...testProperties(`settings.account.group.users.item.${item.type}.title`)}>{item.title}</Text>
+									<View style={styles.optionRightSide} {...testProperties(`settings.account.group.users.item.${item.type}.rightSide`, true)}>
 										{item?.description ? <Text style={styles.optionDescription}>{item.description}</Text> : null}
 										<MezonIconCDN icon={IconCDN.chevronSmallRightIcon} height={15} width={15} color={themeValue?.text} />
 									</View>
@@ -241,20 +242,20 @@ export const AccountSetting = ({ navigation }: SettingScreenProps<AccountSetting
 				</View>
 			</View>
 
-			<View style={styles.settingGroup}>
+			<View style={styles.settingGroup} {...testProperties('settings.account.group.accountManagement', true)}>
 				<Text style={styles.settingGroupTitle}>{t('accountManagement')}</Text>
-				<View style={styles.optionListWrapper}>
+				<View style={styles.optionListWrapper} {...testProperties('settings.account.group.accountManagement.list', true)}>
 					<FlatList
 						data={settingOptions.accountManagementOptions}
 						keyExtractor={(item) => item.type.toString()}
 						ItemSeparatorComponent={SeparatorWithLine}
 						renderItem={({ item }) => {
 							return (
-								<TouchableOpacity onPress={() => handleSettingOption(item.type)} style={styles.optionItem}>
-									<Text style={[styles.optionTitle, [EAccountSettingType.DeleteAccount].includes(item.type) && styles.textRed]}>
+								<TouchableOpacity onPress={() => handleSettingOption(item.type)} style={styles.optionItem} {...testProperties(`settings.account.group.accountManagement.item.${item.type}`)}>
+									<Text style={[styles.optionTitle, [EAccountSettingType.DeleteAccount].includes(item.type) && styles.textRed]} {...testProperties(`settings.account.group.accountManagement.item.${item.type}.title`)}>
 										{item.title}
 									</Text>
-									<View style={styles.optionRightSide}>
+									<View style={styles.optionRightSide} {...testProperties(`settings.account.group.accountManagement.item.${item.type}.rightSide`, true)}>
 										{item?.description ? <Text style={styles.optionDescription}>{item.description}</Text> : null}
 										<MezonIconCDN icon={IconCDN.chevronSmallRightIcon} height={15} width={15} color={themeValue?.text} />
 									</View>

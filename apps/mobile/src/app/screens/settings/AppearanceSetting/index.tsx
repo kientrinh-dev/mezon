@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import MezonMenu, { IMezonMenuSectionProps } from '../../../componentUI/MezonMenu';
 import { APP_SCREEN, SettingScreenProps } from '../../../navigation/ScreenTypes';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 type AppearanceSettingScreen = typeof APP_SCREEN.SETTINGS.APPEARANCE;
 export default function AppearanceSetting({ navigation }: SettingScreenProps<AppearanceSettingScreen>) {
@@ -77,7 +78,7 @@ export default function AppearanceSetting({ navigation }: SettingScreenProps<App
 	// );
 
 	return (
-		<View style={styles.container}>
+		<View style={styles.container} {...testProperties('settings.appearance.screen', true)}>
 			<MezonMenu menu={menuTheme} />
 			{/* <MezonOption data={DMMessagePreviewOptions} title={t('fields.DMMessagePreview.title')} /> */}
 			{/* <MezonMenu menu={menuSearch} /> */}

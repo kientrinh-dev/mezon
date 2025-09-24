@@ -7,6 +7,7 @@ import type { IMezonOptionData } from '../../componentUI/MezonOption';
 import MezonOption from '../../componentUI/MezonOption';
 import { ETypeCustomUserStatus } from '../../screens/profile/ProfileScreen';
 import { styles } from './AddStatusUserModal.styles';
+import { testProperties } from '../../configs/testProperties';
 
 export interface IAddStatusUserModalProps {
 	isVisible: boolean;
@@ -81,10 +82,10 @@ export const AddStatusUserModal = ({ isVisible, setIsVisible, userCustomStatus, 
 			onClickRightBtn={handleSaveCustomStatus}
 			onRequestClose={() => setIsVisible(false)}
 		>
-			<View>
-				<MezonInput value={lineStatus} onTextChange={setLineStatus} placeHolder={t('placeholder')} textarea={true} maxCharacter={128} />
+			<View {...testProperties('addStatusUserModal.container')}>
+				<MezonInput value={lineStatus} onTextChange={setLineStatus} placeHolder={t('placeholder')} textarea={true} maxCharacter={128} {...testProperties('addStatusUserModal.mezonInput')} />
 
-				<MezonOption title={t('statusDuration.label')} value={statusDuration} data={timeOptions} onChange={handleTimeOptionChange} />
+				<MezonOption title={t('statusDuration.label')} value={statusDuration} data={timeOptions} onChange={handleTimeOptionChange} {...testProperties('addStatusUserModal.mezonOption')} />
 			</View>
 		</MezonModal>
 	);

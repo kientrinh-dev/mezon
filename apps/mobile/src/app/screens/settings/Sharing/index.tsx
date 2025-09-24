@@ -57,6 +57,7 @@ import AttachmentFilePreview from '../../home/homedrawer/components/AttachmentFi
 import { RecentInteractiveSearch } from './SearchBar/RecentInteractiveSearch';
 import SharingSuggestItem from './SharingSuggestItem';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 interface ISharing {
 	topUserSuggestionId?: string;
 	data: any;
@@ -451,18 +452,19 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 	}, []);
 
 	return (
-		<View style={styles.wrapper}>
+		<View style={styles.wrapper} {...testProperties('settings.sharing.screen', true)}>
 			<KeyboardAvoidingView
 				style={{ flex: 1, width: '100%' }}
 				behavior={'padding'}
 				keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight + 5}
+				{...testProperties('settings.sharing.keyboardAvoidingView', true)}
 			>
 				<StatusBarHeight />
-				<View style={styles.header}>
-					<TouchableOpacity onPress={() => onCloseSharing()}>
+				<View style={styles.header} {...testProperties('settings.sharing.header', true)}>
+					<TouchableOpacity onPress={() => onCloseSharing()} {...testProperties('settings.sharing.header.close')}>
 						<MezonIconCDN icon={IconCDN.closeIcon} width={size.s_28} height={size.s_28} color={themeValue.white} />
 					</TouchableOpacity>
-					<Text style={styles.titleHeader}>{t('share')}</Text>
+					<Text style={styles.titleHeader} {...testProperties('settings.sharing.header.title')}>{t('share')}</Text>
 				</View>
 				<RecentInteractiveSearch
 					clans={clans.current}
@@ -473,11 +475,12 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 					onChannelSelected={handleChannelSelection}
 					selectedChannel={channelSelected}
 					placeholder={t('selectChannelPlaceholder')}
+					{...testProperties('settings.sharing.search')}
 				/>
 
-				<View style={styles.container}>
+				<View style={styles.container} {...testProperties('settings.sharing.container', true)}>
 					<View>
-						<Text style={styles.title}>{t('suggestions')}</Text>
+						<Text style={styles.title} {...testProperties('settings.sharing.suggestions.title')}>{t('suggestions')}</Text>
 						<FlatList
 							data={dataShareTo?.length ? dataShareTo : []}
 							keyExtractor={(item, index) => `${item?.id}_${index}_suggestion`}
@@ -497,12 +500,13 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 								offset: size.s_42 * index,
 								index
 							})}
+							{...testProperties('settings.sharing.suggestions.list', true)}
 						/>
 					</View>
 				</View>
-				<View style={styles.chatArea}>
+				<View style={styles.chatArea} {...testProperties('settings.sharing.chatArea', true)}>
 					{!!attachmentPreview?.length && (
-						<View style={[styles.attachmentRow]}>
+						<View style={[styles.attachmentRow]} {...testProperties('settings.sharing.attachments', true)}>
 							<ScrollView horizontal keyboardShouldPersistTaps={'always'}>
 								{attachmentPreview?.map((media: any, index) => {
 									const isFile =
@@ -512,41 +516,44 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 									const isUploaded = media?.isUploaded;
 
 									return (
-										<View
-											key={`${media?.url}_${index}_media_sharing`}
-											style={[styles.wrapperItemMedia, isFile && { height: size.s_60, width: size.s_50 * 3 }]}
-										>
+                                        <View
+                                            key={`${media?.url}_${index}_media_sharing`}
+                                            style={[styles.wrapperItemMedia, isFile && { height: size.s_60, width: size.s_50 * 3 }]}
+                                            {...testProperties(`settings.sharing.attachments.item.${index}`)}
+                                        >
 											{isVideo(media?.filename?.toLowerCase()) && isVideo(media?.url?.toLowerCase()) && (
-												<View style={styles.videoOverlay}>
+												<View style={styles.videoOverlay} {...testProperties('settings.sharing.attachments.item.videoOverlay', true)}>
 													<MezonIconCDN icon={IconCDN.playIcon} width={size.s_20} height={size.s_20} />
 												</View>
 											)}
-											{isFile ? (
-												<AttachmentFilePreview attachment={media} />
-											) : (
+                                            {isFile ? (
+                                                <AttachmentFilePreview attachment={media} />
+                                            ) : (
 												<FastImage
 													source={{
 														uri: createImgproxyUrl(media?.url ?? '', { width: 300, height: 300, resizeType: 'fit' })
 													}}
-													style={styles.itemMedia}
+                                                    style={styles.itemMedia}
+                                                    {...testProperties('settings.sharing.attachments.item.image')}
 												/>
 											)}
 											{(isUploaded || media?.error) && (
 												<TouchableOpacity
 													style={styles.iconRemoveMedia}
 													onPress={() => removeAttachmentByUrl(media.url ?? '')}
+													{...testProperties('settings.sharing.attachments.item.remove')}
 												>
 													<MezonIconCDN icon={IconCDN.closeIcon} width={size.s_18} height={size.s_18} />
 												</TouchableOpacity>
 											)}
 
-											{!isUploaded && !media?.error && (
-												<View style={styles.videoOverlay}>
+                                            {!isUploaded && !media?.error && (
+                                                <View style={styles.videoOverlay} {...testProperties('settings.sharing.attachments.item.loading', true)}>
 													<ActivityIndicator size={'small'} color={'white'} />
 												</View>
 											)}
 											{media?.error && (
-												<View style={styles.videoOverlay}>
+												<View style={styles.videoOverlay} {...testProperties('settings.sharing.attachments.item.error', true)}>
 													<View style={styles.errorIconWrapper}>
 														<MezonIconCDN
 															icon={IconCDN.circleExlaimionIcon}
@@ -564,17 +571,18 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 						</View>
 					)}
 
-					<View style={styles.inputRow}>
-						<View style={styles.chatInput}>
+					<View style={styles.inputRow} {...testProperties('settings.sharing.inputRow', true)}>
+						<View style={styles.chatInput} {...testProperties('settings.sharing.chatInput', true)}>
 							<TextInput
 								style={[styles.textInput, { height: size.s_40 }]}
 								value={dataText}
 								onChangeText={(text) => setDataText(text)}
 								placeholder={t('addCommentPlaceholder')}
 								placeholderTextColor={themeValue.textDisabled}
+								{...testProperties('settings.sharing.textInput')}
 							/>
 							{!!dataText?.length && (
-								<TouchableOpacity activeOpacity={0.8} onPress={() => setDataText('')} style={styles.iconRightInput}>
+								<TouchableOpacity activeOpacity={0.8} onPress={() => setDataText('')} style={styles.iconRightInput} {...testProperties('settings.sharing.textInput.clear')}>
 									<MezonIconCDN icon={IconCDN.closeIcon} width={size.s_18} />
 								</TouchableOpacity>
 							)}
@@ -584,6 +592,7 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 							onPress={onSend}
 							disabled={!channelSelected || !isAttachmentUploaded}
 							style={[styles.sendButton, { opacity: channelSelected && isAttachmentUploaded ? 1 : 0.5 }]}
+							{...testProperties('settings.sharing.send')}
 						>
 							{isLoading ? (
 								<Flow size={size.s_28} color={'white'} />

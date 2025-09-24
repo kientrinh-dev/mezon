@@ -1,6 +1,7 @@
 import { useTheme } from '@mezon/mobile-ui';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { testProperties } from '../../../configs/testProperties';
 import ChannelList from './ChannelList';
 import ProfileBar from './ProfileBar';
 import ServerList from './ServerList';
@@ -33,15 +34,18 @@ const ServerAndChannelList = React.memo(({ isTablet }: { isTablet?: boolean }) =
 	const styles = style(themeValue);
 
 	return (
-		<View style={[styles.containerDrawerContent, { backgroundColor: isTablet ? themeValue.tertiary : themeValue.primary }]}>
-			<View style={styles.container}>
-				<View style={styles.rowContainer}>
+		<View
+			style={[styles.containerDrawerContent, { backgroundColor: isTablet ? themeValue.tertiary : themeValue.primary }]}
+			{...testProperties('serverAndChannelList', true)}
+		>
+			<View style={styles.container} {...testProperties('serverAndChannelList.container', true)}>
+				<View style={styles.rowContainer} {...testProperties('serverAndChannelList.row', true)}>
 					<ServerList />
 					<ChannelListWrapper />
 				</View>
 				{isTablet && <ProfileBar />}
 			</View>
-			{isTablet && <View style={styles.wall}></View>}
+			{isTablet && <View style={styles.wall} {...testProperties('serverAndChannelList.wall', true)}></View>}
 		</View>
 	);
 });

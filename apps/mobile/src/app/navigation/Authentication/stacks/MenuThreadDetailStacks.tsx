@@ -1,6 +1,7 @@
 import { size, useTheme } from '@mezon/mobile-ui';
 import { TransitionSpecs, createStackNavigator } from '@react-navigation/stack';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
+import { testProperties } from '../../../configs/testProperties';
 import MuteCategoryDetailModal from '../../../components/MuteCategoryDetailModal';
 import MuteThreadDetailModal from '../../../components/MuteThreadDetailModal';
 import CreateThreadModal from '../../../components/ThreadDetail';
@@ -13,7 +14,8 @@ export const MenuThreadDetailStacks = ({}: any) => {
 	const { themeValue } = useTheme();
 	const Stack = createStackNavigator();
 	return (
-		<Stack.Navigator
+		<View {...testProperties('menuThreadDetailStacks', true)} style={{ flex: 1 }}>
+			<Stack.Navigator
 			screenOptions={{
 				headerShown: false,
 				headerShadowVisible: false,
@@ -52,6 +54,7 @@ export const MenuThreadDetailStacks = ({}: any) => {
 			<Stack.Screen name={APP_SCREEN.MENU_THREAD.CREATE_THREAD_FORM_MODAL} component={CreateThreadForm} />
 			<Stack.Screen name={APP_SCREEN.MENU_THREAD.MUTE_THREAD_DETAIL_CHANNEL} component={MuteThreadDetailModal} />
 			<Stack.Screen name={APP_SCREEN.MENU_THREAD.MUTE_CATEGORY_DETAIL} component={MuteCategoryDetailModal} />
-		</Stack.Navigator>
+			</Stack.Navigator>
+		</View>
 	);
 };

@@ -3,6 +3,7 @@ import { ActionEmitEvent } from '@mezon/mobile-components';
 import { size, useTheme } from '@mezon/mobile-ui';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DeviceEventEmitter, Keyboard, Platform, View } from 'react-native';
+import { testProperties } from '../../../configs/testProperties';
 import AttachmentPicker from './components/AttachmentPicker';
 import EmojiPicker from './components/EmojiPicker';
 import { IMessageActionNeedToResolve } from './types';
@@ -76,6 +77,7 @@ const PanelKeyboard = React.memo((props: IProps) => {
 					height: Platform.OS === 'ios' || typeKeyboardBottomSheet !== 'text' ? heightKeyboardShow : 0,
 					backgroundColor: themeBasic === 'light' ? themeValue.tertiary : themeValue.primary
 				}}
+				{...testProperties('panelKeyboard.placeholder', true)}
 			/>
 			<BottomSheetModal
 				ref={bottomPickerRef}
@@ -104,6 +106,7 @@ const PanelKeyboard = React.memo((props: IProps) => {
 					keyboardShouldPersistTaps="handled"
 					contentContainerStyle={typeKeyboardBottomSheet === 'emoji' ? { flex: 1 } : undefined}
 					style={{ minHeight: heightKeyboardShow }}
+					{...testProperties('panelKeyboard.scrollView', true)}
 				>
 					{typeKeyboardBottomSheet === 'attachment' ? (
 						<AttachmentPicker currentChannelId={props?.currentChannelId} currentClanId={props?.currentClanId} onCancel={onClose} />
@@ -115,7 +118,7 @@ const PanelKeyboard = React.memo((props: IProps) => {
 							messageActionNeedToResolve={messageActionNeedToResolve}
 						/>
 					) : (
-						<View />
+						<View {...testProperties('panelKeyboard.contentEmpty', true)} />
 					)}
 				</BottomSheetScrollView>
 			</BottomSheetModal>

@@ -9,6 +9,7 @@ import { IconCDN } from '../../../constants/icon_cdn';
 import ServerProfile from './ServerProfile';
 import UserProfile from './UserProfile';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 export enum EProfileTab {
 	UserProfile,
@@ -81,10 +82,10 @@ export const ProfileSetting = ({ navigation, route }: { navigation: any; route: 
 	};
 
 	return (
-		<View style={styles.container}>
+		<View style={styles.container} {...testProperties('settings.profile.screen', true)}>
 			<MezonTabHeader tabIndex={tab} onChange={handleTabChange} tabs={[t('switch.userProfile'), t('switch.serverProfile')]} />
 
-			<ScrollView>
+			<ScrollView {...testProperties('settings.profile.scroll', true)}>
 				{tab === EProfileTab.UserProfile ? (
 					<UserProfile navigation={navigation} ref={userProfileRef} />
 				) : (

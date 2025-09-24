@@ -8,6 +8,7 @@ import MezonIconCDN from '../../../../../../../../src/app/componentUI/MezonIconC
 import { IconCDN } from '../../../../../../../../src/app/constants/icon_cdn';
 import MezonAvatar from '../../../../../../componentUI/MezonAvatar';
 import { style } from '../styles';
+import { testProperties } from '../../../../../../configs/testProperties';
 
 const FocusedScreenPopup = () => {
 	const { localParticipant } = useLocalParticipant();
@@ -38,7 +39,7 @@ const FocusedScreenPopup = () => {
 		const screenTrackRef = tracks.find((t) => t.participant.identity === screenShareOther.identity && t.source === Track.Source.ScreenShare);
 		if (screenTrackRef) {
 			return (
-				<View style={{ width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+				<View style={{ width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center' }} {...testProperties('channelVoice.focusedScreenPopup.share', true)}>
 					<View style={{ height: size.s_150, width: '100%', alignSelf: 'center' }}>
 						<VideoTrack
 							objectFit="contain"
@@ -56,7 +57,7 @@ const FocusedScreenPopup = () => {
 		const selfScreenTrackRef = tracks.find((t) => t.participant.identity === selfParticipant.identity && t.source === Track.Source.ScreenShare);
 		if (selfScreenTrackRef) {
 			return (
-				<View style={{ width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+				<View style={{ width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center' }} {...testProperties('channelVoice.focusedScreenPopup.self', true)}>
 					<View style={{ height: size.s_150, width: '100%', alignSelf: 'center' }}>
 						<VideoTrack
 							trackRef={selfScreenTrackRef}
@@ -74,7 +75,7 @@ const FocusedScreenPopup = () => {
 		const videoTrackRef = tracks.find((t) => t.participant.identity === cameraOther.identity && t.source === Track.Source.Camera);
 		if (videoTrackRef) {
 			return (
-				<View style={{ width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+				<View style={{ width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center' }} {...testProperties('channelVoice.focusedScreenPopup.cameraOther', true)}>
 					<View style={{ height: size.s_150, width: '100%', alignSelf: 'center' }}>
 						<VideoTrack
 							trackRef={videoTrackRef}
@@ -89,9 +90,9 @@ const FocusedScreenPopup = () => {
 
 	if (selfParticipant?.isCameraEnabled) {
 		const videoTrackRef = tracks.find((t) => t.participant.identity === selfParticipant.identity && t.source === Track.Source.Camera);
-		if (videoTrackRef) {
+		if (videoTrackRef && (videoTrackRef as any)?.publication) {
 			return (
-				<View style={{ width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+				<View style={{ width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center' }} {...testProperties('channelVoice.focusedScreenPopup.cameraSelf', true)}>
 					<View style={{ height: 100, width: '100%', alignSelf: 'center' }}>
 						<VideoTrack
 							trackRef={videoTrackRef}
@@ -106,7 +107,7 @@ const FocusedScreenPopup = () => {
 
 	if (randomParticipant) {
 		return (
-			<View style={{ width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+			<View style={{ width: '100%', flex: 1, alignItems: 'center', justifyContent: 'center' }} {...testProperties('channelVoice.focusedScreenPopup.avatar', true)}>
 				<View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
 					<MezonAvatar width={size.s_50} height={size.s_50} username={voiceUsername} avatarUrl={avatar} />
 				</View>

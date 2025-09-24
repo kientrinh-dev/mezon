@@ -19,6 +19,7 @@ import { IconCDN } from '../../../constants/icon_cdn';
 import { APP_SCREEN } from '../../../navigation/ScreenTypes';
 import { getQueryParam } from '../../../utils/helpers';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 export const QRScanner = () => {
 	const { t } = useTranslation(['qrScanner']);
@@ -157,7 +158,7 @@ export const QRScanner = () => {
 				return;
 			}
 			if (value?.includes('/chat/')) {
-				const chatMatch = value.match(/(?:^|\/)chat\/([^/?#]+)/);
+				const chatMatch = value.match(/(?:^|\/)chat\/([^\/?#]+)/);
 				const username = chatMatch?.[1];
 				if (username) {
 					const dataParam = getQueryParam(value, 'data');
@@ -211,8 +212,8 @@ export const QRScanner = () => {
 
 	if (!hasPermission) {
 		return (
-			<View style={styles.wrapper}>
-				<View style={[styles.popupLogin, { backgroundColor: 'rgba(0,0,0,0.16)' }]}>
+			<View style={styles.wrapper} {...testProperties('settings.qrScanner.permission', true)}>
+				<View style={[styles.popupLogin, { backgroundColor: 'rgba(0,0,0,0.16)' }]}> 
 					<View
 						style={{
 							zIndex: 100,
@@ -230,6 +231,7 @@ export const QRScanner = () => {
 							onPress={() => {
 								navigation.goBack();
 							}}
+							{...testProperties('settings.qrScanner.permission.close')}
 						>
 							<MezonIconCDN icon={IconCDN.closeSmallBold} width={size.s_28} height={size.s_28} color={baseColor.white} />
 						</TouchableOpacity>
@@ -239,6 +241,7 @@ export const QRScanner = () => {
 						onPress={() => {
 							requestCameraPermission();
 						}}
+						{...testProperties('settings.qrScanner.permission.request')}
 					>
 						<Text style={styles.buttonText}>{t('requestCameraPermission')}</Text>
 					</TouchableOpacity>
@@ -248,7 +251,7 @@ export const QRScanner = () => {
 	}
 
 	return (
-		<View style={styles.wrapper}>
+		<View style={styles.wrapper} {...testProperties('settings.qrScanner.screen', true)}>
 			{!isNavigating && (
 				<Camera
 					key={cameraKey}
@@ -267,10 +270,11 @@ export const QRScanner = () => {
 					}}
 					scanBarcode={doScanBarcode}
 					style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+					{...testProperties('settings.qrScanner.camera', true)}
 				/>
 			)}
 			{!valueCode ? (
-				<View style={{ flex: 1 }}>
+				<View style={{ flex: 1 }} {...testProperties('settings.qrScanner.main', true)}>
 					<View
 						style={{
 							zIndex: 100,
@@ -288,6 +292,7 @@ export const QRScanner = () => {
 							onPress={() => {
 								navigation.goBack();
 							}}
+							{...testProperties('settings.qrScanner.header.close')}
 						>
 							<MezonIconCDN icon={IconCDN.closeSmallBold} width={size.s_28} height={size.s_28} color={baseColor.white} />
 						</TouchableOpacity>
@@ -311,14 +316,14 @@ export const QRScanner = () => {
 						<View style={{ width: size.s_50, backgroundColor: 'transparent' }} />
 					</View>
 
-					<View style={styles.mainOverlay}></View>
-					<View style={styles.overlayCenter}>
+					<View style={styles.mainOverlay} {...testProperties('settings.qrScanner.overlayTop', true)}></View>
+					<View style={styles.overlayCenter} {...testProperties('settings.qrScanner.overlayCenter', true)}>
 						<View style={styles.overlayCenterSub} />
 						<View style={styles.square} />
 						<View style={styles.overlayCenterSub} />
 					</View>
-					<View style={styles.mainOverlay}></View>
-					<TouchableOpacity style={styles.iconLibrary} onPress={openLibrary}>
+					<View style={styles.mainOverlay} {...testProperties('settings.qrScanner.overlayBottom', true)}></View>
+					<TouchableOpacity style={styles.iconLibrary} onPress={openLibrary} {...testProperties('settings.qrScanner.openLibrary')}>
 						<MezonIconCDN icon={IconCDN.imageIcon} width={size.s_34} height={size.s_34} />
 					</TouchableOpacity>
 				</View>
@@ -328,6 +333,7 @@ export const QRScanner = () => {
 					end={{ x: 1, y: 0 }}
 					colors={[baseColor.white, themeValue.bgViolet, baseColor.link]}
 					style={styles.popupLogin}
+					{...testProperties('settings.qrScanner.confirm', true)}
 				>
 					<View style={styles.popupLoginSub}>
 						<MezonIconCDN icon={IconCDN.logoMezon} width={size.s_100} height={size.s_80} useOriginalColor={true} />
@@ -337,11 +343,11 @@ export const QRScanner = () => {
 						) : (
 							<Text style={styles.subTitle}>{t('neverScanALoginQRCodeFromAnotherUser')}</Text>
 						)}
-						<TouchableOpacity style={styles.button} onPress={isSuccess ? onGoback : onConfirmLogin}>
+						<TouchableOpacity style={styles.button} onPress={isSuccess ? onGoback : onConfirmLogin} {...testProperties('settings.qrScanner.confirm.button')}>
 							<Text style={styles.buttonTextOutline}>{isSuccess ? `${t('startTalking')}` : `${t('logIn')}`}</Text>
 						</TouchableOpacity>
 						{!isSuccess && (
-							<TouchableOpacity style={[styles.button, { backgroundColor: 'transparent', marginTop: size.s_10 }]} onPress={onGoback}>
+							<TouchableOpacity style={[styles.button, { backgroundColor: 'transparent', marginTop: size.s_10 }]} onPress={onGoback} {...testProperties('settings.qrScanner.confirm.cancel')}>
 								<Text style={styles.buttonTextOutline}>{t('cancel')}</Text>
 							</TouchableOpacity>
 						)}

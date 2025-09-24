@@ -20,6 +20,7 @@ import MezonIconCDN from '../../../../../../componentUI/MezonIconCDN';
 import { useSendSignaling } from '../../../../../../components/CallingGroupModal';
 import { IconCDN } from '../../../../../../constants/icon_cdn';
 import { style } from '../styles';
+import { testProperties } from '../../../../../../configs/testProperties';
 
 const ButtonEndCall = ({ channelId, clanId, isGroupCall = false }: { channelId: string; clanId: string; isGroupCall?: boolean }) => {
 	const dispatch = useAppDispatch();
@@ -132,7 +133,7 @@ const ButtonEndCall = ({ channelId, clanId, isGroupCall = false }: { channelId: 
 	};
 
 	return (
-		<TouchableOpacity onPress={handleEndCall} style={{ ...styles.menuIcon, backgroundColor: baseColor.redStrong }}>
+		<TouchableOpacity onPress={handleEndCall} style={{ ...styles.menuIcon, backgroundColor: baseColor.redStrong }} {...testProperties('channelVoice.bottomBar.endCall', true)}>
 			<MezonIconCDN icon={IconCDN.phoneCallIcon} />
 		</TouchableOpacity>
 	);

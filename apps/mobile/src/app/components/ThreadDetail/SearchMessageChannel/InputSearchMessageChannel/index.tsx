@@ -20,6 +20,7 @@ import MezonIconCDN from '../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../constants/icon_cdn';
 import ListOptionSearch from '../ListOptionSearch';
 import { style } from './InputSearchMessageChannel.styles';
+import { testProperties } from '../../../../configs/testProperties';
 
 type InputSearchMessageChannelProps = {
 	onChangeText: (value: string) => void;
@@ -106,8 +107,8 @@ const InputSearchMessageChannel = ({
 	};
 
 	return (
-		<View style={styles.wrapper}>
-			<TouchableOpacity onPress={onGoBack} style={{ height: '100%', paddingRight: size.s_10 }}>
+		<View style={styles.wrapper} {...testProperties('searchMessageChannel.header', true)}>
+			<TouchableOpacity onPress={onGoBack} style={{ height: '100%', paddingRight: size.s_10 }} {...testProperties('searchMessageChannel.backButton')}>
 				<View style={{ alignSelf: 'center', justifyContent: 'center', flex: 1 }}>
 					<MezonIconCDN icon={IconCDN.backArrowLarge} width={size.s_20} height={size.s_20} color={themeValue.text} />
 				</View>
@@ -141,9 +142,10 @@ const InputSearchMessageChannel = ({
 					placeholderTextColor={themeValue.textDisabled}
 					placeholder={optionFilter?.title || userMention?.display ? '' : t('search')}
 					autoFocus
+					{...testProperties('searchMessageChannel.searchInput')}
 				></TextInput>
 				{textInput?.length ? (
-					<Pressable onPress={() => clearTextInput()}>
+					<Pressable onPress={() => clearTextInput()} {...testProperties('searchMessageChannel.clearSearch')}>
 						<MezonIconCDN icon={IconCDN.circleXIcon} height={18} width={18} color={themeValue.text} />
 					</Pressable>
 				) : null}
@@ -180,6 +182,7 @@ const InputSearchMessageChannel = ({
 						}
 					}}
 					style={styles.listSearchIcon}
+					{...testProperties('searchMessageChannel.filterButton')}
 				>
 					<MezonIconCDN icon={IconCDN.filterHorizontalIcon} width={20} height={20} color={themeValue.textStrong} />
 				</TouchableOpacity>

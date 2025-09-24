@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import MezonMenu, { IMezonMenuItemProps, IMezonMenuSectionProps } from '../MezonMenu';
 import MezonRadioButton from '../MezonRadioButton';
+import { testProperties } from '../../configs/testProperties';
 
 export type IMezonOptionData = (Omit<IMezonMenuItemProps, 'onPress'> & {
 	value: number | string | boolean;
@@ -35,10 +36,12 @@ export default function MezonOption({ data, onChange, value, ...menuProps }: IMe
 								onChange={() => handleChange(value)}
 								noSwitchFalse
 								disabled={disabled}
+								{...testProperties(`mezonOption.radioButton.${value}`)}
 							/>
 						),
 						disabled,
-						onPress: () => !disabled && handleChange(value)
+						onPress: () => !disabled && handleChange(value),
+						...testProperties(`mezonOption.item.${value}`)
 					})),
 					...menuProps
 				}
@@ -47,7 +50,7 @@ export default function MezonOption({ data, onChange, value, ...menuProps }: IMe
 	);
 
 	return (
-		<View>
+		<View {...testProperties('mezonOption.container')}>
 			<MezonMenu menu={menu} />
 		</View>
 	);

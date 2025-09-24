@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import MezonMenu, { IMezonMenuItemProps, IMezonMenuSectionProps } from '../../../../../../../componentUI/MezonMenu';
+import { testProperties } from '../../../../../../../configs/testProperties';
 import { style } from './UserInfoDm.styles';
 
 export default function UserInfoDm({ user, currentChannel }: { user: ChannelMembersEntity; currentChannel: ChannelsEntity }) {
@@ -62,11 +63,11 @@ export default function UserInfoDm({ user, currentChannel }: { user: ChannelMemb
 	];
 
 	return (
-		<View>
+		<View {...testProperties('userInfoDm', true)}>
 			<View />
 			{/* <Text style={styles.title}>ABOUT ME</Text>
 				<Text style={styles.desc}>{user?.user?.about_me}</Text> */}
-			<View>
+			<View {...testProperties('userInfoDm.menuWrapper', true)}>
 				{/*<Text style={styles.title}>{t('userInfoDM.mezonMemberSince')}</Text>*/}
 				{/*<Text style={styles.desc}>{formatDate(user?.user?.create_time)}</Text>*/}
 			</View>

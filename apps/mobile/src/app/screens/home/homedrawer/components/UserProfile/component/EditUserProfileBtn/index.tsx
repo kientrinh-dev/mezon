@@ -9,6 +9,7 @@ import { DeviceEventEmitter, Text, TouchableOpacity, View } from 'react-native';
 import { APP_SCREEN } from '../../../../../../../navigation/ScreenTypes';
 import { EProfileTab } from '../../../../../../../screens/settings/ProfileSetting';
 import { style } from './EditUserProfileBtn.styles';
+import { testProperties } from '../../../../../../../configs/testProperties';
 
 const EditUserProfileBtn = ({ user }: { user: ChannelMembersEntity }) => {
 	const { themeValue } = useTheme();
@@ -26,12 +27,23 @@ const EditUserProfileBtn = ({ user }: { user: ChannelMembersEntity }) => {
 	};
 
 	return (
-		<View style={{ flexDirection: 'row', gap: size.s_10, alignItems: 'center', justifyContent: 'space-between', marginTop: size.s_20 }}>
-			<TouchableOpacity onPress={() => navigateToUserProfileSetting(EProfileTab.UserProfile)} style={styles.btn}>
+		<View
+			style={{ flexDirection: 'row', gap: size.s_10, alignItems: 'center', justifyContent: 'space-between', marginTop: size.s_20 }}
+			{...testProperties('editUserProfileBtn', true)}
+		>
+			<TouchableOpacity
+				onPress={() => navigateToUserProfileSetting(EProfileTab.UserProfile)}
+				style={styles.btn}
+				{...testProperties('editUserProfileBtn.editUser')}
+			>
 				<Text style={styles.textBtn}>{t('editUser')}</Text>
 			</TouchableOpacity>
 			{isClanOwner && (
-				<TouchableOpacity onPress={() => navigateToUserProfileSetting(EProfileTab.ClanProfile)} style={styles.btn}>
+				<TouchableOpacity
+					onPress={() => navigateToUserProfileSetting(EProfileTab.ClanProfile)}
+					style={styles.btn}
+					{...testProperties('editUserProfileBtn.editServer')}
+				>
 					<Text style={styles.textBtn}>{t('editServer')}</Text>
 				</TouchableOpacity>
 			)}

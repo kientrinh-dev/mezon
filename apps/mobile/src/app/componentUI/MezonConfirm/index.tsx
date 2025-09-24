@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Text, TouchableOpacity, View } from 'react-native';
 import useTabletLandscape from '../../hooks/useTabletLandscape';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 interface IMezonConfirmProps {
 	title: string;
@@ -31,24 +32,24 @@ export default function MezonConfirm({ children, title, confirmText, content, is
 	}
 
 	return (
-		<View style={styles.main}>
+		<View style={styles.main} {...testProperties('mezonConfirm.main')}>
 			<View style={styles.container}>
 				<View style={styles.header}>
-					<Text style={styles.title}>{title}</Text>
+					<Text style={styles.title} {...testProperties('mezonConfirm.title')}>{title}</Text>
 				</View>
 
-				{children ? children : <Text style={styles.contentText}>{content || ''}</Text>}
+				{children ? children : <Text style={styles.contentText} {...testProperties('mezonConfirm.contentText')}>{content || ''}</Text>}
 
-				<View style={styles.btnWrapper}>
+				<View style={styles.btnWrapper} {...testProperties('mezonConfirm.btnWrapper')}>
 					<TouchableOpacity style={[styles.btn, styles.btnDefault, isDanger && styles.btnDanger]} onPress={() => handleConfirm()}>
-						<Text style={[styles.btnText, { color: baseColor.white }]}>{confirmText}</Text>
+						<Text style={[styles.btnText, { color: baseColor.white }]} {...testProperties('mezonConfirm.btnText')}>{confirmText}</Text>
 					</TouchableOpacity>
-					<TouchableOpacity style={styles.btn} onPress={() => handleClose()}>
+					<TouchableOpacity style={styles.btn} onPress={() => handleClose()} {...testProperties('mezonConfirm.btn')}>
 						<Text style={styles.btnText}>{t('buzz.cancel')}</Text>
 					</TouchableOpacity>
 				</View>
 			</View>
-			<TouchableOpacity style={styles.backdrop} onPress={handleClose} />
+			<TouchableOpacity style={styles.backdrop} onPress={handleClose} {...testProperties('mezonConfirm.backdrop')} />
 		</View>
 	);
 }

@@ -4,6 +4,7 @@ import { StyleProp, View, ViewStyle } from 'react-native';
 import WebView from 'react-native-webview';
 import { WebViewErrorEvent, WebViewMessageEvent } from 'react-native-webview/lib/WebViewTypes';
 import ErrorPage from './ErrorPage';
+import { testProperties } from '../../configs/testProperties';
 
 interface webviewBaseComponentProps {
 	url: string;
@@ -96,6 +97,7 @@ const WebviewBase = (props: webviewBaseComponentProps) => {
                 onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
 				iosTimeoutInMilliseconds={iosTimeoutInMilliseconds}
 				androidTimeoutInMilliseconds={androidTimeoutInMilliseconds}
+				{...testProperties('webview')}
 			/>
 		</View>
 	);

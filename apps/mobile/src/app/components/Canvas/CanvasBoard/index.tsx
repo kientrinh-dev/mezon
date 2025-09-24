@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { APP_SCREEN, MenuChannelScreenProps } from '../../../navigation/ScreenTypes';
 import WebviewBase from '../../WebviewBase';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 type ScreenChannelCanvas = typeof APP_SCREEN.MENU_CHANNEL.CANVAS;
 export function CanvasScreen({ navigation, route }: MenuChannelScreenProps<ScreenChannelCanvas>) {
@@ -87,10 +88,10 @@ export function CanvasScreen({ navigation, route }: MenuChannelScreenProps<Scree
 		console.error('Received message from WebView:', event?.nativeEvent?.data);
 	};
 
-	return (
-		<View style={styles.container}>
-			{loading && (
-				<View
+    return (
+        <View style={styles.container} {...testProperties('canvas.screen', true)}>
+            {loading && (
+                <View
 					style={{
 						alignItems: 'center',
 						justifyContent: 'center',
@@ -101,6 +102,7 @@ export function CanvasScreen({ navigation, route }: MenuChannelScreenProps<Scree
 						backgroundColor: themeValue.charcoal,
 						flex: 1
 					}}
+                    {...testProperties('canvas.overlay', true)}
 				>
 					<Chase color={'#cdcdcd'} />
 				</View>

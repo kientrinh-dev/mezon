@@ -10,6 +10,7 @@ import MezonIconCDN from '../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../constants/icon_cdn';
 import { APP_SCREEN, SettingScreenProps } from '../../../../navigation/ScreenTypes';
 import { style } from './styles';
+import { testProperties } from '../../../../configs/testProperties';
 
 type BlockedUsersScreen = typeof APP_SCREEN.SETTINGS.BLOCKED_USERS;
 export const BlockedUsers = ({ navigation }: SettingScreenProps<BlockedUsersScreen>) => {
@@ -43,26 +44,26 @@ export const BlockedUsers = ({ navigation }: SettingScreenProps<BlockedUsersScre
 	};
 
 	const renderBlockedUser = ({ item }: { item: FriendsEntity }) => (
-		<View style={styles.userItem}>
-			<View style={styles.userInfo}>
+		<View style={styles.userItem} {...testProperties(`settings.blockedUsers.item.${item?.id}`)}>
+			<View style={styles.userInfo} {...testProperties(`settings.blockedUsers.item.${item?.id}.info`, true)}>
 				{item?.user?.avatar_url ? (
 					<Image source={{ uri: createImgproxyUrl(item?.user?.avatar_url) }} style={styles.avatar} />
 				) : (
-					<View style={styles.avatarPlaceholder}>
-						<Text style={styles.avatarText}>{(item?.user?.username?.[0] || '').toUpperCase()}</Text>
+					<View style={styles.avatarPlaceholder} {...testProperties(`settings.blockedUsers.item.${item?.id}.avatarPlaceholder`, true)}>
+						<Text style={styles.avatarText} {...testProperties(`settings.blockedUsers.item.${item?.id}.avatarText`)}>{(item?.user?.username?.[0] || '').toUpperCase()}</Text>
 					</View>
 				)}
-				<Text style={styles.username}>{item?.user?.username}</Text>
+				<Text style={styles.username} {...testProperties(`settings.blockedUsers.item.${item?.id}.username`)}>{item?.user?.username}</Text>
 			</View>
 
-			<TouchableOpacity style={styles.unblockButton} onPress={() => handleUnblockFriend(item)}>
-				<Text style={styles.unblockText}>{t('pendingContent.unblock', { ns: 'userProfile' })}</Text>
+			<TouchableOpacity style={styles.unblockButton} onPress={() => handleUnblockFriend(item)} {...testProperties(`settings.blockedUsers.item.${item?.id}.unblock`)}>
+				<Text style={styles.unblockText} {...testProperties(`settings.blockedUsers.item.${item?.id}.unblock.text`)}>{t('pendingContent.unblock', { ns: 'userProfile' })}</Text>
 			</TouchableOpacity>
 		</View>
 	);
 
 	return (
-		<View style={styles.container}>
+		<View style={styles.container} {...testProperties('settings.blockedUsers.screen', true)}>
 			{blockedUsers?.length > 0 ? (
 				<FlatList
 					data={blockedUsers}
@@ -73,10 +74,11 @@ export const BlockedUsers = ({ navigation }: SettingScreenProps<BlockedUsersScre
 					initialNumToRender={1}
 					maxToRenderPerBatch={1}
 					windowSize={2}
+					{...testProperties('settings.blockedUsers.list', true)}
 				/>
 			) : (
-				<View style={styles.emptyContainer}>
-					<Text style={styles.emptyText}>{t('doNotHaveBlockedUser')}</Text>
+				<View style={styles.emptyContainer} {...testProperties('settings.blockedUsers.empty', true)}>
+					<Text style={styles.emptyText} {...testProperties('settings.blockedUsers.empty.text')}>{t('doNotHaveBlockedUser')}</Text>
 				</View>
 			)}
 		</View>

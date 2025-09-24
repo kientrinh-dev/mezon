@@ -7,6 +7,7 @@ import Toast from 'react-native-toast-message';
 import { useSelector } from 'react-redux';
 import { TextInputUser } from '../../../components/auth/TextInput';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 const SetPassword = ({ navigation }) => {
 	const { t } = useTranslation(['accountSetting']);
@@ -89,7 +90,7 @@ const SetPassword = ({ navigation }) => {
 	};
 
 	return (
-		<View style={styles.container}>
+		<View style={styles.container} {...testProperties('settings.setPassword.screen', true)}>
 			<TextInputUser
 				placeholder={''}
 				isPass={false}
@@ -98,6 +99,7 @@ const SetPassword = ({ navigation }) => {
 				error={errors?.password}
 				require={false}
 				disable
+				{...testProperties('settings.setPassword.email')}
 			/>
 			<TextInputUser
 				placeholder={t('setPasswordAccount.password')}
@@ -107,6 +109,7 @@ const SetPassword = ({ navigation }) => {
 				label={t('setPasswordAccount.password')}
 				error={errors?.password}
 				touched={true}
+				{...testProperties('settings.setPassword.password')}
 			/>
 			<Text style={styles.description}>{t('setPasswordAccount.description')}</Text>
 			<TextInputUser
@@ -117,8 +120,9 @@ const SetPassword = ({ navigation }) => {
 				label={t('setPasswordAccount.confirmPassword')}
 				error={errors?.confirmPassword}
 				touched={true}
+				{...testProperties('settings.setPassword.confirm')}
 			/>
-			<Pressable style={styles.button} onPress={handleSubmit}>
+			<Pressable style={styles.button} onPress={handleSubmit} {...testProperties('settings.setPassword.submit')}>
 				<Text style={styles.buttonTitle}>{t('setPasswordAccount.confirm')}</Text>
 			</Pressable>
 		</View>

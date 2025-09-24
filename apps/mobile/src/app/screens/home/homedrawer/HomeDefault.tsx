@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DeviceEventEmitter, Keyboard, Platform, StatusBar, StyleSheet, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import LinearGradient from 'react-native-linear-gradient';
+import { testProperties } from '../../../configs/testProperties';
 import AgeRestrictedModal from '../../../components/AgeRestricted/AgeRestrictedModal';
 import NotificationSetting from '../../../components/NotificationSetting';
 import { APP_SCREEN } from '../../../navigation/ScreenTypes';
@@ -72,17 +73,19 @@ const HomeDefault = React.memo(
 				style={styles.channelView}
 				behavior={'padding'}
 				keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight}
+				{...testProperties('homeDefault.screen', true)}
 			>
 				<LinearGradient
 					start={{ x: 1, y: 0 }}
 					end={{ x: 0, y: 0 }}
 					colors={[themeValue.primary, themeValue?.primaryGradiant || themeValue.primary]}
 					style={[StyleSheet.absoluteFillObject]}
+					{...testProperties('homeDefault.gradientOverlay', true)}
 				/>
 				{Platform.OS === 'ios' && <LicenseAgreement />}
 				<DrawerListener channelId={channelId} />
 				<HomeDefaultHeader openBottomSheet={openBottomSheet} navigation={props.navigation} onOpenDrawer={onOpenDrawer} />
-				<View style={{ flex: 1 }}>
+				<View style={{ flex: 1 }} {...testProperties('homeDefault.messagesWrapper', true)}>
 					<ChannelMessages
 						channelId={channelId}
 						clanId={clanId}

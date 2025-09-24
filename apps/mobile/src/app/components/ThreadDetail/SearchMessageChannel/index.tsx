@@ -3,6 +3,7 @@ import { useTheme } from '@mezon/mobile-ui';
 import { DirectEntity, searchMessagesActions, selectCurrentClanId, useAppDispatch } from '@mezon/store-mobile';
 import { IChannel, SIZE_PAGE_SEARCH, SearchFilter } from '@mezon/utils';
 import { RouteProp } from '@react-navigation/native';
+import { testProperties } from '../../../configs/testProperties';
 import { createContext, memo, useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useSelector } from 'react-redux';
@@ -105,7 +106,7 @@ const SearchMessageChannel = ({ route }: SearchMessageChannelProps) => {
 
 	return (
 		<SearchMessageChannelContext.Provider value={filtersSearch}>
-			<View style={{ flex: 1, backgroundColor: themeValue.primary }}>
+			<View style={{ flex: 1, backgroundColor: themeValue.primary }} {...testProperties('searchMessageChannel.screen', true)}>
 				<StatusBarHeight />
 				<InputSearchMessageChannel
 					onKeyPress={handleKeyPress}

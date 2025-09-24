@@ -11,6 +11,7 @@ import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import MezonImagePicker from '../../../componentUI/MezonImagePicker';
 import { IconCDN } from '../../../constants/icon_cdn';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 function RoleImagePicker({ roleId, disable = false }: { roleId: string; disable?: boolean }) {
 	const { themeValue } = useTheme();
@@ -53,13 +54,13 @@ function RoleImagePicker({ roleId, disable = false }: { roleId: string; disable?
 	};
 
 	return (
-		<View>
-			<View style={styles.roleButton}>
-				<Text style={styles.textBtn}>{t('roleImagePicker')}</Text>
-				<View style={styles.tailButton}>
+		<View {...testProperties('roleImagePicker.container', true)}>
+			<View style={styles.roleButton} {...testProperties('roleImagePicker.row', true)}>
+				<Text style={styles.textBtn} {...testProperties('roleImagePicker.title')}>{t('roleImagePicker')}</Text>
+				<View style={styles.tailButton} {...testProperties('roleImagePicker.tail', true)}>
 					{!!activeRole?.role_icon && !disable && (
-						<TouchableOpacity style={styles.deleteButton} onPress={handleRemoveIcon}>
-							<Text style={styles.deleteText}>{t('removeImage')}</Text>
+						<TouchableOpacity style={styles.deleteButton} onPress={handleRemoveIcon} {...testProperties('roleImagePicker.removeBtn')}>
+							<Text style={styles.deleteText} {...testProperties('roleImagePicker.removeBtn.text')}>{t('removeImage')}</Text>
 						</TouchableOpacity>
 					)}
 					<MezonImagePicker
@@ -70,6 +71,7 @@ function RoleImagePicker({ roleId, disable = false }: { roleId: string; disable?
 						autoUpload
 						disabled={disable}
 						imageSizeLimit={MAX_FILE_SIZE_256KB}
+						{...testProperties('roleImagePicker.picker')}
 					/>
 				</View>
 			</View>

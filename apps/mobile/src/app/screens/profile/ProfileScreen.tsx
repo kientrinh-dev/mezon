@@ -32,6 +32,7 @@ import { useMixImageColor } from '../../hooks/useMixImageColor';
 import useTabletLandscape from '../../hooks/useTabletLandscape';
 import { APP_SCREEN } from '../../navigation/ScreenTypes';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 export enum ETypeCustomUserStatus {
 	Save = 'Save',
@@ -195,26 +196,26 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 	};
 
 	return (
-		<View style={styles.container}>
+		<View style={styles.container} {...testProperties('profile', true)}>
 			<View style={[styles.containerBackground, { backgroundColor: color }]}>
 				<View style={[styles.backgroundListIcon, isTabletLandscape && { justifyContent: 'space-between' }]}>
 					{isTabletLandscape && (
-						<TouchableOpacity style={styles.backgroundSetting} onPress={navigateGoback}>
+						<TouchableOpacity style={styles.backgroundSetting} onPress={navigateGoback} {...testProperties('profile.header.back')}>
 							<MezonIconCDN icon={IconCDN.chevronSmallLeftIcon} height={size.s_20} width={size.s_20} color={themeValue.textStrong} />
 						</TouchableOpacity>
 					)}
 					<View style={{ flexDirection: 'row', gap: size.s_10 }}>
-						<TouchableOpacity style={styles.backgroundSetting} onPress={() => navigateToShopScreen()}>
+						<TouchableOpacity style={styles.backgroundSetting} onPress={() => navigateToShopScreen()} {...testProperties('profile.header.shop')}>
 							<MezonIconCDN icon={IconCDN.shopSparkleIcon} height={size.s_20} width={size.s_20} color={themeValue.textStrong} />
 						</TouchableOpacity>
-						<TouchableOpacity style={styles.backgroundSetting} onPress={() => navigateToSettingScreen()}>
+						<TouchableOpacity style={styles.backgroundSetting} onPress={() => navigateToSettingScreen()} {...testProperties('profile.header.settings')}>
 							<MezonIconCDN icon={IconCDN.settingIcon} height={size.s_20} width={size.s_20} color={themeValue.textStrong} />
 						</TouchableOpacity>
 					</View>
 				</View>
 
 				<View style={styles.viewImageProfile}>
-					<TouchableOpacity onPress={showUserStatusBottomSheet} style={styles.imageProfile}>
+					<TouchableOpacity onPress={showUserStatusBottomSheet} style={styles.imageProfile} {...testProperties('profile.avatar')}>
 						{userProfile?.user?.avatar_url ? (
 							isTabletLandscape ? (
 								<Image
@@ -267,15 +268,16 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 					<View style={styles.badgeStatus}>
 						<View style={styles.badgeStatusInside} />
 						{!userCustomStatus && (
-							<TouchableOpacity
+					<TouchableOpacity
 								activeOpacity={1}
 								onPress={() => setIsVisibleAddStatusUserModal(!isVisibleAddStatusUserModal)}
-								style={styles.iconAddStatus}
+						style={styles.iconAddStatus}
+						{...testProperties('profile.addStatus')}
 							>
 								<MezonIconCDN icon={IconCDN.plusLargeIcon} height={size.s_12} width={size.s_12} color={themeValue.primary} />
 							</TouchableOpacity>
 						)}
-						<TouchableOpacity activeOpacity={1} onPress={() => setIsVisibleAddStatusUserModal(!isVisibleAddStatusUserModal)}>
+					<TouchableOpacity activeOpacity={1} onPress={() => setIsVisibleAddStatusUserModal(!isVisibleAddStatusUserModal)} {...testProperties('profile.status')}>
 							<Text numberOfLines={1} style={styles.textStatus}>
 								{userCustomStatus ? userCustomStatus : t('addStatus')}
 							</Text>
@@ -307,16 +309,16 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 				</View>
 			)}
 
-			<ScrollView style={styles.contentWrapper} contentContainerStyle={{ paddingBottom: size.s_100 }}>
+			<ScrollView style={styles.contentWrapper} contentContainerStyle={{ paddingBottom: size.s_100 }} {...testProperties('profile.scroll', true)}>
 				<View style={styles.contentContainer}>
-					<TouchableOpacity onPress={showUserStatusBottomSheet} style={{ marginBottom: size.s_10 }}>
+					<TouchableOpacity onPress={showUserStatusBottomSheet} style={{ marginBottom: size.s_10 }} {...testProperties('profile.name')}>
 						<View style={styles.viewInfo}>
 							<Text style={styles.textName}>{userProfile?.user?.display_name || userProfile?.user?.username}</Text>
 							<MezonIconCDN icon={IconCDN.chevronDownSmallIcon} height={size.s_18} width={size.s_18} color={themeValue.text} />
 						</View>
 						<Text style={styles.text}>{userProfile?.user?.username}</Text>
 					</TouchableOpacity>
-					<TouchableOpacity onPress={showSendTokenBottomSheet} style={{ flexDirection: 'row', alignItems: 'center', gap: size.s_10 }}>
+					<TouchableOpacity onPress={showSendTokenBottomSheet} style={{ flexDirection: 'row', alignItems: 'center', gap: size.s_10 }} {...testProperties('profile.token')}>
 						<MezonIconCDN icon={IconCDN.checkmarkSmallIcon} width={size.s_20} height={size.s_20} color={baseColor.azureBlue} />
 						<View style={styles.token}>
 							<Text style={styles.text}>
@@ -331,6 +333,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 							});
 						}}
 						style={{ flexDirection: 'row', alignItems: 'center', gap: size.s_10, marginTop: size.s_10 }}
+						{...testProperties('profile.sendToken')}
 					>
 						<MezonIconCDN icon={IconCDN.sendMoneyIcon} height={size.s_22} width={size.s_22} color={baseColor.bgSuccess} />
 						<View style={styles.token}>
@@ -344,13 +347,14 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 							});
 						}}
 						style={{ flexDirection: 'row', alignItems: 'center', gap: size.s_10, marginTop: size.s_10 }}
+						{...testProperties('profile.history')}
 					>
 						<MezonIconCDN icon={IconCDN.historyIcon} height={size.s_24} width={size.s_24} color={baseColor.bgSuccess} />
 						<View style={styles.token}>
 							<Text style={styles.text}>{tStack('settingStack.historyTransaction')}</Text>
 						</View>
 					</TouchableOpacity>
-					{!isTabletLandscape && (
+				{!isTabletLandscape && (
 						<View style={styles.buttonList}>
 							<MezonButton
 								containerStyle={styles.button}
@@ -362,6 +366,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 								icon={<MezonIconCDN icon={IconCDN.wallet} height={size.s_20} width={size.s_20} color={'white'} />}
 								title={t('manageWallet')}
 								titleStyle={styles.whiteText}
+							{...testProperties('profile.manageWallet')}
 							/>
 							<MezonButton
 								containerStyle={styles.button}
@@ -369,6 +374,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 								icon={<MezonIconCDN icon={IconCDN.pencilIcon} height={size.s_18} width={size.s_18} color={'white'} />}
 								title={t('editStatus')}
 								titleStyle={styles.whiteText}
+							{...testProperties('profile.editStatus')}
 							/>
 						</View>
 					)}
@@ -390,7 +396,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 					</View>
 				</View>
 
-				<TouchableOpacity style={[styles.contentContainer, styles.imgList]} onPress={() => navigateToFriendScreen()}>
+				<TouchableOpacity style={[styles.contentContainer, styles.imgList]} onPress={() => navigateToFriendScreen()} {...testProperties('profile.friends')}>
 					<Text style={styles.textTitle}>{t('yourFriend')}</Text>
 
 					<MezonAvatar avatarUrl="" username="" height={size.s_30} width={size.s_30} stacks={firstFriendImageList} />
@@ -403,7 +409,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 					/>
 				</TouchableOpacity>
 
-				<TouchableOpacity style={[styles.contentContainer, styles.imgList]} onPress={copyUserId}>
+				<TouchableOpacity style={[styles.contentContainer, styles.imgList]} onPress={copyUserId} {...testProperties('profile.copyUserId')}>
 					<Text style={styles.textTitle}>{t('copyUserId')}</Text>
 					<MezonIconCDN
 						icon={IconCDN.idIcon}

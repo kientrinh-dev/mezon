@@ -12,6 +12,7 @@ import { ContainerMessageActionModal } from '../../MessageItemBS/ContainerMessag
 import { style } from '../styles';
 import SendVoiceSound from './SendVoiceSound';
 import SwitchCamera from './SwitchCamera';
+import { testProperties } from '../../../../../../configs/testProperties';
 const { AudioSessionModule } = NativeModules;
 
 export type AudioOutput = {
@@ -147,21 +148,21 @@ const HeaderRoomView = memo(({ channelId, onPressMinimizeRoom, isGroupCall = fal
 	};
 
 	return (
-		<View style={[styles.menuHeader, !isShow && { display: 'none' }]}>
+		<View style={[styles.menuHeader, !isShow && { display: 'none' }]} {...testProperties('channelVoice.header', true)}>
 			<View style={{ flexDirection: 'row', alignItems: 'center', gap: size.s_20, flexGrow: 1, flexShrink: 1 }}>
 				{!isGroupCall && (
-					<TouchableOpacity onPress={onPressMinimizeRoom} style={styles.buttonCircle}>
+					<TouchableOpacity onPress={onPressMinimizeRoom} style={styles.buttonCircle} {...testProperties('channelVoice.header.minimize')}>
 						<MezonIconCDN icon={IconCDN.chevronDownSmallIcon} color={themeValue.white} />
 					</TouchableOpacity>
 				)}
-				<Text numberOfLines={1} style={[styles.text, { flexGrow: 1, flexShrink: 1 }]}>
+				<Text numberOfLines={1} style={[styles.text, { flexGrow: 1, flexShrink: 1 }]} {...testProperties('channelVoice.header.channelLabel')}>
 					{channelLabel}
 				</Text>
 			</View>
 
 			<View style={{ flexDirection: 'row', alignItems: 'center', gap: size.s_10 }}>
 				{!isGroupCall && (
-					<TouchableOpacity onPress={handleOpenEmojiPicker} style={[styles.buttonCircle]}>
+					<TouchableOpacity onPress={handleOpenEmojiPicker} style={[styles.buttonCircle]} {...testProperties('channelVoice.header.openEmoji')}>
 						<MezonIconCDN icon={IconCDN.reactionIcon} height={size.s_20} width={size.s_20} color={themeValue.white} />
 					</TouchableOpacity>
 				)}
@@ -173,6 +174,7 @@ const HeaderRoomView = memo(({ channelId, onPressMinimizeRoom, isGroupCall = fal
 					currentOutput={currentAudioOutput}
 					currentAudioOutput={currentAudioOutput}
 					onOpenTooltip={onOpenTooltip}
+					{...testProperties('channelVoice.header.audioOutput', true)}
 				/>
 			</View>
 		</View>

@@ -23,6 +23,7 @@ import { APP_SCREEN } from '../../../../../../navigation/ScreenTypes';
 import { style } from '../styles';
 import ButtonEndCall from './ButtonEndCall';
 import ToggleMic from './ButtonToggleMic';
+import { testProperties } from '../../../../../../configs/testProperties';
 
 const ControlBottomBar = ({
 	isShow,
@@ -181,14 +182,15 @@ const ControlBottomBar = ({
 					display: 'none'
 				}
 			]}
+			{...testProperties('channelVoice.bottomBar', true)}
 		>
 			<View style={{ gap: size.s_10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: size.s_6 }}>
-				<TouchableOpacity onPress={handleToggleCamera} style={styles.menuIcon}>
+				<TouchableOpacity onPress={handleToggleCamera} style={styles.menuIcon} {...testProperties('channelVoice.bottomBar.toggleCamera', true)}>
 					<MezonIconCDN icon={isCameraEnabled ? IconCDN.videoIcon : IconCDN.videoSlashIcon} color={themeValue.textStrong} />
 				</TouchableOpacity>
 				<ToggleMic />
 				{!isGroupCall && (
-					<TouchableOpacity onPress={handleShowChat} style={styles.menuIcon}>
+					<TouchableOpacity onPress={handleShowChat} style={styles.menuIcon} {...testProperties('channelVoice.bottomBar.openChat', true)}>
 						<MezonIconCDN icon={IconCDN.chatIcon} color={themeValue.textStrong} />
 					</TouchableOpacity>
 				)}
