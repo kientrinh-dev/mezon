@@ -30,6 +30,7 @@ import MezonMenu, { IMezonMenuItemProps, IMezonMenuSectionProps } from '../../..
 import CategoryNotificationSetting from '../../../../../components/CategoryNotificationSetting';
 import InviteToChannel from '../InviteToChannel';
 import { style } from './styles';
+import { testProperties } from '../../../../../configs/testProperties';
 
 enum StatusMarkAsReadCategory {
 	Error = 'error',
@@ -234,8 +235,8 @@ export default function CategoryMenu({ category }: ICategoryMenuProps) {
 		}
 	];
 
-	return (
-		<View style={styles.container}>
+    return (
+        <View style={styles.container} {...testProperties('categoryMenu.container')}>
 			<View style={styles.header}>
 				<View style={styles.avatarWrapper}>
 					<MezonClanAvatar defaultColor={baseColor.blurple} alt={currentClan?.clan_name} image={currentClan?.logo} />

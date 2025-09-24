@@ -2,6 +2,7 @@ import { useTheme } from '@mezon/mobile-ui';
 import { Text, View } from 'react-native';
 import MezonMenuItem, { IMezonMenuItemProps } from '../MezonMenuItem';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 export interface IMezonMenuSectionProps {
 	title?: string;
@@ -14,15 +15,15 @@ export default function MezonMenuSection({ title, items, bottomDescription }: IM
 
 	return (
 		<View>
-			{title && <Text style={styles.sectionTitle}>{title}</Text>}
+			{title && <Text style={styles.sectionTitle} {...testProperties(`mezonMenuSection.sectionTitle.${title}`)}>{title}</Text>}
 
 			<View style={styles.section}>
 				{items.map((item, index) => (
-					<MezonMenuItem isLast={index === items?.length - 1} key={index.toString()} {...item} />
+					<MezonMenuItem isLast={index === items?.length - 1} key={index.toString()} {...item}/>
 				))}
 			</View>
 
-			{bottomDescription && <Text style={styles.sectionDescription}>{bottomDescription}</Text>}
+			{bottomDescription && <Text style={styles.sectionDescription} {...testProperties(`mezonMenuSection.sectionDescription.${title}`)}>{bottomDescription}</Text>}
 		</View>
 	);
 }

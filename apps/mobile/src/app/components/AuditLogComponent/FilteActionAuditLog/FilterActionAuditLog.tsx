@@ -8,6 +8,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { useSelector } from 'react-redux';
 import MezonOption, { IMezonOptionData } from '../../../componentUI/MezonOption';
 import InputSearchAuditLog from '../InputSearchAuditLog/InputSearchAuditLog';
+import { testProperties } from '../../../configs/testProperties';
 
 const iconMap: { [key in ActionLog]: ReactNode | string } = {
 	[ActionLog.ALL_ACTION_AUDIT]: '-',
@@ -97,11 +98,12 @@ export default function FilterActionAuditLog() {
 	return (
 		<View
 			style={{ width: '100%', height: '100%', backgroundColor: themeValue.primary, paddingHorizontal: size.s_10, paddingVertical: size.s_10 }}
+			{...testProperties('filterActionAuditLog.container')}
 		>
-			<InputSearchAuditLog onChangeText={handleSearchTerm} placeHolder={t('filterActionAuditLog.placeholder')} />
-			<View style={{ marginVertical: size.s_20 }}>
-				<ScrollView showsVerticalScrollIndicator={false}>
-					<MezonOption data={actionOptions} onChange={handleOptionChange} value={actionOption} />
+			<InputSearchAuditLog onChangeText={handleSearchTerm} placeHolder={t('filterActionAuditLog.placeholder')} {...testProperties('filterActionAuditLog.inputSearch')} />
+			<View style={{ marginVertical: size.s_20 }} {...testProperties('filterActionAuditLog.view')}>
+				<ScrollView showsVerticalScrollIndicator={false} {...testProperties('filterActionAuditLog.scrollView')}>
+					<MezonOption data={actionOptions} onChange={handleOptionChange} value={actionOption} {...testProperties('filterActionAuditLog.mezonOption')} />
 				</ScrollView>
 			</View>
 		</View>

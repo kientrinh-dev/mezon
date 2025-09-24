@@ -1,14 +1,15 @@
 import { size, useTheme } from '@mezon/mobile-ui';
 import { sleep } from '@mezon/utils';
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { StyleProp, Text, TextInput, TextStyle, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { StyleProp, Text, TextInput, TextStyle, TouchableOpacity, View, ViewProps, ViewStyle } from 'react-native';
 import { ErrorInput } from '../../components/ErrorInput';
 import { IconCDN } from '../../constants/icon_cdn';
 import { validInput } from '../../utils/validate';
 import MezonIconCDN from '../MezonIconCDN';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
-interface IMezonInputProps {
+interface IMezonInputProps extends ViewProps {
 	placeHolder?: string;
 	label?: string;
 	titleStyle?: StyleProp<TextStyle>;
@@ -51,7 +52,8 @@ export default function MezonInput({
 	disabled = false,
 	isValid = true,
 	defaultValue = '',
-	forcusInput = false
+    forcusInput = false,
+    ...rest
 }: IMezonInputProps) {
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
@@ -101,11 +103,11 @@ export default function MezonInput({
 		}
 	};
 
-	return (
-		<View style={styles.container}>
-			{label && <Text style={[styles.label, titleUppercase ? styles.titleUppercase : {}, titleStyle]}>{label}</Text>}
+    return (
+        <View style={styles.container} {...rest} {...testProperties('mezonInput.container')}>
+			{label && <Text style={[styles.label, titleUppercase ? styles.titleUppercase : {}, titleStyle]} {...testProperties('mezonInput.label')}>{label}</Text>}
 			<View style={[styles.fakeInput, textarea && { paddingTop: 10 }, renderBorder(), inputWrapperStyle]}>
-				<View style={styles.inputBox}>
+				<View style={styles.inputBox} {...testProperties('mezonInput.inputBox')}>
 					{prefixIcon}
 					<TextInput
 						ref={ref}
@@ -122,23 +124,24 @@ export default function MezonInput({
 						onBlur={handleBlur}
 						editable={!disabled}
 						defaultValue={defaultValue}
+						{...testProperties('mezonInput.input')}
 					/>
 					{postfixIcon}
 
 					{!textarea && value?.length > 0 && !disabled && (
-						<TouchableOpacity onPress={handleClearBtn} style={styles.clearBtn}>
+						<TouchableOpacity onPress={handleClearBtn} style={styles.clearBtn} {...testProperties('mezonInput.clearBtn')}>
 							<MezonIconCDN icon={IconCDN.circleXIcon} height={size.s_18} width={size.s_18} color={themeValue.white} />
 						</TouchableOpacity>
 					)}
 				</View>
 
 				{textarea && (
-					<View style={[styles.lineCountWrapper, { opacity: showCount ? 1 : 0 }]}>
-						<Text style={styles.count}>{`${value?.length || '0'}/${maxCharacter}`}</Text>
+					<View style={[styles.lineCountWrapper, { opacity: showCount ? 1 : 0 }]} {...testProperties('mezonInput.lineCountWrapper')}>
+						<Text style={styles.count} {...testProperties('mezonInput.count')}>{`${value?.length || '0'}/${maxCharacter}`}</Text>
 					</View>
 				)}
 			</View>
-			{(!isCheckValid || !isValid) && errorMessage && <ErrorInput style={styles.errorInput} errorMessage={errorMessage} />}
+			{(!isCheckValid || !isValid) && errorMessage && <ErrorInput style={styles.errorInput} errorMessage={errorMessage} {...testProperties('mezonInput.errorInput')} />}
 		</View>
 	);
 }

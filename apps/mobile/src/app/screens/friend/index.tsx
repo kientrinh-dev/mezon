@@ -18,6 +18,7 @@ import { normalizeString } from '../../utils/helpers';
 import { checkNotificationPermissionAndNavigate } from '../../utils/notificationPermissionHelper';
 import { DirectMessageCallMain } from '../messages/DirectMessageCall';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 export const FriendScreen = React.memo(({ navigation }: { navigation: any }) => {
 	const { themeValue } = useTheme();
@@ -155,7 +156,7 @@ export const FriendScreen = React.memo(({ navigation }: { navigation: any }) => 
 	const typingSearchDebounce = useThrottledCallback((text) => setSearchText(text), 500);
 
 	return (
-		<View style={styles.friendContainer}>
+		<View style={styles.friendContainer} {...testProperties('friends.home.root', true)}>
 			<View style={styles.searchFriend}>
 				<Feather size={18} name="search" style={{ color: themeValue.text }} />
 				<TextInput
@@ -163,6 +164,7 @@ export const FriendScreen = React.memo(({ navigation }: { navigation: any }) => 
 					placeholderTextColor={themeValue.textDisabled}
 					style={styles.searchInput}
 					onChangeText={(text) => typingSearchDebounce(text)}
+					{...testProperties('friends.home.searchInput')}
 				/>
 			</View>
 
@@ -173,7 +175,7 @@ export const FriendScreen = React.memo(({ navigation }: { navigation: any }) => 
 			) : null}
 
 			{!searchText?.trim()?.length || filteredFriendList?.length === 0 ? (
-				<Pressable style={styles.requestFriendWrapper} onPress={() => navigateToRequestFriendScreen()}>
+				<Pressable style={styles.requestFriendWrapper} onPress={() => navigateToRequestFriendScreen()} {...testProperties('friends.home.requestFriend')}>
 					<MezonIconCDN icon={IconCDN.paperPlaneIcon} width={25} color={themeValue.text} />
 					<View style={styles.fill}>
 						<Text style={styles.defaultText}>{t('friends:friendRequest.title')}</Text>

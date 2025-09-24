@@ -7,6 +7,7 @@ import { Animated, Dimensions, Easing, Platform, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Sound from 'react-native-sound';
 import { style } from '../styles';
+import { testProperties } from '../../../../../../configs/testProperties';
 
 const { width, height } = Dimensions.get('window');
 
@@ -307,7 +308,13 @@ export const CallReactionHandler = memo(({ channelId, isAnimatedCompleted, onSou
 		return null;
 	}
 
-	return <View style={styles.reactionContainer}>{displayedEmojis?.map((item) => <AnimatedEmoji key={item.id} item={item} />)}</View>;
+	return (
+		<View style={styles.reactionContainer} {...testProperties('channelVoice.reactionOverlay', true)}>
+			{displayedEmojis?.map((item) => (
+				<AnimatedEmoji key={item.id} item={item} />
+			))}
+		</View>
+	);
 });
 
 CallReactionHandler.displayName = 'CallReactionHandler';

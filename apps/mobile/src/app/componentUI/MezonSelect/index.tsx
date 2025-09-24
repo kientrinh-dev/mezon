@@ -7,6 +7,7 @@ import MezonFakeInputBox, { IMezonFakeBoxProps } from '../MezonFakeBox';
 import MezonIconCDN from '../MezonIconCDN';
 import MezonOption, { IMezonOptionData } from '../MezonOption';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 type IMezonSelectProps = Omit<IMezonFakeBoxProps, 'onPress' | 'postfixIcon' | 'value'> & {
 	onChange?: (value: number | string) => void;
@@ -35,11 +36,11 @@ export default function MezonSelect({ data, onChange, initValue, ...props }: IMe
 			title: props.title,
 			children: (
 				<View style={styles.bsContainer}>
-					<MezonOption data={data} onChange={handleChange} value={currentValue} />
+					<MezonOption data={data} onChange={handleChange} value={currentValue} {...testProperties('mezonSelect.option')} />
 				</View>
 			)
 		};
-		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: false, data: dataBottomSheet });
+		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: false, data: dataBottomSheet, ...testProperties('mezonSelect.bottomSheet') });
 	}
 
 	useEffect(() => {
@@ -50,12 +51,13 @@ export default function MezonSelect({ data, onChange, initValue, ...props }: IMe
 	}, [currentValue, data]);
 
 	return (
-		<View>
+		<View {...testProperties('mezonSelect.container')}>
 			<MezonFakeInputBox
 				{...props}
-				postfixIcon={<MezonIconCDN icon={IconCDN.chevronDownSmallIcon} height={size.s_20} width={size.s_20} color={themeValue.text} />}
+				postfixIcon={<MezonIconCDN icon={IconCDN.chevronDownSmallIcon} height={size.s_20} width={size.s_20} color={themeValue.text} {...testProperties('mezonSelect.chevronDownSmallIcon')} />}
 				value={currentContent}
 				onPress={handlePress}
+				{...testProperties('mezonSelect.fakeInputBox')}
 			/>
 		</View>
 	);

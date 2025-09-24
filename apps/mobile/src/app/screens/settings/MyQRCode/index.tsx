@@ -12,6 +12,7 @@ import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../constants/icon_cdn';
 import { useImage } from '../../../hooks/useImage';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 type TabType = 'profile' | 'transfer';
 
@@ -112,8 +113,8 @@ export const MyQRCode = () => {
 
 	const renderTabButton = useCallback(
 		(tab: TabType, label: string) => (
-			<TouchableOpacity style={[styles.tabButton, activeTab === tab && styles.activeTabButton]} onPress={() => setActiveTab(tab)}>
-				<Text style={[styles.tabButtonText, activeTab === tab && styles.activeTabButtonText]}>{label}</Text>
+			<TouchableOpacity style={[styles.tabButton, activeTab === tab && styles.activeTabButton]} onPress={() => setActiveTab(tab)} {...testProperties(`settings.myQRCode.tab.${tab}`)}>
+				<Text style={[styles.tabButtonText, activeTab === tab && styles.activeTabButtonText]} {...testProperties(`settings.myQRCode.tab.${tab}.text`)}>{label}</Text>
 			</TouchableOpacity>
 		),
 		[activeTab, styles]
@@ -129,14 +130,14 @@ export const MyQRCode = () => {
 	);
 
 	return (
-		<View style={styles.container}>
-			<View style={styles.tabContainer}>
+		<View style={styles.container} {...testProperties('settings.myQRCode.screen', true)}>
+			<View style={styles.tabContainer} {...testProperties('settings.myQRCode.tabs', true)}>
 				{renderTabButton('profile', t('qr_profile', 'QR Profile'))}
 				{renderTabButton('transfer', t('qr_transfer', 'QR Transfer'))}
 			</View>
 
-			<View style={[styles.card]}>
-				<View style={styles.headerCard}>
+			<View style={[styles.card]} {...testProperties('settings.myQRCode.card', true)}>
+				<View style={styles.headerCard} {...testProperties('settings.myQRCode.card.header', true)}>
 					{userInfo.avatarUrl ? (
 						<FastImage
 							source={{
@@ -145,40 +146,42 @@ export const MyQRCode = () => {
 							style={styles.avatar}
 						/>
 					) : (
-						<View style={styles.defaultAvatar}>
-							<Text style={styles.textAvatar}>{userInfo.username?.charAt?.(0)?.toUpperCase()}</Text>
+						<View style={styles.defaultAvatar} {...testProperties('settings.myQRCode.card.header.defaultAvatar', true)}>
+							<Text style={styles.textAvatar} {...testProperties('settings.myQRCode.card.header.defaultAvatar.text')}>
+								{userInfo.username?.charAt?.(0)?.toUpperCase()}
+							</Text>
 						</View>
 					)}
 
 					<View>
-						<Text style={styles.nameProfile}>{userInfo.username || userInfo.displayName}</Text>
-						<Text style={styles.tokenProfile}>
+						<Text style={styles.nameProfile} {...testProperties('settings.myQRCode.card.header.name')}>{userInfo.username || userInfo.displayName}</Text>
+						<Text style={styles.tokenProfile} {...testProperties('settings.myQRCode.card.header.token')}>
 							{activeTab === 'profile' ? `${t('shareWithOthers')}` : `${t('token')} ${formatMoney(Number(tokenInWallet || 0))}₫`}
 						</Text>
 					</View>
 				</View>
 
-				<View style={styles.qrContainer}>
+				<View style={styles.qrContainer} {...testProperties('settings.myQRCode.card.qr', true)}>
 					{isGenerating ? (
 						<Grid color={themeValue.text} size={size.s_50} />
 					) : (
-						<View style={styles.qrWrapper}>
-							<Image source={{ uri: qrCode?.[activeTab] }} style={styles.imageQR} />
+						<View style={styles.qrWrapper} {...testProperties('settings.myQRCode.card.qr.wrapper', true)}>
+							<Image source={{ uri: qrCode?.[activeTab] }} style={styles.imageQR} {...testProperties('settings.myQRCode.card.qr.image')} />
 						</View>
 					)}
 				</View>
 
 				{!isGenerating && qrCode?.[activeTab] && activeTab === 'profile' && (
-					<View style={styles.actionsRow}>
-						<TouchableOpacity style={styles.actionButton} onPress={handleDownloadQRCode}>
+					<View style={styles.actionsRow} {...testProperties('settings.myQRCode.card.actions', true)}>
+						<TouchableOpacity style={styles.actionButton} onPress={handleDownloadQRCode} {...testProperties('settings.myQRCode.card.actions.download')}>
 							<MezonIconCDN icon={IconCDN.downloadIcon} color={themeValue.text} />
 						</TouchableOpacity>
-						<TouchableOpacity style={styles.actionButton} onPress={handleShareQRCode}>
+						<TouchableOpacity style={styles.actionButton} onPress={handleShareQRCode} {...testProperties('settings.myQRCode.card.actions.share')}>
 							<MezonIconCDN icon={IconCDN.shareIcon} color={themeValue.text} />
 						</TouchableOpacity>
 					</View>
 				)}
-				<View style={styles.descriptionContainer}>
+				<View style={styles.descriptionContainer} {...testProperties('settings.myQRCode.card.description', true)}>
 					<Text style={styles.descriptionText}>
 						{activeTab === 'profile'
 							? t('qr_profile_description', 'Scan this QR code to chat with me or view my profile')

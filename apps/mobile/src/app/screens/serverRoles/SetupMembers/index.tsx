@@ -20,6 +20,7 @@ import { normalizeString } from '../../../utils/helpers';
 import { AddMemberBS } from './components/AddMemberBs';
 import { MemberItem } from './components/MemberItem';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 type SetupMembersScreen = typeof APP_SCREEN.MENU_CLAN.SETUP_ROLE_MEMBERS;
 export const SetupMembers = ({ navigation, route }: MenuClanScreenProps<SetupMembersScreen>) => {
@@ -136,9 +137,10 @@ export const SetupMembers = ({ navigation, route }: MenuClanScreenProps<SetupMem
 			behavior={'padding'}
 			keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight + 5}
 			style={styles.flex}
+			{...testProperties('setupMembers.container', true)}
 		>
 			<StatusBarHeight />
-			<View style={styles.header}>
+			<View style={styles.header} {...testProperties('setupMembers.header', true)}>
 				<Pressable style={styles.backButton} onPress={handleClose}>
 					<MezonIconCDN
 						icon={isEditRoleMode ? IconCDN.arrowLargeLeftIcon : IconCDN.closeSmallBold}
@@ -148,39 +150,45 @@ export const SetupMembers = ({ navigation, route }: MenuClanScreenProps<SetupMem
 					/>
 				</Pressable>
 				{!isEditRoleMode ? (
-					<Text style={styles.title}>{t('setupMember.title')}</Text>
+					<Text style={styles.title} {...testProperties('setupMembers.title')}>
+						{t('setupMember.title')}
+					</Text>
 				) : (
-					<View style={styles.roleName}>
-						<Text style={styles.name}>{clanRole?.title}</Text>
-						<Text style={styles.emptyText}>{t('roleDetail.role')}</Text>
+					<View style={styles.roleName} {...testProperties('setupMembers.roleName', true)}>
+						<Text style={styles.name} {...testProperties('setupMembers.roleName.title')}>{clanRole?.title}</Text>
+						<Text style={styles.emptyText} {...testProperties('setupMembers.roleName.subtitle')}>{t('roleDetail.role')}</Text>
 					</View>
 				)}
 			</View>
-			<View style={styles.container}>
-				<View style={styles.addMember}>
+			<View style={styles.container} {...testProperties('setupMembers.wrapper', true)}>
+				<View style={styles.addMember} {...testProperties('setupMembers.addMember', true)}>
 					{!isEditRoleMode && (
-						<View style={styles.addMemberTitle}>
-							<Text style={styles.addMemberText}>{t('setupMember.addMember')}</Text>
-							<Text style={styles.addMemberDescription}>{t('setupMember.description')}</Text>
+						<View style={styles.addMemberTitle} {...testProperties('setupMembers.addMemberTitle', true)}>
+							<Text style={styles.addMemberText} {...testProperties('setupMembers.addMemberTitle.text')}>
+								{t('setupMember.addMember')}
+							</Text>
+							<Text style={styles.addMemberDescription} {...testProperties('setupMembers.addMemberTitle.description')}>
+								{t('setupMember.description')}
+							</Text>
 						</View>
 					)}
 
-					<MezonInput value={searchMemberText} onTextChange={setSearchMemberText} placeHolder={t('setupMember.searchMembers')} />
+					<MezonInput value={searchMemberText} onTextChange={setSearchMemberText} placeHolder={t('setupMember.searchMembers')} {...testProperties('setupMembers.searchInput')} />
 
 					{isEditRoleMode && (
-						<TouchableOpacity onPress={openAddMemberBottomSheet}>
+						<TouchableOpacity onPress={openAddMemberBottomSheet} {...testProperties('setupMembers.openAddMemberBS.btn')}>
 							<View style={styles.addMemberButton}>
 								<MezonIconCDN icon={IconCDN.circlePlusPrimaryIcon} />
-								<View style={styles.flex}>
-									<Text style={styles.text}>{t('setupMember.addMember')}</Text>
+								<View style={styles.flex} {...testProperties('setupMembers.openAddMemberBS.textWrapper', true)}>
+									<Text style={styles.text} {...testProperties('setupMembers.openAddMemberBS.text')}>{t('setupMember.addMember')}</Text>
 								</View>
 								<MezonIconCDN icon={IconCDN.chevronSmallRightIcon} />
 							</View>
 						</TouchableOpacity>
 					)}
-					<View style={styles.memberList}>
+					<View style={styles.memberList} {...testProperties('setupMembers.memberList', true)}>
 						{filteredMemberList.length ? (
-							<View style={styles.listWrapper}>
+							<View style={styles.listWrapper} {...testProperties('setupMembers.memberList.wrapper', true)}>
 								<FlatList
 									data={filteredMemberList}
 									keyExtractor={(item) => item?.id}
@@ -203,24 +211,24 @@ export const SetupMembers = ({ navigation, route }: MenuClanScreenProps<SetupMem
 								/>
 							</View>
 						) : (
-							<View>
-								<Text style={styles.emptyText}>{t('setupMember.noMembersFound')}</Text>
+							<View {...testProperties('setupMembers.memberList.empty', true)}>
+								<Text style={styles.emptyText} {...testProperties('setupMembers.memberList.empty.text')}>{t('setupMember.noMembersFound')}</Text>
 							</View>
 						)}
 					</View>
 				</View>
 
 				{!isEditRoleMode ? (
-					<View style={styles.bottomButton}>
-						<TouchableOpacity onPress={() => updateMemberToRole()}>
+					<View style={styles.bottomButton} {...testProperties('setupMembers.bottom', true)}>
+						<TouchableOpacity onPress={() => updateMemberToRole()} {...testProperties('setupMembers.finishBtn')}>
 							<View style={styles.finishButton}>
-								<Text style={styles.buttonText}>{t('setupMember.finish')}</Text>
+								<Text style={styles.buttonText} {...testProperties('setupMembers.finishBtn.text')}>{t('setupMember.finish')}</Text>
 							</View>
 						</TouchableOpacity>
 
-						<TouchableOpacity onPress={() => navigation.navigate(APP_SCREEN.MENU_CLAN.ROLE_SETTING)}>
+						<TouchableOpacity onPress={() => navigation.navigate(APP_SCREEN.MENU_CLAN.ROLE_SETTING)} {...testProperties('setupMembers.skipBtn')}>
 							<View style={styles.cancelButton}>
-								<Text style={styles.buttonText}>{t('skipStep')}</Text>
+								<Text style={styles.buttonText} {...testProperties('setupMembers.skipBtn.text')}>{t('skipStep')}</Text>
 							</View>
 						</TouchableOpacity>
 					</View>

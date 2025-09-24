@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Dimensions, Pressable, Text, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { FlatList } from 'react-native-gesture-handler';
+import { testProperties } from '../../../../../../configs/testProperties';
 import MezonIconCDN from '../../../../../../../../src/app/componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../../../../../src/app/constants/icon_cdn';
 import { combineMessageReactions } from '../../../../../../utils/helpers';
@@ -95,6 +96,7 @@ export const MessageReactionContent = memo((props: IMessageReactionContentProps)
 	const getTabHeader = () => {
 		return (
 			<FlatList
+				{...testProperties('messageReactionContent.tabList', true)}
 				onContentSizeChange={handleContentSizeChange}
 				horizontal
 				scrollEnabled={isScrollable}
@@ -106,6 +108,7 @@ export const MessageReactionContent = memo((props: IMessageReactionContentProps)
 				windowSize={2}
 				renderItem={({ item }) => (
 					<Pressable
+						{...testProperties(`messageReactionContent.tab.${item.emojiId}`)}
 						onPress={() => selectEmoji(item.emojiId)}
 						style={[styles.tabHeaderItem, selectedTabId === item.emojiId && styles.activeTab]}
 					>
@@ -125,18 +128,22 @@ export const MessageReactionContent = memo((props: IMessageReactionContentProps)
 
 	const getContent = () => {
 		return (
-			<View style={styles.contentWrapper}>
+			<View style={styles.contentWrapper} {...testProperties('messageReactionContent.content', true)}>
 				<View style={styles.removeEmojiContainer}>
 					<Text style={styles.emojiText}>{currentEmojiSelected?.emoji}</Text>
 					{isExistingMyEmoji ? (
 						<View>
 							{showConfirmDeleteEmoji ? (
-								<Pressable style={styles.confirmDeleteEmoji} onPress={() => onRemoveEmoji()}>
+								<Pressable
+									style={styles.confirmDeleteEmoji}
+									onPress={() => onRemoveEmoji()}
+									{...testProperties('messageReactionContent.removeEmojiConfirmBtn')}
+								>
 									<MezonIconCDN icon={IconCDN.trashIcon} width={size.s_20} height={size.s_20} />
 									<Text style={styles.confirmText}>{t('reactions.removeActions')}</Text>
 								</Pressable>
 							) : (
-								<Pressable onPress={() => setShowConfirmDeleteEmoji(true)}>
+								<Pressable onPress={() => setShowConfirmDeleteEmoji(true)} {...testProperties('messageReactionContent.removeEmojiBtn')}>
 									<MezonIconCDN icon={IconCDN.trashIcon} width={size.s_20} height={size.s_20} />
 								</Pressable>
 							)}
@@ -147,7 +154,11 @@ export const MessageReactionContent = memo((props: IMessageReactionContentProps)
 					data={dataSenderEmojis}
 					renderItem={({ item, index }: { item: { sender_id: string; count: number }; index: number }) => {
 						return (
-							<View key={`${index}_${item.sender_id}_allReactionDataOnOneMessage`} style={{ marginBottom: size.s_10 }}>
+							<View
+								key={`${index}_${item.sender_id}_allReactionDataOnOneMessage`}
+								style={{ marginBottom: size.s_10 }}
+								{...testProperties(`MessageReactionContent.ReactionMemberItem_${item.sender_id}`)}
+							>
 								<ReactionMember
 									userId={item.sender_id}
 									channelId={channelId}
@@ -170,12 +181,16 @@ export const MessageReactionContent = memo((props: IMessageReactionContentProps)
 		);
 	};
 	return (
-		<BottomSheetScrollView stickyHeaderIndices={[0]}>
-			{!!allReactionDataOnOneMessage?.length && <View style={styles.contentHeader}>{getTabHeader()}</View>}
+		<BottomSheetScrollView stickyHeaderIndices={[0]} {...testProperties('MessageReactionContent', true)}>
+			{!!allReactionDataOnOneMessage?.length && (
+				<View style={styles.contentHeader} {...testProperties('MessageReactionContent.Header', true)}>
+					{getTabHeader()}
+				</View>
+			)}
 			{allReactionDataOnOneMessage?.length ? (
 				<View>{getContent()}</View>
 			) : (
-				<View style={styles.noActionsWrapper}>
+				<View style={styles.noActionsWrapper} {...testProperties('MessageReactionContent.Empty', true)}>
 					<Text style={styles.noActionTitle}>{t('reactions.noActionTitle')}</Text>
 					<Text style={styles.noActionContent}>{t('reactions.noActionDescription')}</Text>
 				</View>

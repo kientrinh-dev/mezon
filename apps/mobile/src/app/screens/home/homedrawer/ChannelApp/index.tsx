@@ -4,6 +4,7 @@ import { getAuthState } from '@mezon/store-mobile';
 import { sleep } from '@mezon/utils';
 import { useEffect, useMemo, useState } from 'react';
 import { Dimensions, Modal, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { testProperties } from '../../../../configs/testProperties';
 import { Wave } from 'react-native-animated-spinkit';
 import { useSelector } from 'react-redux';
 import MezonIconCDN from '../../../../componentUI/MezonIconCDN';
@@ -159,14 +160,15 @@ const ChannelAppScreen = ({ navigation, route }: { navigation: any; route: any }
 						backgroundColor: themeValue.primary,
 						flex: 1
 					}}
+					{...testProperties('channelApp.loadingOverlay', true)}
 				>
 					<Wave color={themeValue.text} />
-					<Text style={styles.textLoading}>Loading data, please wait a moment!</Text>
+					<Text style={styles.textLoading} {...testProperties('channelApp.loadingOverlay.text')}>Loading data, please wait a moment!</Text>
 				</View>
 			)}
-			<TouchableOpacity onPress={onClose} style={styles.backButton}>
+			<TouchableOpacity onPress={onClose} style={styles.backButton} {...testProperties('channelApp.close')}>
 				<MezonIconCDN icon={IconCDN.closeSmallBold} height={size.s_16} width={size.s_16} />
-				<Text style={styles.buttonText}>Close</Text>
+				<Text style={styles.buttonText} {...testProperties('channelApp.close.text')}>Close</Text>
 			</TouchableOpacity>
 			<WebviewBase
 				url={uri}

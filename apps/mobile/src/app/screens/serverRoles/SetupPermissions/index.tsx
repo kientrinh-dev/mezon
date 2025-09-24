@@ -17,6 +17,7 @@ import { IconCDN } from '../../../constants/icon_cdn';
 import { APP_SCREEN, MenuClanScreenProps } from '../../../navigation/ScreenTypes';
 import { isEqualStringArrayUnordered, normalizeString } from '../../../utils/helpers';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 type SetupPermissionsScreen = typeof APP_SCREEN.MENU_CLAN.SETUP_PERMISSIONS;
 export const SetupPermissions = ({ navigation, route }: MenuClanScreenProps<SetupPermissionsScreen>) => {
@@ -192,9 +193,10 @@ export const SetupPermissions = ({ navigation, route }: MenuClanScreenProps<Setu
 			behavior={'padding'}
 			keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight + 5}
 			style={styles.flex}
+			{...testProperties('setupPermissions.container', true)}
 		>
 			<StatusBarHeight />
-			<View style={styles.header}>
+			<View style={styles.header} {...testProperties('setupPermissions.header', true)}>
 				<Pressable style={styles.backButton} onPress={handleClose}>
 					<MezonIconCDN
 						icon={isEditRoleMode ? IconCDN.arrowLargeLeftIcon : IconCDN.closeSmallBold}
@@ -204,34 +206,41 @@ export const SetupPermissions = ({ navigation, route }: MenuClanScreenProps<Setu
 					/>
 				</Pressable>
 				{!isEditRoleMode ? (
-					<Text style={styles.title}>{t('setupPermission.title')}</Text>
+					<Text style={styles.title} {...testProperties('setupPermissions.title')}>
+						{t('setupPermission.title')}
+					</Text>
 				) : (
-					<View style={styles.roleName}>
-						<Text style={styles.name}>{clanRole?.title}</Text>
-						<Text style={styles.emptyText}>{t('roleDetail.role')}</Text>
+					<View style={styles.roleName} {...testProperties('setupPermissions.roleName', true)}>
+						<Text style={styles.name} {...testProperties('setupPermissions.roleName.title')}>{clanRole?.title}</Text>
+						<Text style={styles.emptyText} {...testProperties('setupPermissions.roleName.subtitle')}>{t('roleDetail.role')}</Text>
 					</View>
 				)}
 				{!isEditRoleMode || (isEditRoleMode && isNotChange) ? null : (
-					<TouchableOpacity onPress={handleEditPermissions}>
+					<TouchableOpacity onPress={handleEditPermissions} {...testProperties('setupPermissions.saveBtn')}>
 						<View style={styles.saveButton}>
-							<Text style={styles.saveText}>{t('roleDetail.save')}</Text>
+							<Text style={styles.saveText} {...testProperties('setupPermissions.saveBtn.text')}>
+								{t('roleDetail.save')}
+							</Text>
 						</View>
 					</TouchableOpacity>
 				)}
 			</View>
-			<View style={styles.wrapper}>
+			<View style={styles.wrapper} {...testProperties('setupPermissions.wrapper', true)}>
 				<View style={styles.flex}>
-					<View style={styles.permissionTitle}>
-						<Text style={styles.text}>{t('setupPermission.setupPermissionTitle')}</Text>
+					<View style={styles.permissionTitle} {...testProperties('setupPermissions.permissionTitle', true)}>
+						<Text style={styles.text} {...testProperties('setupPermissions.permissionTitle.text')}>
+							{t('setupPermission.setupPermissionTitle')}
+						</Text>
 					</View>
 
 					<MezonInput
 						value={searchPermissionText}
 						onTextChange={setSearchPermissionText}
 						placeHolder={t('setupPermission.searchPermission')}
+						{...testProperties('setupPermissions.searchInput')}
 					/>
 
-					<View style={styles.permissionPanel}>
+					<View style={styles.permissionPanel} {...testProperties('setupPermissions.permissionPanel', true)}>
 						<View style={{ borderRadius: size.s_10, overflow: 'hidden' }}>
 							<FlatList
 								data={filteredPermissionList}
@@ -245,8 +254,9 @@ export const SetupPermissions = ({ navigation, route }: MenuClanScreenProps<Setu
 										<TouchableOpacity
 											onPress={() => onSelectPermissionChange(!selectedPermissions?.includes(item?.id), item?.id)}
 											disabled={item?.disabled}
+											{...testProperties(`setupPermissions.permissionItem.btn.${item.id}`)}
 										>
-											<View style={styles.permissionItem}>
+											<View style={styles.permissionItem} {...testProperties(`setupPermissions.permissionItem.container.${item.id}`)}>
 												<View style={styles.flex}>
 													<Text
 														style={{
@@ -258,7 +268,7 @@ export const SetupPermissions = ({ navigation, route }: MenuClanScreenProps<Setu
 													<Text style={styles.permissionDescription}>{getPermissionDescription(item?.slug)}</Text>
 												</View>
 
-												<View style={styles.switchContainer}>
+												<View style={styles.switchContainer} {...testProperties(`setupPermissions.permissionItem.switchContainer.${item.id}`)}>
 													<MezonSwitch
 														value={selectedPermissions?.includes(item?.id)}
 														onValueChange={(isSelect) => onSelectPermissionChange(isSelect, item?.id)}
@@ -275,16 +285,16 @@ export const SetupPermissions = ({ navigation, route }: MenuClanScreenProps<Setu
 				</View>
 
 				{!isEditRoleMode ? (
-					<View style={styles.bottomButton}>
-						<TouchableOpacity onPress={() => handleNextStep()}>
+					<View style={styles.bottomButton} {...testProperties('setupPermissions.bottom', true)}>
+						<TouchableOpacity onPress={() => handleNextStep()} {...testProperties('setupPermissions.nextBtn')}>
 							<View style={styles.finishButton}>
-								<Text style={styles.buttonText}>{t('setupPermission.next')}</Text>
+								<Text style={styles.buttonText} {...testProperties('setupPermissions.nextBtn.text')}>{t('setupPermission.next')}</Text>
 							</View>
 						</TouchableOpacity>
 
-						<TouchableOpacity onPress={() => navigation.navigate(APP_SCREEN.MENU_CLAN.SETUP_ROLE_MEMBERS)}>
+						<TouchableOpacity onPress={() => navigation.navigate(APP_SCREEN.MENU_CLAN.SETUP_ROLE_MEMBERS)} {...testProperties('setupPermissions.skipBtn')}>
 							<View style={styles.cancelButton}>
-								<Text style={styles.buttonText}>{t('skipStep')}</Text>
+								<Text style={styles.buttonText} {...testProperties('setupPermissions.skipBtn.text')}>{t('skipStep')}</Text>
 							</View>
 						</TouchableOpacity>
 					</View>

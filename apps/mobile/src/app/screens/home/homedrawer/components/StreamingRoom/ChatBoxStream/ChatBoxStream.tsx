@@ -13,6 +13,7 @@ import ChannelMessages from '../../../ChannelMessages';
 import { ChatBox } from '../../../ChatBox';
 import PanelKeyboard from '../../../PanelKeyboard';
 import { style } from './styles';
+import { testProperties } from '../../../../../../configs/testProperties';
 type ChatBoxStreamScreen = typeof APP_SCREEN.MESSAGES.STACK;
 
 const ChatBoxStream = ({ navigation }: AppStackScreenProps<ChatBoxStreamScreen>) => {
@@ -32,15 +33,17 @@ const ChatBoxStream = ({ navigation }: AppStackScreenProps<ChatBoxStreamScreen>)
 			style={styles.channelView}
 			behavior={'padding'}
 			keyboardVerticalOffset={Platform.OS === 'ios' ? 85 : StatusBar.currentHeight + 40}
+			{...testProperties('chatStream.screen', true)}
 		>
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
 				end={{ x: 0, y: 0 }}
 				colors={[themeValue.primary, themeValue?.primaryGradiant || themeValue.primary]}
 				style={[StyleSheet.absoluteFillObject]}
+				{...testProperties('chatStream.gradient', true)}
 			/>
 			<PanGestureHandler failOffsetY={[-5, 5]} onHandlerStateChange={onHandlerStateChange}>
-				<View style={{ flex: 1 }}>
+				<View style={{ flex: 1 }} {...testProperties('chatStream.content', true)}>
 					<ChannelMessages
 						channelId={currentChannel?.channel_id}
 						clanId={currentChannel?.clan_id}

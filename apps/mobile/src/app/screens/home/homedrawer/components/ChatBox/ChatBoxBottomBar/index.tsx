@@ -57,6 +57,7 @@ import { ChatMessageLeftArea } from '../ChatMessageLeftArea';
 import { ChatMessageSending } from '../ChatMessageSending';
 import { ChatBoxTyping } from './ChatBoxTyping';
 import { style } from './style';
+import { testProperties } from '../../../../../../configs/testProperties';
 import useProcessedContent from './useProcessedContent';
 
 export const triggersConfig: TriggersConfig<'mention' | 'hashtag' | 'emoji' | 'slash'> = {
@@ -796,6 +797,7 @@ export const ChatBoxBottomBar = memo(
 								onPressIn={handlePressIn}
 								onPressOut={handlePressOut}
 								contextMenuHidden={isShowOptionPaste}
+								{...testProperties('chat.input')}
 							/>
 							<View style={styles.iconEmoji}>
 								<EmojiSwitcher onChange={handleKeyboardBottomSheetMode} mode={modeKeyBoardBottomSheet} />

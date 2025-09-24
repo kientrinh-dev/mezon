@@ -11,6 +11,7 @@ import { Alert, DeviceEventEmitter, Linking, PermissionsAndroid, Platform, Text,
 import { launchImageLibrary } from 'react-native-image-picker';
 import Toast from 'react-native-toast-message';
 import { useDispatch } from 'react-redux';
+import { testProperties } from '../../../../../configs/testProperties';
 import MezonIconCDN from '../../../../../componentUI/MezonIconCDN';
 import { IFile } from '../../../../../componentUI/MezonImagePicker';
 import ShareLocationConfirmModal from '../../../../../components/ShareLocationConfirmModal';
@@ -279,19 +280,34 @@ function AttachmentPicker({ mode, currentChannelId, currentClanId, onCancel }: A
 	}, [handleSelectedAttachments]);
 
 	return (
-		<View style={styles.container}>
-			<View style={styles.wrapperHeader}>
-				<TouchableOpacity activeOpacity={0.8} style={styles.buttonHeader} onPress={() => handleLinkGoogleMap()}>
+		<View style={styles.container} {...testProperties('AttachmentPicker.Container', true)}>
+			<View style={styles.wrapperHeader} {...testProperties('AttachmentPicker.Header', true)}>
+				<TouchableOpacity
+					activeOpacity={0.8}
+					style={styles.buttonHeader}
+					onPress={() => handleLinkGoogleMap()}
+					{...testProperties('AttachmentPicker.BtnLocation')}
+				>
 					<MezonIconCDN icon={IconCDN.locationIcon} height={20} width={20} color={themeValue.text} />
 					<Text style={styles.titleButtonHeader}>{t('message:actions.location')}</Text>
 				</TouchableOpacity>
-				<TouchableOpacity activeOpacity={0.8} style={styles.buttonAlbum} onPress={() => handleShowAllAlbums()}>
+				<TouchableOpacity
+					activeOpacity={0.8}
+					style={styles.buttonAlbum}
+					onPress={() => handleShowAllAlbums()}
+					{...testProperties('AttachmentPicker.BtnAllAlbums')}
+				>
 					<View style={styles.albumButtonGroup}>
 						<Text style={styles.albumTitle}>{t('message:actions.allAlbums')}</Text>
 						<MezonIconCDN icon={IconCDN.chevronSmallRightIcon} color={themeValue.textStrong} height={size.s_16} width={size.s_16} />
 					</View>
 				</TouchableOpacity>
-				<TouchableOpacity activeOpacity={0.8} onPress={onPickFiles} style={styles.buttonHeader}>
+				<TouchableOpacity
+					activeOpacity={0.8}
+					onPress={onPickFiles}
+					style={styles.buttonHeader}
+					{...testProperties('AttachmentPicker.BtnFiles')}
+				>
 					<MezonIconCDN icon={IconCDN.attachmentIcon} height={20} width={20} color={themeValue.text} />
 					<Text style={styles.titleButtonHeader}>{t('message:actions.files')}</Text>
 				</TouchableOpacity>

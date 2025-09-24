@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, TouchableOpacity, View } from 'react-native';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 export const RoleColorPicker = function RoleColorPicker({ onPickColor }: { onPickColor: (color: string) => void }) {
 	const [colorSelected, setColorSelected] = useState<string>('');
@@ -47,12 +48,12 @@ export const RoleColorPicker = function RoleColorPicker({ onPickColor }: { onPic
 		dismiss();
 	};
 	return (
-		<View style={{ paddingHorizontal: size.s_20 }}>
+		<View style={{ paddingHorizontal: size.s_20 }} {...testProperties('roleColorPicker.container', true)}>
 			<View style={{ width: '100%', flexDirection: 'row', marginBottom: size.s_20 }}>
 				<View style={{ width: size.s_60 }} />
-				<Text style={styles.title}>{t('roleColorPicker.titleBS')}</Text>
-				<TouchableOpacity onPress={handleSaveColor} style={styles.headerRightBtn}>
-					<Text style={styles.textBtn}>{t('roleColorPicker.save')}</Text>
+				<Text style={styles.title} {...testProperties('roleColorPicker.title')}>{t('roleColorPicker.titleBS')}</Text>
+				<TouchableOpacity onPress={handleSaveColor} style={styles.headerRightBtn} {...testProperties('roleColorPicker.saveBtn')}>
+					<Text style={styles.textBtn} {...testProperties('roleColorPicker.saveBtn.text')}>{t('roleColorPicker.save')}</Text>
 				</TouchableOpacity>
 			</View>
 			<View
@@ -65,9 +66,10 @@ export const RoleColorPicker = function RoleColorPicker({ onPickColor }: { onPic
 					justifyContent: 'center',
 					gap: size.s_20
 				}}
+				{...testProperties('roleColorPicker.palette', true)}
 			>
 				{colorArray?.map((color) => (
-					<Pressable onPress={() => handlePickColor(color)}>
+					<Pressable onPress={() => handlePickColor(color)} {...testProperties(`roleColorPicker.color.${color}`)}>
 						<View
 							style={{
 								alignItems: 'center',
@@ -83,9 +85,9 @@ export const RoleColorPicker = function RoleColorPicker({ onPickColor }: { onPic
 					</Pressable>
 				))}
 			</View>
-			<View style={{ width: '100%', alignItems: 'center', marginVertical: size.s_20 }}>
-				<TouchableOpacity onPress={handleResetColor} style={styles.footerBtn}>
-					<Text style={styles.textBtn}>{t('roleColorPicker.reset')}</Text>
+			<View style={{ width: '100%', alignItems: 'center', marginVertical: size.s_20 }} {...testProperties('roleColorPicker.footer', true)}>
+				<TouchableOpacity onPress={handleResetColor} style={styles.footerBtn} {...testProperties('roleColorPicker.resetBtn')}>
+					<Text style={styles.textBtn} {...testProperties('roleColorPicker.resetBtn.text')}>{t('roleColorPicker.reset')}</Text>
 				</TouchableOpacity>
 			</View>
 		</View>

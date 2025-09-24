@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { Platform, Text, TextInput, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { useSelector } from 'react-redux';
+import { testProperties } from '../../../../../configs/testProperties';
 import MezonIconCDN from '../../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../../constants/icon_cdn';
 import { EMessageActionType } from '../../enums';
@@ -38,14 +39,16 @@ interface TextTabProps {
 	selected?: boolean;
 	title: string;
 	onPress: () => void;
+	testId: string;
 }
-function TextTab({ selected, title, onPress }: TextTabProps) {
+function TextTab({ selected, title, onPress, testId }: TextTabProps) {
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
 	return (
 		<View style={{ flex: 1, height: size.s_30 }}>
 			<Pressable
 				onPress={onPress}
+				{...testProperties(testId)}
 				style={{
 					backgroundColor: selected ? themeValue.bgViolet : 'transparent',
 					...styles.selected,
@@ -175,12 +178,12 @@ function EmojiPicker({ onDone, bottomSheetRef, directMessageId = '', messageActi
 	}, [stickerMode]);
 
 	return (
-		<View style={styles.container}>
+		<View style={styles.container} {...testProperties('EmojiPicker.Container', true)}>
 			<View>
 				<View style={styles.tabContainer}>
-					<TextTab title={t('tab.emoji')} selected={mode === 'emoji'} onPress={() => setMode('emoji')} />
-					<TextTab title={t('tab.gif')} selected={mode === 'gif'} onPress={() => setMode('gif')} />
-					<TextTab title={t('tab.sticker')} selected={mode === 'sticker'} onPress={() => setMode('sticker')} />
+					<TextTab testId={'emojiPicker.tab.emoji'} title={t('tab.emoji')} selected={mode === 'emoji'} onPress={() => setMode('emoji')} />
+					<TextTab testId={'emojiPicker.tab.gif'} title={t('tab.gif')} selected={mode === 'gif'} onPress={() => setMode('gif')} />
+					<TextTab testId={'emojiPicker.tab.sticker'} title={t('tab.sticker')} selected={mode === 'sticker'} onPress={() => setMode('sticker')} />
 				</View>
 
 				{mode !== 'emoji' && (
@@ -205,6 +208,7 @@ function EmojiPicker({ onDone, bottomSheetRef, directMessageId = '', messageActi
 								style={styles.textInput}
 								onFocus={handleInputSearchFocus}
 								onChangeText={debouncedSetSearchText}
+								{...testProperties('emojiPicker.searchInput')}
 							/>
 						</View>
 
@@ -219,6 +223,7 @@ function EmojiPicker({ onDone, bottomSheetRef, directMessageId = '', messageActi
 									setValueInputSearch('');
 									changeStickerMode();
 								}}
+								{...testProperties('emojiPicker.toggleStickerMode')}
 							>
 								<MezonIconCDN icon={IconCDN.channelVoice} height={20} width={20} color={themeValue.text} />
 							</Pressable>

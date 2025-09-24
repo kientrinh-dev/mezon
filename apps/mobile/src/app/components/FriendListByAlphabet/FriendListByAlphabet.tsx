@@ -7,6 +7,7 @@ import { SeparatorWithLine, SeparatorWithSpace } from '../Common';
 import { FriendItem } from '../FriendItem';
 import { style } from './styles';
 import { IFriendGroupByCharacter, IListUserByAlphabetProps } from './type';
+import { testProperties } from '../../configs/testProperties';
 
 export const FriendListByAlphabet = React.memo((props: IListUserByAlphabetProps) => {
 	const { themeValue } = useTheme();
@@ -98,7 +99,7 @@ export const FriendListByAlphabet = React.memo((props: IListUserByAlphabetProps)
 		);
 	};
 	return (
-		<View style={styles.listUserByAlphabetContainer}>
+		<View style={styles.listUserByAlphabetContainer} {...testProperties('friends.listByAlphabet.root', true)}>
 			{isSearching ? (
 				<View style={{ flex: 1 }}>
 					{friendList?.length ? <Text style={styles.friendText}>{t('friends:friends')}</Text> : null}

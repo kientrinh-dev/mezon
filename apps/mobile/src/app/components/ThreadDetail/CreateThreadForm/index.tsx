@@ -40,6 +40,7 @@ import { checkNotificationPermissionMiddleware } from '../../../utils/notificati
 import StatusBarHeight from '../../StatusBarHeight/StatusBarHeight';
 import { style } from './CreateThreadForm.style';
 import HeaderLeftThreadForm from './HeaderLeftThreadForm';
+import { testProperties } from '../../../configs/testProperties';
 
 type CreateThreadFormScreen = typeof APP_SCREEN.MENU_THREAD.CREATE_THREAD_FORM_MODAL;
 
@@ -218,11 +219,13 @@ export default function CreateThreadForm({ navigation, route }: MenuThreadScreen
 
 	return (
 		<KeyboardAvoidingView
+			{...testProperties('threadDetail.createThreadForm', true)}
 			style={styles.createChannelContent}
 			behavior={'padding'}
 			keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight + 5}
 		>
 			<LinearGradient
+				{...testProperties('threadDetail.createThreadFormOverlay', true)}
 				start={{ x: 1, y: 0 }}
 				end={{ x: 0, y: 0 }}
 				colors={[themeValue.primary, themeValue?.primaryGradiant || themeValue.primary]}

@@ -2,6 +2,7 @@ import { ITabList } from '@mezon/mobile-components';
 import { baseColor, size, useTheme } from '@mezon/mobile-ui';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { testProperties } from '../../../../../configs/testProperties';
 interface IHeaderTabSearchProps {
 	onPress: (index: number) => void;
 	tabList: ITabList[];
@@ -20,7 +21,12 @@ const HeaderTabSearch = ({ onPress, tabList, activeTab }: IHeaderTabSearchProps)
 			}}
 		>
 			{tabList?.map((tab: ITabList, index: number) => (
-				<Pressable key={`tab_search_${index.toString()}`} onPress={() => onPress(tab?.index)} style={{ width: '33.33%' }}>
+				<Pressable
+					key={`tab_search_${index.toString()}`}
+					onPress={() => onPress(tab?.index)}
+					style={{ width: '33.33%' }}
+					{...testProperties(`searchMessageChannel.tab.${tab?.index}`)}
+				>
 					<View
 						style={{
 							paddingBottom: size.s_10,

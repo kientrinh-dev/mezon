@@ -10,6 +10,7 @@ import { ChatMessageWrapper } from '../ChatMessageWrapper';
 import { DirectMessageDetailListener } from './DirectMessageDetailListener';
 import HeaderDirectMessage from './HeaderDirectMessage';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 export const DirectMessageDetailScreen = ({ route }: { route: any }) => {
 	const { themeValue } = useTheme();
@@ -33,7 +34,7 @@ export const DirectMessageDetailScreen = ({ route }: { route: any }) => {
 	}, [currentDmGroup?.type]);
 
 	return (
-		<View style={{ flex: 1 }}>
+		<View style={{ flex: 1 }} {...testProperties('dmDetail.screen', true)}>
 			<StatusBarHeight />
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
@@ -44,7 +45,13 @@ export const DirectMessageDetailScreen = ({ route }: { route: any }) => {
 			<DirectMessageDetailListener dmType={dmType} directMessageId={directMessageId} />
 			<HeaderDirectMessage from={from} styles={styles} themeValue={themeValue} directMessageId={directMessageId} />
 			{directMessageId && (
-				<ChatMessageWrapper directMessageId={directMessageId} isModeDM={Number(dmType) === ChannelType.CHANNEL_TYPE_DM} currentClanId={'0'} />
+				<View style={{ flex: 1 }} {...testProperties('dmDetail.chatArea', true)}>
+					<ChatMessageWrapper
+						directMessageId={directMessageId}
+						isModeDM={Number(dmType) === ChannelType.CHANNEL_TYPE_DM}
+						currentClanId={'0'}
+					/>
+				</View>
 			)}
 		</View>
 	);

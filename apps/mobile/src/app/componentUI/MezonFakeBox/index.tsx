@@ -2,6 +2,7 @@ import { useTheme } from '@mezon/mobile-ui';
 import { ReactNode } from 'react';
 import { StyleProp, Text, TextStyle, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 export interface IMezonFakeBoxProps {
 	title?: string;
@@ -28,13 +29,13 @@ export default function MezonFakeInputBox({
 	const styles = style(themeValue);
 
 	return (
-		<View>
-			{title && <Text style={[styles.sectionTitle, titleUppercase ? styles.titleUppercase : {}, titleStyle]}>{title}</Text>}
+		<View {...testProperties('mezonFakeBox.container')}>
+			{title && <Text style={[styles.sectionTitle, titleUppercase ? styles.titleUppercase : {}, titleStyle]} {...testProperties('mezonFakeBox.sectionTitle')}>{title}</Text>}
 
-			<TouchableOpacity onPress={onPress}>
-				<View style={[styles.box, containerStyle]}>
+			<TouchableOpacity onPress={onPress} {...testProperties('mezonFakeBox.fakeInputBox')}>
+				<View style={[styles.box, containerStyle]} {...testProperties('mezonFakeBox.box')}>
 					{prefixIcon}
-					<Text style={styles.textBox}>{value}</Text>
+					<Text style={styles.textBox} {...testProperties('mezonFakeBox.textBox')}>{value}</Text>
 					{postfixIcon}
 				</View>
 			</TouchableOpacity>

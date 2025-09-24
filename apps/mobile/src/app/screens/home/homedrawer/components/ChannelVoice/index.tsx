@@ -12,6 +12,7 @@ import { useSoundReactions } from '../../../../../hooks/useSoundReactions';
 import { CallReactionHandler } from './CallReactionHandler';
 import HeaderRoomView from './HeaderRoomView';
 import RoomView from './RoomView';
+import { testProperties } from '../../../../../configs/testProperties';
 const { CustomAudioModule, KeepAwake, KeepAwakeIOS, AudioSessionModule, PipModule } = NativeModules;
 
 // Audio output types
@@ -242,7 +243,7 @@ function ChannelVoice({
 	}
 
 	return (
-		<View>
+		<View {...testProperties('channelVoice.root', true)}>
 			{isAnimationComplete && !focusedScreenShare && !isPiPMode && <StatusBarHeight />}
 			<View
 				style={[
@@ -257,6 +258,7 @@ function ChannelVoice({
 						overflow: 'hidden'
 					}
 				]}
+				{...testProperties('channelVoice.container', true)}
 			>
 				<LinearGradient
 					start={{ x: 1, y: 0 }}

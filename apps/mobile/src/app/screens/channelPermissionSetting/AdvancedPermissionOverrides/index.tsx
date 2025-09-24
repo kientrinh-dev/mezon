@@ -15,6 +15,7 @@ import { APP_SCREEN, MenuChannelScreenProps } from '../../../navigation/ScreenTy
 import { PermissionItem } from '../components/PermissionItem';
 import { EOverridePermissionType, EPermissionStatus, ERequestStatus } from '../types/channelPermission.enum';
 import { IPermissionSetting } from '../types/channelPermission.type';
+import { testProperties } from '../../../configs/testProperties';
 
 type AdvancedPermissionOverrides = typeof APP_SCREEN.MENU_CHANNEL.ADVANCED_PERMISSION_OVERRIDES;
 export const AdvancedPermissionOverrides = ({ navigation, route }: MenuChannelScreenProps<AdvancedPermissionOverrides>) => {
@@ -195,7 +196,7 @@ export const AdvancedPermissionOverrides = ({ navigation, route }: MenuChannelSc
 	}, [channelId, dispatch, id, type, isOverrideRole]);
 
 	return (
-		<View style={{ flex: 1, backgroundColor: themeValue.primary, paddingHorizontal: size.s_18, gap: size.s_18 }}>
+		<View style={{ flex: 1, backgroundColor: themeValue.primary, paddingHorizontal: size.s_18, gap: size.s_18 }} {...testProperties('channelPermission.overrides.screen', true)}>
 			<Text
 				style={{
 					color: themeValue.textDisabled
@@ -205,7 +206,7 @@ export const AdvancedPermissionOverrides = ({ navigation, route }: MenuChannelSc
 			</Text>
 
 			<ScrollView>
-				<View style={{ gap: size.s_28 }}>
+				<View style={{ gap: size.s_28 }} {...testProperties('channelPermission.overrides.list', true)}>
 					{channelPermissionList?.map((permission) => {
 						return (
 							<PermissionItem
@@ -213,6 +214,7 @@ export const AdvancedPermissionOverrides = ({ navigation, route }: MenuChannelSc
 								permission={permission}
 								status={currentChannelPermissionValues?.[permission?.id]}
 								onPermissionStatusChange={onPermissionStatusChange}
+								{...testProperties(`channelPermission.overrides.item.${permission?.id}`)}
 							/>
 						);
 					})}

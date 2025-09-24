@@ -6,6 +6,7 @@ import { FlatList, Pressable, Text, View } from 'react-native';
 import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../constants/icon_cdn';
 import { styles } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 export const LanguageSetting = () => {
 	const currentLanguage = useAppSelector(selectCurrentLanguage);
@@ -37,17 +38,18 @@ export const LanguageSetting = () => {
 	};
 
 	return (
-		<View style={themeStyles.languageSettingContainer}>
+		<View style={themeStyles.languageSettingContainer} {...testProperties('settings.language.screen', true)}>
 			<FlatList
 				data={languageList}
 				keyExtractor={(item) => item.value}
 				ItemSeparatorComponent={() => <View style={{ height: 1 }} />}
 				renderItem={({ item }) => (
-					<Pressable onPress={() => changeLanguage(item.value)} style={[themeStyles.languageItem]}>
-						<Text style={themeStyles.optionText}>{item.title}</Text>
-						{currentLanguage === item.value ? <MezonIconCDN icon={IconCDN.checkmarkSmallIcon} color={themeValue.bgViolet} /> : null}
+					<Pressable onPress={() => changeLanguage(item.value)} style={[themeStyles.languageItem]} {...testProperties(`settings.language.item.${item.value}`)}>
+						<Text style={themeStyles.optionText} {...testProperties(`settings.language.item.${item.value}.title`)}>{item.title}</Text>
+						{currentLanguage === item.value ? <MezonIconCDN icon={IconCDN.checkmarkSmallIcon} color={themeValue.bgViolet} {...testProperties('settings.language.item.selectedIcon')} /> : null}
 					</Pressable>
 				)}
+				{...testProperties('settings.language.list', true)}
 			/>
 		</View>
 	);

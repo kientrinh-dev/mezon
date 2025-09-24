@@ -5,6 +5,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 import { DeviceEventEmitter, StyleProp, Text, View, ViewStyle } from 'react-native';
 import MezonFakeInputBox, { IMezonFakeBoxProps } from '../MezonFakeBox';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 type IMezonDateTimePicker = Omit<IMezonFakeBoxProps, 'onPress' | 'postfixIcon' | 'value'> & {
 	mode?: 'datetime' | 'date' | 'time';
@@ -87,15 +88,15 @@ export default memo(function MezonDateTimePicker({
 		};
 
 		return (
-			<View>
+			<View {...testProperties('mezonDateTimePicker.containerBottomSheet')}>
 				{error && (
-					<View style={styles.wrapperError}>
-						<Text style={styles.textError}>{error}</Text>
-						<Text style={styles.textError}>{formatDate(new Date())}</Text>
+					<View style={styles.wrapperError} {...testProperties('mezonDateTimePicker.wrapperError')}>
+						<Text style={styles.textError} {...testProperties('mezonDateTimePicker.textError')}>{error}</Text>
+						<Text style={styles.textError} {...testProperties('mezonDateTimePicker.textError.formatDate')}>{formatDate(new Date())}</Text>
 					</View>
 				)}
 				{show && (
-					<View style={styles.bsContainer}>
+					<View style={styles.bsContainer} {...testProperties('mezonDateTimePicker.bsContainerBottomSheet')}>
 						<DateTimePicker
 							{...(need24HourFormat && isModeTime ? need24HourFormat : {})}
 							{...(needLocale && isModeTime ? needLocale : {})}
@@ -147,12 +148,13 @@ export default memo(function MezonDateTimePicker({
 	};
 
 	return (
-		<View>
+		<View {...testProperties('mezonDateTimePicker.container')}>
 			<MezonFakeInputBox
 				{...props}
 				value={formatCurrentDateTime(currentDate, isModeTime, need24HourFormat)}
 				containerStyle={containerStyle}
 				onPress={handlePress}
+				{...testProperties('mezonDateTimePicker.fakeInputBox')}
 			/>
 			<ContentBottomSheet />
 		</View>

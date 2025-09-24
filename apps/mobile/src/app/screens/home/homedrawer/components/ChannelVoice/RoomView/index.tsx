@@ -26,6 +26,7 @@ import ControlBottomBar from '../ControlBottomBar';
 import FocusedScreenPopup from '../FocusedScreenPopup';
 import ParticipantScreen from '../ParticipantScreen';
 import { style } from '../styles';
+import { testProperties } from '../../../../../../configs/testProperties';
 
 const RoomViewListener = memo(
 	({
@@ -173,7 +174,7 @@ const RoomView = ({
 					</ResumableZoom>
 				</View>
 				{!isPiPMode && (
-					<View style={[styles.wrapperHeaderFocusSharing]}>
+					<View style={[styles.wrapperHeaderFocusSharing]} {...testProperties('channelVoice.focusedScreenControls', true)}>
 						<TouchableOpacity style={[styles.focusIcon]} onPress={() => handleOpenEmojiPicker()}>
 							<MezonIconCDN icon={IconCDN.reactionIcon} height={size.s_16} width={size.s_24} color={themeValue.white} />
 						</TouchableOpacity>

@@ -3,13 +3,14 @@ import React from 'react';
 
 import { size, useTheme } from '@mezon/mobile-ui';
 import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import ForwardMessageScreen from '../../../screens/home/homedrawer/components/ForwardMessage';
 import { ChatBoxStreamComponent } from '../../../screens/home/homedrawer/components/StreamingRoom/ChatBoxStream';
 import TopicDiscussion from '../../../screens/home/homedrawer/components/TopicDiscussion/TopicDiscussion';
 import { NewGroupScreen } from '../../../screens/messages/NewGroup';
 import { NewMessageScreen } from '../../../screens/messages/NewMessage';
 import { APP_SCREEN } from '../../ScreenTypes';
+import { testProperties } from '../../../configs/testProperties';
 const Stack = createStackNavigator();
 
 // eslint-disable-next-line no-empty-pattern
@@ -17,7 +18,8 @@ export const MessagesStacks = ({}: any) => {
 	const { themeValue } = useTheme();
 	const { t } = useTranslation('screen');
 	return (
-		<Stack.Navigator
+		<View style={{ flex: 1 }} {...testProperties('messages.stack', true)}>
+			<Stack.Navigator
 			screenOptions={{
 				headerShown: true,
 				headerShadowVisible: true,
@@ -38,7 +40,7 @@ export const MessagesStacks = ({}: any) => {
 				headerLeftLabelVisible: false,
 				animationEnabled: Platform.OS === 'ios'
 			}}
-		>
+			>
 			{/*<Stack.Screen*/}
 			{/*	name={APP_SCREEN.MESSAGES.MESSAGE_DETAIL}*/}
 			{/*	component={DirectMessageDetailScreen}*/}
@@ -91,6 +93,7 @@ export const MessagesStacks = ({}: any) => {
 				}}
 			/>
 			<Stack.Screen name={APP_SCREEN.MESSAGES.FORWARD_MESSAGE} component={ForwardMessageScreen} options={{ headerShown: false }} />
-		</Stack.Navigator>
+			</Stack.Navigator>
+		</View>
 	);
 };

@@ -6,6 +6,7 @@ import { TouchableOpacity } from 'react-native';
 import MezonIconCDN from '../../../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../../../constants/icon_cdn';
 import { style } from '../styles';
+import { testProperties } from '../../../../../../configs/testProperties';
 
 const SwitchCamera = memo(() => {
 	const { themeValue } = useTheme();
@@ -38,7 +39,7 @@ const SwitchCamera = memo(() => {
 	if (!isCameraEnabled) return null;
 
 	return (
-		<TouchableOpacity onPress={() => handleSwitchCamera()} style={[styles.buttonCircle]}>
+		<TouchableOpacity onPress={() => handleSwitchCamera()} style={[styles.buttonCircle]} {...testProperties('channelVoice.header.switchCamera', true)}>
 			<MezonIconCDN icon={IconCDN.cameraFront} height={size.s_24} width={size.s_24} color={themeValue.white} />
 		</TouchableOpacity>
 	);

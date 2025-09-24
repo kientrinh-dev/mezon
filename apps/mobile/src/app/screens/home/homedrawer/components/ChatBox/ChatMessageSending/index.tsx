@@ -44,6 +44,7 @@ import { EMessageActionType } from '../../../enums';
 import { IMessageActionNeedToResolve, IPayloadThreadSendMessage } from '../../../types';
 import { style } from '../ChatBoxBottomBar/style';
 import { BaseRecordAudioMessage } from '../RecordAudioMessage';
+import { testProperties } from '../../../../../../configs/testProperties';
 
 interface IChatMessageSendingProps {
 	isAvailableSending: boolean;
@@ -345,11 +346,12 @@ export const ChatMessageSending = memo(
 						}}
 						onPress={handleSendMessage}
 						style={[styles.btnIcon, styles.iconSend]}
+						{...testProperties('chat.sendButton', true)}
 					>
 						<MezonIconCDN icon={IconCDN.sendMessageIcon} width={size.s_18} height={size.s_18} color={baseColor.white} />
 					</Pressable>
 				) : (
-					<Pressable onLongPress={startRecording} style={[styles.btnIcon, styles.iconVoice]}>
+					<Pressable onLongPress={startRecording} style={[styles.btnIcon, styles.iconVoice]} {...testProperties('chat.voiceButton', true)}>
 						<MezonIconCDN icon={IconCDN.microphoneIcon} width={size.s_18} height={size.s_18} color={themeValue.textStrong} />
 					</Pressable>
 				)}

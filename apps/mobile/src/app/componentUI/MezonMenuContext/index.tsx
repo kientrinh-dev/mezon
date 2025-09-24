@@ -4,6 +4,7 @@ import { Pressable, View } from 'react-native';
 import Tooltip from 'react-native-walkthrough-tooltip';
 import MezonMenuContextItem, { IMezonMenuContextItemProps } from './MezonMenuContextItem';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 interface IMezonMenuContext {
 	icon: ReactNode;
@@ -27,7 +28,7 @@ export default function MezonMenuContext({ icon, headerTitle, menu }: IMezonMenu
 			disableShadow={true}
 			closeOnContentInteraction={true}
 			content={
-				<View>
+				<View {...testProperties('mezonMenuContext.content')}>
 					{!!headerTitle && <MezonMenuContextItem isHeader title={headerTitle} disabled />}
 					{menu.map((item, index) => (
 						<MezonMenuContextItem
@@ -44,7 +45,7 @@ export default function MezonMenuContext({ icon, headerTitle, menu }: IMezonMenu
 			placement="bottom"
 			onClose={() => setVisible(false)}
 		>
-			<Pressable onPress={() => setVisible(true)}>{icon}</Pressable>
+			<Pressable onPress={() => setVisible(true)} {...testProperties('mezonMenuContext.icon')}>{icon}</Pressable>
 		</Tooltip>
 	);
 }

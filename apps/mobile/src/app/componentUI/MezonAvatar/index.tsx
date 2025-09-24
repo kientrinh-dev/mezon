@@ -5,6 +5,7 @@ import { Text, View, ViewStyle } from 'react-native';
 import { UserStatus } from '../../components/UserStatus';
 import MezonClanAvatar from '../MezonClanAvatar';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 interface IMezonAvatarProps {
 	avatarUrl: string;
@@ -47,18 +48,18 @@ const MezonAvatar = React.memo((props: IMezonAvatarProps) => {
 
 	if (stacks) {
 		return (
-			<View style={styles.listImageFriend}>
+			<View style={styles.listImageFriend} {...testProperties('mezonAvatar.listImageFriend', true)}>
 				{stacks.map((user, idx) => {
 					return (
-						<View key={idx} style={[styles.imageContainer, styles.borderBoxImage, { height, width }, { left: idx * 20 }]}>
+						<View key={idx} style={[styles.imageContainer, styles.borderBoxImage, { height, width }, { left: idx * 20 }]} {...testProperties(`mezonAvatar.item.${idx}`)}>
 							<MezonClanAvatar alt={user.username} image={user.avatarUrl} lightMode />
 						</View>
 					);
 				})}
 
 				{isCountBadge && (
-					<View style={[styles.imageContainer, styles.borderBoxImage, { height, width }, { left: 3 * 20 }]}>
-						<View style={styles.countBadge}>
+					<View style={[styles.imageContainer, styles.borderBoxImage, { height, width }, { left: 3 * 20 }]} {...testProperties('mezonAvatar.countBadge')}>
+						<View style={styles.countBadge} {...testProperties('mezonAvatar.countBadge')}>
 							<Text style={styles.countBadgeText}>+{countBadge}</Text>
 						</View>
 					</View>
@@ -68,12 +69,12 @@ const MezonAvatar = React.memo((props: IMezonAvatarProps) => {
 	}
 
 	return (
-		<View style={[styles.containerItem, { height, width }]}>
-			<View style={[styles.boxImage, { height, width }, isBorderBoxImage && styles.borderBoxImage]}>
+		<View style={[styles.containerItem, { height, width }]} {...testProperties('mezonAvatar.container', true)}>
+			<View style={[styles.boxImage, { height, width }, isBorderBoxImage && styles.borderBoxImage]} {...testProperties('mezonAvatar.boxImage', true)}>
 				<MezonClanAvatar alt={username} image={avatarUrl} isMsgReply={isMsgReply} lightMode />
 			</View>
 
-			{!!userStatus && <UserStatus status={userStatus} customStyles={statusUserStyles} customStatus={customStatus} />}
+			{!!userStatus && <UserStatus status={userStatus} customStyles={statusUserStyles} customStatus={customStatus} {...testProperties('mezonAvatar.userStatus')} />}
 		</View>
 	);
 });

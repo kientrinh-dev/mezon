@@ -3,6 +3,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import MessagesScreenRender from './MessagesScreenRender';
+import { View } from 'react-native';
+import { testProperties } from '../../configs/testProperties';
 
 const MessagesScreen = () => {
 	const dmGroupChatList = useSelector(selectDirectsOpenlistOrder);
@@ -13,7 +15,11 @@ const MessagesScreen = () => {
 			dispatch(acitvitiesActions.listActivities({ noCache: true }));
 		}, [dispatch])
 	);
-	return <MessagesScreenRender chatList={JSON.stringify(dmGroupChatList)} />;
+	return (
+		<View {...testProperties('messages', true)}>
+			<MessagesScreenRender chatList={JSON.stringify(dmGroupChatList)} />
+		</View>
+	);
 };
 
 export default MessagesScreen;

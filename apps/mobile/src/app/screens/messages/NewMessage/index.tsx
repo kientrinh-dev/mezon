@@ -5,6 +5,7 @@ import { User } from 'mezon-js';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { testProperties } from '../../../configs/testProperties';
 import { useThrottledCallback } from 'use-debounce';
 import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import { SeparatorWithLine } from '../../../components/Common';
@@ -112,9 +113,11 @@ export const NewMessageScreen = ({ navigation }: { navigation: any }) => {
 	const typingSearchDebounce = useThrottledCallback((text) => setSearchText(text), 500);
 
 	return (
-		<View style={styles.newMessageContainer}>
-			<View style={styles.searchFriend}>
-				<Text style={styles.defaultText}>{t('message:newMessage.to')}: </Text>
+		<View style={styles.newMessageContainer} {...testProperties('newMessage.screen', true)}>
+			<View style={styles.searchFriend} {...testProperties('newMessage.search', true)}>
+				<Text style={styles.defaultText} {...testProperties('newMessage.search.toLabel')}>
+					{t('message:newMessage.to')}: 
+				</Text>
 				<TextInput
 					ref={inputRef}
 					placeholder={t('common:searchPlaceHolder')}
@@ -122,23 +125,28 @@ export const NewMessageScreen = ({ navigation }: { navigation: any }) => {
 					style={styles.searchInput}
 					onChangeText={(text) => typingSearchDebounce(text)}
 					autoFocus
+					{...testProperties('newMessage.search.input')}
 				/>
 			</View>
 
-			<View style={styles.actionsWrapper}>
-				<TouchableOpacity onPress={() => navigateToNewGroupScreen()} style={styles.actionItem}>
-					<View style={[styles.actionIconWrapper, styles.bgNewGroupIcon]}>
+			<View style={styles.actionsWrapper} {...testProperties('newMessage.actions', true)}>
+				<TouchableOpacity onPress={() => navigateToNewGroupScreen()} style={styles.actionItem} {...testProperties('newMessage.actions.newGroup')}>
+					<View style={[styles.actionIconWrapper, styles.bgNewGroupIcon]} {...testProperties('newMessage.actions.newGroup.icon')}>
 						<MezonIconCDN icon={IconCDN.userGroupIcon} />
 					</View>
-					<Text style={styles.actionTitle}>{t('message:newMessage.newGroup')}</Text>
+					<Text style={styles.actionTitle} {...testProperties('newMessage.actions.newGroup.text')}>
+						{t('message:newMessage.newGroup')}
+					</Text>
 					<MezonIconCDN icon={IconCDN.chevronSmallRightIcon} height={15} width={15} color={themeValue.text} />
 				</TouchableOpacity>
 				<SeparatorWithLine />
-				<TouchableOpacity onPress={() => navigateToAddFriendScreen()} style={styles.actionItem}>
-					<View style={[styles.actionIconWrapper, styles.bgAddFriendIcon]}>
+				<TouchableOpacity onPress={() => navigateToAddFriendScreen()} style={styles.actionItem} {...testProperties('newMessage.actions.addFriend')}>
+					<View style={[styles.actionIconWrapper, styles.bgAddFriendIcon]} {...testProperties('newMessage.actions.addFriend.icon')}>
 						<MezonIconCDN icon={IconCDN.userIcon} />
 					</View>
-					<Text style={styles.actionTitle}>{t('message:newMessage.addFriend')}</Text>
+					<Text style={styles.actionTitle} {...testProperties('newMessage.actions.addFriend.text')}>
+						{t('message:newMessage.addFriend')}
+					</Text>
 					<MezonIconCDN icon={IconCDN.chevronSmallRightIcon} height={15} width={15} color={themeValue.text} />
 				</TouchableOpacity>
 			</View>
@@ -148,9 +156,18 @@ export const NewMessageScreen = ({ navigation }: { navigation: any }) => {
 				friendList={filteredFriendList}
 				handleFriendAction={handleFriendAction}
 				showAction={false}
+				{...testProperties('newMessage.friendList')}
 			/>
 
-			{selectedUser && <UserInformationBottomSheet user={selectedUser} onClose={onClose} showAction={false} showRole={false} />}
+			{selectedUser && (
+				<UserInformationBottomSheet
+					user={selectedUser}
+					onClose={onClose}
+					showAction={false}
+					showRole={false}
+					{...testProperties('newMessage.bottomSheet')}
+				/>
+			)}
 		</View>
 	);
 };

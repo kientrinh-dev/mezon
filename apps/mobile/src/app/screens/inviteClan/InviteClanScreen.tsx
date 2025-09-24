@@ -13,6 +13,7 @@ import { IconCDN } from '../../constants/icon_cdn';
 import useCheckClanLimit from '../../hooks/useCheckClanLimit';
 import { APP_SCREEN } from '../../navigation/ScreenTypes';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 const InviteClanScreen = ({ route }: { route: any }) => {
 	const code = route?.params?.code;
@@ -74,42 +75,46 @@ const InviteClanScreen = ({ route }: { route: any }) => {
 		navigation.navigate(APP_SCREEN.BOTTOM_BAR);
 	};
 	return (
-		<View style={styles.container}>
-			<View style={styles.inviteContainer}>
-				<Text style={styles.inviteTitle}>{t('title')}</Text>
+		<View style={styles.container} {...testProperties('inviteClan_screen', true)}>
+			<View style={styles.inviteContainer} {...testProperties('inviteClan_inviteContainer', true)}>
+				<Text style={styles.inviteTitle} {...testProperties('inviteClan_title')}>{t('title')}</Text>
 
 				{selectInvite && (
-					<View style={styles.clanInfo}>
+					<View style={styles.clanInfo} {...testProperties('inviteClan_clanInfo', true)}>
 						{selectInvite?.clan_logo ? (
-							<View style={styles.clanAvatar}>
+							<View style={styles.clanAvatar} {...testProperties('inviteClan_clanAvatar', true)}>
 								<ImageNative style={styles.clanAvatar} resizeMode={'contain'} url={selectInvite.clan_logo} />
 							</View>
 						) : (
-							<View style={styles.defaultAvatar}>
-								<Text style={styles.defaultAvatarText}>{selectInvite?.clan_name?.charAt(0)?.toUpperCase()}</Text>
+							<View style={styles.defaultAvatar} {...testProperties('inviteClan_defaultAvatar', true)}>
+								<Text style={styles.defaultAvatarText} {...testProperties('inviteClan_defaultAvatarText')}>
+									{selectInvite?.clan_name?.charAt(0)?.toUpperCase()}
+								</Text>
 							</View>
 						)}
 
-						<View style={styles.clanNameRow}>
-							<Text style={styles.clanName} numberOfLines={1}>
+						<View style={styles.clanNameRow} {...testProperties('inviteClan_clanNameRow', true)}>
+							<Text style={styles.clanName} numberOfLines={1} {...testProperties('inviteClan_clanName')}>
 								{selectInvite?.clan_name}
 							</Text>
 							{selectInvite?.clan_name && (
-								<MezonIconCDN icon={IconCDN.verifyIcon} width={size.s_16} height={size.s_16} color={themeValue.textStrong} />
+								<View {...testProperties('inviteClan_verifyIcon')}>
+									<MezonIconCDN icon={IconCDN.verifyIcon} width={size.s_16} height={size.s_16} color={themeValue.textStrong} />
+								</View>
 							)}
 						</View>
 						{selectInvite?.channel_label && (
-							<Text style={styles.channelName} numberOfLines={1}>
+							<Text style={styles.channelName} numberOfLines={1} {...testProperties('inviteClan_channelName')}>
 								# {selectInvite?.channel_label}
 							</Text>
 						)}
 					</View>
 				)}
 
-				<TouchableOpacity style={styles.joinButton} onPress={handleJoinClanInvite} activeOpacity={0.8}>
+				<TouchableOpacity style={styles.joinButton} onPress={handleJoinClanInvite} activeOpacity={0.8} {...testProperties('inviteClan_joinButton')}>
 					<Text style={styles.joinButtonText}>{t('join')}</Text>
 				</TouchableOpacity>
-				<TouchableOpacity style={[styles.joinButton, styles.disMissButton]} onPress={onDismiss} activeOpacity={0.8}>
+				<TouchableOpacity style={[styles.joinButton, styles.disMissButton]} onPress={onDismiss} activeOpacity={0.8} {...testProperties('inviteClan_dismissButton')}>
 					<Text style={styles.joinButtonText}>{t('noThanks')}</Text>
 				</TouchableOpacity>
 			</View>

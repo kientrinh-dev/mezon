@@ -10,6 +10,7 @@ import { EFriendItemAction, FriendItem } from '../../../components/FriendItem';
 import { UserInformationBottomSheet } from '../../../components/UserInformationBottomSheet';
 import { EmptyFriendRequest } from './EmptyFriendRequest';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 export enum EFriendRequest {
 	Received,
@@ -70,7 +71,7 @@ export const RequestFriendScreen = () => {
 	}, [selectedTab]);
 
 	return (
-		<View style={styles.requestFriendContainer}>
+		<View style={styles.requestFriendContainer} {...testProperties('friends.request.root', true)}>
 			<View style={styles.toggleWrapper}>
 				{friendRequestTabs.map((tab) => {
 					return (
@@ -78,6 +79,7 @@ export const RequestFriendScreen = () => {
 							key={tab.type}
 							onPress={() => setSelectedTab(tab.type)}
 							style={[styles.tab, selectedTab === tab.type && styles.activeTab]}
+							{...testProperties(`friends.request.tab.${tab.type === EFriendRequest.Received ? 'received' : 'sent'}`)}
 						>
 							<Text style={[styles.tabTitle, selectedTab === tab.type && styles.activeTabTitle]}>{tab.title}</Text>
 						</Pressable>

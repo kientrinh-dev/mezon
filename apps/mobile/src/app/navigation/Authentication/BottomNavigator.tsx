@@ -5,6 +5,7 @@ import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 import MezonIconCDN from '../../componentUI/MezonIconCDN';
+import { testProperties } from '../../configs/testProperties';
 import { IconCDN } from '../../constants/icon_cdn';
 import useTabletLandscape from '../../hooks/useTabletLandscape';
 import Notifications from '../../screens/Notifications';
@@ -51,6 +52,7 @@ const BottomNavigator = memo(({ isLastActiveTabDm = false }: { isLastActiveTabDm
 					tabBarLabelStyle: { fontWeight: '600', top: -size.s_2 },
 					tabBarIcon: ({ color }) => <MezonIconCDN icon={IconCDN.homeIcon} color={color} width={size.s_22} height={size.s_22} />
 				}}
+				{...testProperties('bottomTab.home', true)}
 			/>
 			<TabStack.Screen
 				name={APP_SCREEN.MESSAGES.HOME}
@@ -61,6 +63,7 @@ const BottomNavigator = memo(({ isLastActiveTabDm = false }: { isLastActiveTabDm
 					tabBarLabelStyle: { fontWeight: '600', top: -size.s_2 },
 					tabBarIcon: ({ color }) => <MezonIconCDN icon={IconCDN.chatIcon} color={color} width={size.s_22} height={size.s_22} />
 				}}
+				{...testProperties('bottomTab.messages', true)}
 			/>
 			<TabStack.Screen
 				name={APP_SCREEN.NOTIFICATION.HOME}
@@ -71,6 +74,7 @@ const BottomNavigator = memo(({ isLastActiveTabDm = false }: { isLastActiveTabDm
 					tabBarLabelStyle: { fontWeight: '600', top: -size.s_2 },
 					tabBarIcon: ({ color }) => <MezonIconCDN icon={IconCDN.bellIcon} color={color} width={size.s_22} height={size.s_22} />
 				}}
+				{...testProperties('bottomTab.notifications', true)}
 			/>
 			<TabStack.Screen
 				name={APP_SCREEN.PROFILE.HOME}
@@ -81,6 +85,7 @@ const BottomNavigator = memo(({ isLastActiveTabDm = false }: { isLastActiveTabDm
 					tabBarLabelStyle: { fontWeight: '600', top: -size.s_2 },
 					tabBarIcon: ({ color }) => <MezonIconCDN icon={IconCDN.userIcon} color={color} width={size.s_22} height={size.s_22} />
 				}}
+				{...testProperties('bottomTab.profile', true)}
 			/>
 		</TabStack.Navigator>
 	);

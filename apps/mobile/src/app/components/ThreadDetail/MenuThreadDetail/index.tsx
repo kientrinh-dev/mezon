@@ -10,6 +10,7 @@ import StatusBarHeight from '../../StatusBarHeight/StatusBarHeight';
 import { ActionRow } from '../ActionRow';
 import { AssetsViewer } from '../AssetViewer';
 import { ThreadHeader } from '../ThreadHeader';
+import { testProperties } from '../../../configs/testProperties';
 
 export const threadDetailContext = createContext<IChannel | DirectEntity>(null);
 
@@ -28,7 +29,7 @@ export default function MenuThreadDetail(props: { route: any }) {
 
 	return (
 		<threadDetailContext.Provider value={channel}>
-			<View style={{ flex: 1, backgroundColor: themeValue.secondary }}>
+			<View {...testProperties('threadDetail.menuThreadDetailScreen', true)} style={{ flex: 1, backgroundColor: themeValue.secondary }}>
 				<StatusBarHeight />
 				<View style={styles.container}>
 					<ThreadHeader />

@@ -2,9 +2,10 @@ import { CardStyleInterpolators, createStackNavigator, TransitionSpecs } from '@
 import React from 'react';
 
 import { size, useTheme } from '@mezon/mobile-ui';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import UpdateGateScreen from '../../../screens/updateGate/UpdateGateScreen';
 import { APP_SCREEN } from '../../ScreenTypes';
+import { testProperties } from '../../../configs/testProperties';
 
 // eslint-disable-next-line no-empty-pattern
 export const ServersStacks = ({}: any) => {
@@ -12,7 +13,8 @@ export const ServersStacks = ({}: any) => {
 	const { themeValue } = useTheme();
 
 	return (
-		<Stack.Navigator
+		<View style={{ flex: 1 }} {...testProperties('servers.stack', true)}>
+			<Stack.Navigator
 			screenOptions={{
 				headerShown: false,
 				headerShadowVisible: false,
@@ -36,7 +38,7 @@ export const ServersStacks = ({}: any) => {
 				animationEnabled: Platform.OS === 'ios'
 			}}
 			initialRouteName={APP_SCREEN.SERVERS.HOME}
-		>
+			>
 			<Stack.Screen
 				name={APP_SCREEN.SERVERS.UPDATE_GATE}
 				component={UpdateGateScreen}
@@ -45,6 +47,7 @@ export const ServersStacks = ({}: any) => {
 					headerShown: false
 				}}
 			/>
-		</Stack.Navigator>
+			</Stack.Navigator>
+		</View>
 	);
 };

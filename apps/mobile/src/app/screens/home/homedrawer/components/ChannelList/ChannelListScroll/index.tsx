@@ -1,6 +1,7 @@
 import { ActionEmitEvent } from '@mezon/mobile-components';
 import React, { memo, useCallback, useEffect } from 'react';
 import { DeviceEventEmitter, View } from 'react-native';
+import { testProperties } from '../../../../../../configs/testProperties';
 
 interface IProps {
 	flashListRef: any;
@@ -33,7 +34,7 @@ const ChannelListScroll = ({ flashListRef, data }: IProps) => {
 		};
 	}, [handleScrollToChannel]);
 
-	return <View />;
+    return <View {...testProperties('channelList.scroll', true)} />;
 };
 
 export default memo(ChannelListScroll);

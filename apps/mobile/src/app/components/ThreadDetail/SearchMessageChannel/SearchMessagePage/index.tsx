@@ -21,6 +21,7 @@ import { EmptySearchPage } from '../../../EmptySearchPage';
 import MembersSearchTab from '../../../MembersSearchTab/MembersSearchTab';
 import MessagesSearchTab from '../../../MessagesSearchTab';
 import HeaderTabSearch from './HeaderTabSearch';
+import { testProperties } from '../../../../configs/testProperties';
 
 interface ISearchMessagePageProps {
 	currentChannel: IChannel | DirectEntity;
@@ -184,7 +185,7 @@ function SearchMessagePage({ searchText, currentChannel, userMention, typeSearch
 	};
 
 	return (
-		<View style={{ flex: 1 }}>
+		<View style={{ flex: 1 }} {...testProperties('searchMessageChannel.messagePage', true)}>
 			<HeaderTabSearch tabList={TabList} activeTab={activeTab} onPress={handelHeaderTabChange} />
 			<View style={{ flex: 1 }}>{isContentReady ? renderContent() : null}</View>
 		</View>

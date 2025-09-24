@@ -17,6 +17,7 @@ import { APP_SCREEN, MenuClanScreenProps } from '../../../navigation/ScreenTypes
 import RoleCoLourComponent from '../RoleCoLourComponent/RoleCoLourComponent';
 import RoleImagePicker from '../RoleImagePicker';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 enum EActionType {
 	permissions,
@@ -187,21 +188,22 @@ export const RoleDetail = ({ navigation, route }: MenuClanScreenProps<RoleDetail
 
 	return (
 		<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-			<View style={styles.container}>
-				<View style={styles.nameInput}>
+			<View style={styles.container} {...testProperties('roleDetail.container', true)}>
+				<View style={styles.nameInput} {...testProperties('roleDetail.nameInput', true)}>
 					<MezonInput
 						value={currentRoleName}
 						onTextChange={setCurrentRoleName}
 						placeHolder={t('roleDetail.roleName')}
 						label={t('roleDetail.roleName')}
 						disabled={!isCanEditRole || isEveryoneRole}
+						{...testProperties('roleDetail.roleNameInput')}
 					/>
 				</View>
 
-				<View style={styles.wrapper}>
+				<View style={styles.wrapper} {...testProperties('roleDetail.wrapper', true)}>
 					<RoleCoLourComponent roleId={roleId} disable={!isCanEditRole} />
 					<RoleImagePicker roleId={roleId} disable={!isCanEditRole} />
-					<View style={styles.actionList}>
+					<View style={styles.actionList} {...testProperties('roleDetail.actionList', true)}>
 						<FlatList
 							data={actionList}
 							scrollEnabled
@@ -213,8 +215,8 @@ export const RoleDetail = ({ navigation, route }: MenuClanScreenProps<RoleDetail
 							windowSize={2}
 							renderItem={({ item }) => {
 								return (
-									<TouchableOpacity onPress={() => handleAction(item.type)} disabled={!item?.isView}>
-										<View style={styles.actionItem}>
+									<TouchableOpacity onPress={() => handleAction(item.type)} disabled={!item?.isView} {...testProperties(`roleDetail.actionItem.btn.${item.type}`)}>
+										<View style={styles.actionItem} {...testProperties(`roleDetail.actionItem.container.${item.type}`)}>
 											<View style={styles.actionTitleHeader}>
 												<Text
 													style={{
@@ -243,11 +245,13 @@ export const RoleDetail = ({ navigation, route }: MenuClanScreenProps<RoleDetail
 					</View>
 
 					{isCanEditRole && !isEveryoneRole && (
-						<View style={{ marginVertical: size.s_10 }}>
-							<TouchableOpacity onPress={() => deleteRole()}>
+						<View style={{ marginVertical: size.s_10 }} {...testProperties('roleDetail.deleteWrapper', true)}>
+							<TouchableOpacity onPress={() => deleteRole()} {...testProperties('roleDetail.deleteBtn')}>
 								<View style={styles.deleteButton}>
 									<View style={styles.flex}>
-										<Text style={styles.deleteText}>{t('roleDetail.deleteRole')}</Text>
+										<Text style={styles.deleteText} {...testProperties('roleDetail.deleteBtn.text')}>
+											{t('roleDetail.deleteRole')}
+										</Text>
 									</View>
 								</View>
 							</TouchableOpacity>

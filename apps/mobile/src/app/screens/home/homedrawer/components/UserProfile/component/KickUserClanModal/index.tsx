@@ -11,6 +11,7 @@ import MezonIconCDN from '../../../../../../../componentUI/MezonIconCDN';
 import MezonInput from '../../../../../../../componentUI/MezonInput';
 import StatusBarHeight from '../../../../../../../components/StatusBarHeight/StatusBarHeight';
 import { IconCDN } from '../../../../../../../constants/icon_cdn';
+import { testProperties } from '../../../../../../../configs/testProperties';
 import { style } from './KickUserClanModal.style';
 
 const KickUserClanModal = ({ user, onRemoveUserClan }: { user: ChannelMembersEntity; onRemoveUserClan: () => void }) => {
@@ -21,7 +22,7 @@ const KickUserClanModal = ({ user, onRemoveUserClan }: { user: ChannelMembersEnt
 	const currentClan = useSelector(selectCurrentClan);
 
 	return (
-		<View style={styles.modalWrapper}>
+		<View style={styles.modalWrapper} {...testProperties('kickUserClanModal', true)}>
 			<StatusBarHeight />
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
@@ -33,6 +34,7 @@ const KickUserClanModal = ({ user, onRemoveUserClan }: { user: ChannelMembersEnt
 				<TouchableOpacity
 					style={styles.leftClose}
 					onPress={() => DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true })}
+					{...testProperties('kickUserClanModal.closeBtn')}
 				>
 					<MezonIconCDN icon={IconCDN.closeIcon} width={size.s_20} height={size.s_20} color={themeValue.text} />
 				</TouchableOpacity>
@@ -50,7 +52,7 @@ const KickUserClanModal = ({ user, onRemoveUserClan }: { user: ChannelMembersEnt
 					<Text style={styles.description}>
 						{t('kickUserClanModal.description', { username: user?.user?.username || user?.['username'] })}
 					</Text>
-					<View style={styles.textAreaBox}>
+					<View style={styles.textAreaBox} {...testProperties('kickUserClanModal.reasonBox', true)}>
 						<MezonInput
 							label={t('kickUserClanModal.reasonKick', { username: user?.user?.username || user?.['username'] })}
 							textarea

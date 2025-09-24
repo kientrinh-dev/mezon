@@ -6,6 +6,7 @@ import { PERMISSIONS, RESULTS, check, request } from 'react-native-permissions';
 import MezonIconCDN from '../../../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../../../constants/icon_cdn';
 import { style } from '../styles';
+import { testProperties } from '../../../../../../configs/testProperties';
 
 const ButtonToggleMic = () => {
 	const { themeValue } = useTheme();
@@ -67,7 +68,7 @@ const ButtonToggleMic = () => {
 		}
 	};
 	return (
-		<TouchableOpacity onPress={handleToggleMicrophone} style={styles.menuIcon}>
+		<TouchableOpacity onPress={handleToggleMicrophone} style={styles.menuIcon} {...testProperties('channelVoice.bottomBar.toggleMic', true)}>
 			<MezonIconCDN icon={isMicrophoneEnabled ? IconCDN.microphoneIcon : IconCDN.microphoneSlashIcon} color={themeValue.textStrong} />
 		</TouchableOpacity>
 	);

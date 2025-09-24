@@ -4,6 +4,7 @@ import { channelsActions, selectAllChannels, selectCurrentClanId, useAppDispatch
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Text, TouchableOpacity, View } from 'react-native';
+import { testProperties } from '../../../../configs/testProperties';
 import { useSelector } from 'react-redux';
 import useTabletLandscape from '../../../../hooks/useTabletLandscape';
 import { style } from './styles';
@@ -29,13 +30,13 @@ const ButtonNewUnread = React.memo(() => {
 			await dispatch(channelsActions.fetchChannels({ clanId: currentClanId, noCache: true, isMobile: true }));
 		};
 		return (
-			<TouchableOpacity onPress={onPressNewUnread} style={styles.buttonBadgeCount}>
+			<TouchableOpacity onPress={onPressNewUnread} style={styles.buttonBadgeCount} {...testProperties('channelList.btnNewUnread')}>
 				<Text style={styles.buttonBadgeCountText}>@{t('btnBadgeCount')}</Text>
 			</TouchableOpacity>
 		);
 	}
 
-	return <View />;
+	return <View {...testProperties('channelList.btnNewUnread.placeholder', true)} />;
 });
 
 export default ButtonNewUnread;

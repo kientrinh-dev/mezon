@@ -2,6 +2,7 @@ import { useTheme } from '@mezon/mobile-ui';
 import { ReactNode } from 'react';
 import { StyleProp, Text, TextStyle, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 export interface IMezonMenuContextItemProps {
 	containerStyle?: StyleProp<ViewStyle>;
@@ -32,9 +33,10 @@ export default function MezonMenuContextItem({
 			onPress={onPress}
 			disabled={disabled}
 			style={[styles.container, hasBorder && styles.border, isHeader && styles.header, containerStyle]}
+			{...testProperties(`mezonMenuContextItem.container.${title}`)}
 		>
 			<View>
-				<Text numberOfLines={1} ellipsizeMode="tail" style={[styles.title, isHeader && styles.textHeader, titleStyle]}>
+				<Text numberOfLines={1} ellipsizeMode="tail" style={[styles.title, isHeader && styles.textHeader, titleStyle]} {...testProperties(`mezonMenuContextItem.title.${title}`)}>
 					{title}
 				</Text>
 				{icon}

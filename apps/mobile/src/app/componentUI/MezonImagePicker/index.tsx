@@ -11,6 +11,7 @@ import Toast from 'react-native-toast-message';
 import { useSelector } from 'react-redux';
 import MezonClanAvatar from '../MezonClanAvatar';
 import { style as _style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 export interface IFile {
 	uri: string;
@@ -213,9 +214,9 @@ export default memo(
 		}));
 
 		return (
-			<TouchableOpacity onPress={handlePress} disabled={disabled}>
+			<TouchableOpacity onPress={handlePress} disabled={disabled} {...testProperties('mezonImagePicker.container')}>
 				<View style={styles.bannerContainer}>
-					<View style={[styles.bannerWrapper, { height, width }, rounded && { borderRadius: 999 }, style]}>
+					<View style={[styles.bannerWrapper, { height, width }, rounded && { borderRadius: 999 }, style]} {...testProperties('mezonImagePicker.bannerWrapper')}>
 						{localValue ? (
 							localValue
 						) : image || !showHelpText ? (
@@ -228,7 +229,7 @@ export default memo(
 								imageWidth={imageWidth}
 							/>
 						) : (
-							<Text style={styles.textPlaceholder}>{t('chooseImage')}</Text>
+							<Text style={styles.textPlaceholder} {...testProperties('mezonImagePicker.textPlaceholder')}>{t('chooseImage')}</Text>
 						)}
 					</View>
 				</View>

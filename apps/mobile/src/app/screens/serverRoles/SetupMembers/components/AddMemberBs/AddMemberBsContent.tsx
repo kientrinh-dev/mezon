@@ -13,6 +13,7 @@ import MezonInput from '../../../../../componentUI/MezonInput';
 import { IconCDN } from '../../../../../constants/icon_cdn';
 import { normalizeString } from '../../../../../utils/helpers';
 import { MemberItem } from '../MemberItem';
+import { testProperties } from '../../../../../configs/testProperties';
 
 interface IAddMemberBsContentProps {
 	memberList?: UsersClanEntity[];
@@ -75,7 +76,7 @@ export const AddMemberBsContent = memo((props: IAddMemberBsContentProps) => {
 	}, [updateRole, role?.clan_id, role?.id, role?.title, role?.color, selectedMemberIdList, onClose, t]);
 
 	return (
-		<View style={{ flex: 1, paddingHorizontal: size.s_15 }}>
+		<View style={{ flex: 1, paddingHorizontal: size.s_15 }} {...testProperties('addMemberBS.content.container', true)}>
 			<View style={{ marginBottom: size.s_14 }}>
 				<Text
 					style={{
@@ -83,6 +84,7 @@ export const AddMemberBsContent = memo((props: IAddMemberBsContentProps) => {
 						textAlign: 'center',
 						color: themeValue.white
 					}}
+					{...testProperties('addMemberBS.content.title')}
 				>
 					{t('setupMember.addMember')}
 				</Text>
@@ -91,18 +93,20 @@ export const AddMemberBsContent = memo((props: IAddMemberBsContentProps) => {
 						textAlign: 'center',
 						color: themeValue.text
 					}}
+					{...testProperties('addMemberBS.content.roleTitle')}
 				>
 					{role?.title}
 				</Text>
 				{selectedMemberIdList?.length ? (
-					<View style={{ position: 'absolute', right: 0 }}>
-						<TouchableOpacity onPress={handleAddMemberToRole} style={{ padding: size.s_6 }}>
+					<View style={{ position: 'absolute', right: 0 }} {...testProperties('addMemberBS.content.addBtnWrapper', true)}>
+						<TouchableOpacity onPress={handleAddMemberToRole} style={{ padding: size.s_6 }} {...testProperties('addMemberBS.content.addBtn')}>
 							<Text
 								style={{
 									fontSize: verticalScale(13),
 									textAlign: 'center',
 									color: themeValue.bgViolet
 								}}
+								{...testProperties('addMemberBS.content.addBtn.text')}
 							>
 								{t('setupMember.add')}
 							</Text>
@@ -110,11 +114,12 @@ export const AddMemberBsContent = memo((props: IAddMemberBsContentProps) => {
 					</View>
 				) : null}
 			</View>
-			<MezonInput onTextChange={debouncedSetSearchText} placeHolder={t('setupMember.searchMembers')} />
+			<MezonInput onTextChange={debouncedSetSearchText} placeHolder={t('setupMember.searchMembers')} {...testProperties('addMemberBS.content.searchInput')} />
 			{filteredMemberList?.length ? (
 				<BottomSheetFlatList
 					data={filteredMemberList}
 					keyExtractor={(item) => item.id}
+					{...testProperties('addMemberBS.content.list', true)}
 					renderItem={({ item }) => {
 						return (
 							<MemberItem
@@ -134,6 +139,7 @@ export const AddMemberBsContent = memo((props: IAddMemberBsContentProps) => {
 							textAlign: 'center',
 							color: themeValue.text
 						}}
+						{...testProperties('addMemberBS.content.emptyText')}
 					>
 						{t('setupMember.noMembersFound')}
 					</Text>

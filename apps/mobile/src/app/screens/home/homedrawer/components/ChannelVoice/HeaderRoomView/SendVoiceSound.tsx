@@ -7,6 +7,7 @@ import MezonIconCDN from '../../../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../../../constants/icon_cdn';
 import ReactionSoundEffect from '../../EmojiPicker/StickerSelector/ReactionSoundEffect';
 import { style } from '../styles';
+import { testProperties } from '../../../../../../configs/testProperties';
 
 type SendVoiceSoundProps = {
 	channelId: string;
@@ -41,7 +42,7 @@ const SendVoiceSound = memo(({ channelId }: SendVoiceSoundProps) => {
 	};
 
 	return (
-		<TouchableOpacity onPress={handleOpenSoundEffect} style={[styles.buttonCircle]}>
+			<TouchableOpacity onPress={handleOpenSoundEffect} style={[styles.buttonCircle]} {...testProperties('channelVoice.header.openSoundEffect', true)}>
 			<MezonIconCDN icon={IconCDN.activityIcon} height={size.s_20} width={size.s_20} color={themeValue.white} />
 		</TouchableOpacity>
 	);

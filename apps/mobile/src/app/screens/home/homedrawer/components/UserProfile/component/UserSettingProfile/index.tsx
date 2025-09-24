@@ -24,6 +24,7 @@ import { IconCDN } from '../../../../../../../constants/icon_cdn';
 import { APP_SCREEN, AppStackScreenProps } from '../../../../../../../navigation/ScreenTypes';
 import { EActionSettingUserProfile, IProfileSetting } from '../../../../../../ManageUserScreen/types';
 import KickUserClanModal from '../KickUserClanModal';
+import { testProperties } from '../../../../../../../configs/testProperties';
 import { style } from './UserSettingProfile.style';
 
 interface IUserSettingProfileProps {
@@ -255,14 +256,18 @@ const UserSettingProfile = ({
 	};
 
 	return (
-		<View>
+		<View {...testProperties('userSettingProfile', true)}>
 			{/* short profile */}
 			{showActionOutside && profileSetting.some((action) => action.isShow) && (
-				<View style={styles.wrapper}>
+				<View style={styles.wrapper} {...testProperties('userSettingProfile.list', true)}>
 					{profileSetting?.map((item, index) => {
 						if (!item?.isShow) return <View key={`empty-${index}`} />;
 						return (
-							<TouchableOpacity onPress={() => item.action(item.value)} key={`${item?.value}_${index}`}>
+							<TouchableOpacity
+								onPress={() => item.action(item.value)}
+								key={`${item?.value}_${index}`}
+								{...testProperties(`userSettingProfile.action.${item.value}`)}
+							>
 								<View style={styles.option}>
 									{item?.icon}
 									<Text

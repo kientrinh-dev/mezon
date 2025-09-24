@@ -15,6 +15,7 @@ import { DirectMessageDetailTablet } from './DirectMessageDetailTablet';
 import { DmListItem } from './DmListItem';
 import MessageHeader from './MessageHeader';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 const MessagesScreenTablet = ({ navigation }: { navigation: any }) => {
 	const { themeValue } = useTheme();
@@ -52,14 +53,14 @@ const MessagesScreenTablet = ({ navigation }: { navigation: any }) => {
 	};
 
 	return (
-		<View style={styles.containerMessages}>
+		<View style={styles.containerMessages} {...testProperties('messages.tablet', true)}>
 			<View style={styles.leftContainer}>
-				<View style={styles.containerMessages}>
+				<View style={styles.containerMessages} {...testProperties('messages.tablet.left', true)}>
 					<View>
 						<ServerList />
 					</View>
 
-					<View style={styles.container}>
+					<View style={styles.container} {...testProperties('messages.tablet.left.content', true)}>
 						<MessageHeader />
 						{clansLoadingStatus === 'loaded' && !dmGroupChatList?.length ? (
 							<UserEmptyMessage
@@ -79,7 +80,7 @@ const MessagesScreenTablet = ({ navigation }: { navigation: any }) => {
 							/>
 						)}
 
-						<Pressable style={styles.addMessage} onPress={() => navigateToNewMessageScreen()}>
+						<Pressable style={styles.addMessage} onPress={() => navigateToNewMessageScreen()} {...testProperties('messages.tablet.newMessage')}>
 							<MezonIconCDN icon={IconCDN.messagePlusIcon} width={size.s_22} height={size.s_22} />
 						</Pressable>
 					</View>
@@ -87,7 +88,7 @@ const MessagesScreenTablet = ({ navigation }: { navigation: any }) => {
 				{isTabletLandscape && <ProfileBar />}
 			</View>
 			<View style={{ height: '100%', width: size.s_4 }} />
-			<View style={styles.containerDetailMessage}>
+			<View style={styles.containerDetailMessage} {...testProperties('messages.tablet.detail', true)}>
 				{currentDmGroupId ? <DirectMessageDetailTablet directMessageId={currentDmGroupId} /> : <FriendsTablet navigation={navigation} />}
 			</View>
 		</View>

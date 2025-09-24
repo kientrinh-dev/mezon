@@ -2,6 +2,7 @@ import { useTheme } from '@mezon/mobile-ui';
 import { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 interface IMezonRadioButton {
 	onChange?: (isCheck: boolean) => void;
@@ -35,18 +36,18 @@ export default function MezonRadioButton({ onChange, checked, noSwitchFalse, dis
 
 	if (type === 'checkbox') {
 		return (
-			<TouchableOpacity onPress={handleToggle} style={styles.container} disabled={disabled}>
-				<View style={[styles.checkboxOuter, isChecked && styles.checkboxOuterChecked]}>
-					{isChecked && <Text style={styles.checkmark}>✓</Text>}
+			<TouchableOpacity onPress={handleToggle} style={styles.container} disabled={disabled} {...testProperties('mezonRadioButton.checkbox')}>
+				<View style={[styles.checkboxOuter, isChecked && styles.checkboxOuterChecked]} {...testProperties('mezonRadioButton.checkboxOuter')}>
+					{isChecked && <Text style={styles.checkmark} {...testProperties('mezonRadioButton.checkmark')}>✓</Text>}
 				</View>
 			</TouchableOpacity>
 		);
 	}
 
 	return (
-		<TouchableOpacity onPress={handleToggle} style={styles.container} disabled={disabled}>
-			<View style={[styles.outer, isChecked && styles.outerChecked]}>
-				<View style={[styles.inner, isChecked && styles.innerChecked]} />
+		<TouchableOpacity onPress={handleToggle} style={styles.container} disabled={disabled} {...testProperties('mezonRadioButton.radio')}>
+			<View style={[styles.outer, isChecked && styles.outerChecked]} {...testProperties('mezonRadioButton.outer')}>
+				<View style={[styles.inner, isChecked && styles.innerChecked]} {...testProperties('mezonRadioButton.inner')} />
 			</View>
 		</TouchableOpacity>
 	);

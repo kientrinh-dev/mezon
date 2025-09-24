@@ -9,6 +9,7 @@ import { APP_SCREEN, MenuChannelScreenProps } from '../../navigation/ScreenTypes
 import { AdvancedView } from './AdvancedView';
 import { BasicView } from './BasicView';
 import { EPermissionSetting } from './types/channelPermission.enum';
+import { testProperties } from '../../configs/testProperties';
 
 type ChannelPermissionSetting = typeof APP_SCREEN.MENU_CHANNEL.CHANNEL_PERMISSION;
 export const ChannelPermissionSetting = ({ navigation, route }: MenuChannelScreenProps<ChannelPermissionSetting>) => {
@@ -62,7 +63,7 @@ export const ChannelPermissionSetting = ({ navigation, route }: MenuChannelScree
 
 				if (isAdvancedEditMode) {
 					return (
-						<TouchableOpacity onPress={() => setIsAdvancedEditMode(false)}>
+						<TouchableOpacity onPress={() => setIsAdvancedEditMode(false)} {...testProperties('channelPermission.header.done')}>
 							<View
 								style={{
 									marginRight: size.s_20
@@ -93,9 +94,9 @@ export const ChannelPermissionSetting = ({ navigation, route }: MenuChannelScree
 				// 	</TouchableOpacity>
 				// );
 			},
-			headerLeft: () => {
+				headerLeft: () => {
 				return (
-					<TouchableOpacity onPress={() => navigation.goBack()}>
+						<TouchableOpacity onPress={() => navigation.goBack()} {...testProperties('channelPermission.header.back')}>
 						<View
 							style={{
 								marginTop: size.s_8,
@@ -111,7 +112,7 @@ export const ChannelPermissionSetting = ({ navigation, route }: MenuChannelScree
 	}, [currentTab, isAdvancedEditMode, navigation, t, themeValue.white]);
 
 	return (
-		<View style={{ flex: 1, backgroundColor: themeValue.primary, paddingHorizontal: size.s_12 }}>
+		<View style={{ flex: 1, backgroundColor: themeValue.primary, paddingHorizontal: size.s_12 }} {...testProperties('channelPermission.screen', true)}>
 			<View
 				style={{
 					backgroundColor: themeValue.tertiary,
@@ -133,6 +134,7 @@ export const ChannelPermissionSetting = ({ navigation, route }: MenuChannelScree
 								borderRadius: size.s_16,
 								backgroundColor: isActive ? themeValue.bgViolet : themeValue.tertiary
 							}}
+							{...testProperties(`channelPermission.tab.${tab.type}`)}
 						>
 							<Text
 								style={{

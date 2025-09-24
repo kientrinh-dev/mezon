@@ -7,6 +7,7 @@ import { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { useSelector } from 'react-redux';
 import ImageNative from '../../../../../components/ImageNative';
 import { style } from './styles';
+import { testProperties } from '../../../../../configs/testProperties';
 
 interface IClanIconProps {
 	data: ClansEntity;
@@ -43,6 +44,7 @@ export const ClanIcon = memo(
 					}}
 					disabled={props.isActive}
 					onLongPress={props.drag}
+					{...testProperties(`clanIcon.${props?.data?.clan_id}`)}
 				>
 					<View onLayout={onIconLayout}>
 						{props?.data?.logo ? (

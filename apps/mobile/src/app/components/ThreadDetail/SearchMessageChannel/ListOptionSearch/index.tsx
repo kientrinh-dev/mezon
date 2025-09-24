@@ -6,6 +6,7 @@ import MezonIconCDN from '../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../constants/icon_cdn';
 import OptionSearch from '../OptionSearch';
 import { style } from './ListOptionSearch.styles';
+import { testProperties } from '../../../../configs/testProperties';
 
 interface IListOptionSearchProps {
 	onPressOption: (option: IOption) => void;
@@ -40,7 +41,7 @@ const ListOptionSearch = ({ onPressOption }: IListOptionSearchProps) => {
 	];
 
 	return (
-		<View style={styles.optionSearchContainer}>
+		<View style={styles.optionSearchContainer} {...testProperties('searchMessageChannel.option.sheet', true)}>
 			<Text style={styles.headerTitle}>{t('filterResults')}</Text>
 			{searchOptions.map((option, index) => (
 				<OptionSearch onSelect={handleSelectOption} option={option} key={`${option.value}_${index}`}></OptionSearch>

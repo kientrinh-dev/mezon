@@ -10,6 +10,7 @@ import { useSelector } from 'react-redux';
 import UseMentionList from '../../../../hooks/useUserMentionList';
 import { EmptySearchPage } from '../../../EmptySearchPage';
 import UserInfoSearch from './UserInfoSearch';
+import { testProperties } from '../../../../configs/testProperties';
 
 interface ISeachOptionPageProps {
 	searchText: string;
@@ -51,7 +52,7 @@ function SearchOptionPage({ searchText, onSelect, optionFilter }: ISeachOptionPa
 		return userListDataSearchByMention;
 	}, [searchText, userListDataSearchByMention]);
 	return (
-		<View style={{ paddingHorizontal: size.s_20, width: '100%', height: '100%' }}>
+		<View style={{ paddingHorizontal: size.s_20, width: '100%', height: '100%' }} {...testProperties('searchMessageChannel.optionPage', true)}>
 			{[ITypeOptionSearch.MENTIONS, ITypeOptionSearch.FROM].includes(optionFilter?.title as ITypeOptionSearch) && (
 				<View style={{ height: '100%', width: '100%', paddingBottom: size.s_100 }}>
 					{searchUserListByMention?.length ? (
@@ -62,6 +63,7 @@ function SearchOptionPage({ searchText, onSelect, optionFilter }: ISeachOptionPa
 							estimatedItemSize={100}
 							removeClippedSubviews={true}
 							keyboardShouldPersistTaps="handled"
+							{...testProperties('searchMessageChannel.option.list')}
 						/>
 					) : (
 						<EmptySearchPage emptyDescription="Unfortunately, we could not find any suggestions" />

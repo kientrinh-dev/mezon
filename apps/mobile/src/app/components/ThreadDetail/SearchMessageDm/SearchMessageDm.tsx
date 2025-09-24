@@ -17,6 +17,7 @@ import StatusBarHeight from '../../StatusBarHeight/StatusBarHeight';
 import { SearchMessageChannelContext } from '../SearchMessageChannel';
 import HeaderTabSearch from '../SearchMessageChannel/SearchMessagePage/HeaderTabSearch';
 import HeaderSearchMessageDm from './HeaderSearchMessageDm/HeaderSearchMessageDm';
+import { testProperties } from '../../../configs/testProperties';
 export enum ACTIVE_TAB {
 	MESSAGES = 0
 }
@@ -108,7 +109,7 @@ export default function SearchMessageDm({ navigation, route }: any) {
 	return (
 		<SearchMessageChannelContext.Provider value={filtersSearch}>
 			<StatusBarHeight />
-			<View style={{ width: '100%', height: '100%', backgroundColor: themeValue.primary }}>
+			<View style={{ width: '100%', height: '100%', backgroundColor: themeValue.primary }} {...testProperties('searchMessageDm.screen', true)}>
 				<HeaderSearchMessageDm
 					onChangeText={handleTextChange}
 					initialSearchText={keywordSearch.current}

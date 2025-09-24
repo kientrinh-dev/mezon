@@ -22,6 +22,7 @@ import MezonMenu, { IMezonMenuSectionProps } from '../../componentUI/MezonMenu';
 import { IconCDN } from '../../constants/icon_cdn';
 import NotificationSetting from '../NotificationSetting';
 import { style } from './MuteThreadDetailModal.styles';
+import { testProperties } from '../../configs/testProperties';
 
 type RootStackParamList = {
 	MuteThreadDetail: {
@@ -222,7 +223,7 @@ const MuteThreadDetailModal = ({ route }: MuteThreadDetailModalProps) => {
 	};
 
 	return (
-		<View style={styles.wrapper}>
+		<View style={styles.wrapper} {...testProperties('muteThreadDetailModal', true)}>
 			{getNotificationChannelSelected?.active === ENotificationActive.ON ||
 			getNotificationChannelSelected?.id === ENotificationChannelId.Default ? (
 				<MezonMenu menu={menu} />

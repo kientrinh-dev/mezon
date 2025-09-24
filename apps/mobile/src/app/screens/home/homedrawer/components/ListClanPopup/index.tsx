@@ -15,6 +15,7 @@ import { APP_SCREEN } from '../../../../../navigation/ScreenTypes';
 import { ClanIcon } from '../ClanIcon';
 import CreateClanModal from '../CreateClanModal';
 import { style } from './styles';
+import { testProperties } from '../../../../../configs/testProperties';
 
 const GROUP = 'group';
 const CLAN = 'clan';
@@ -303,7 +304,7 @@ export const ListClanPopup = React.memo(() => {
 	};
 
 	return (
-		<View style={styles.clansBox}>
+		<View style={styles.clansBox} {...testProperties('listClanPopup.container', true)}>
 			<NestableDraggableFlatList
 				initialNumToRender={10}
 				maxToRenderPerBatch={10}
@@ -320,7 +321,7 @@ export const ListClanPopup = React.memo(() => {
 				ListEmptyComponent={<View />}
 				ListFooterComponent={() => {
 					return (
-						<TouchableOpacity style={styles.createClan} onPress={onCreateClanModal}>
+						<TouchableOpacity style={styles.createClan} onPress={onCreateClanModal} {...testProperties('listClanPopup.createClanButton')}>
 							<View style={styles.wrapperPlusClan}>
 								<MezonIconCDN icon={IconCDN.plusLargeIcon} color={baseColor.blurple} width={size.s_18} height={size.s_18} />
 							</View>
@@ -328,6 +329,7 @@ export const ListClanPopup = React.memo(() => {
 					);
 				}}
 				activationDistance={40}
+				{...testProperties('listClanPopup.list', true)}
 			/>
 		</View>
 	);

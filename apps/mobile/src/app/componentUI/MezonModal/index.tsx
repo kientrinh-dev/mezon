@@ -6,6 +6,7 @@ import { toastConfig } from '../../configs/toastConfig';
 import { IconCDN } from '../../constants/icon_cdn';
 import MezonIconCDN from '../MezonIconCDN';
 import { style as _style } from './style';
+import { testProperties } from '../../configs/testProperties';
 
 interface IMezonModalProps extends Pick<ModalBaseProps, 'animationType'> {
 	visible: boolean;
@@ -77,41 +78,41 @@ export const MezonModal = (props: IMezonModalProps) => {
 			supportedOrientations={['portrait', 'landscape']}
 		>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-				<View style={[styles.container, containerStyle]}>
+				<View style={[styles.container, containerStyle]} {...testProperties('mezonModal.container')}>
 					{rightClose ? (
 						<View style={[styles.headerWrapper, isEmptyHeader && styles.bgDefault, headerStyles]}>
 							{visibleBackButton ? (
-								<Pressable onPress={() => onBack && onBack()} style={styles.buttonHeader}>
+								<Pressable onPress={() => onBack && onBack()} style={styles.buttonHeader} {...testProperties('mezonModal.buttonHeader')}>
 									<MezonIconCDN icon={IconCDN.backArrowLarge} height={size.s_20} width={size.s_20} />
 								</Pressable>
 							) : (
 								<View />
 							)}
-							<Pressable onPress={() => setVisible(false)} style={styles.buttonHeader}>
+							<Pressable onPress={() => setVisible(false)} style={styles.buttonHeader} {...testProperties('mezonModal.buttonHeader')}>
 								<MezonIconCDN icon={IconCDN.closeIcon} color={themeValue.textStrong} height={size.s_24} width={size.s_24} />
 							</Pressable>
 						</View>
 					) : (
 						<View style={[styles.headerWrapper, isEmptyHeader && styles.bgDefault, headerStyles]}>
 							<View style={styles.headerContent}>
-								<Pressable onPress={() => setVisible(false)} style={styles.buttonHeader}>
+								<Pressable onPress={() => setVisible(false)} style={styles.buttonHeader} {...testProperties('mezonModal.buttonHeader')}>
 									<MezonIconCDN icon={IconCDN.closeIcon} color={themeValue.textStrong} height={size.s_24} width={size.s_24} />
 								</Pressable>
 								{isTitleString ? (
-									<Text style={[styles.textTitle, titleStyle]}>{title}</Text>
+									<Text style={[styles.textTitle, titleStyle]} {...testProperties('mezonModal.textTitle')}>{title}</Text>
 								) : (
 									<View style={titleStyle}>{title}</View>
 								)}
 								<View style={{ width: rightBtnText ? size.s_60 : size.s_30 }}>
 									{rightBtnText ? (
-										<Pressable onPress={() => onClickRightBtn()}>
+										<Pressable onPress={() => onClickRightBtn()} {...testProperties('mezonModal.confirm')}>
 											<Text style={styles.confirm}>{rightBtnText}</Text>
 										</Pressable>
 									) : null}
 								</View>
 							</View>
 							{confirmText ? (
-								<Pressable onPress={() => pressConfirm()}>
+								<Pressable onPress={() => pressConfirm()} {...testProperties('mezonModal.confirm')}>
 									<Text style={styles.confirm}>{confirmText}</Text>
 								</Pressable>
 							) : (
@@ -119,7 +120,7 @@ export const MezonModal = (props: IMezonModalProps) => {
 							)}
 						</View>
 					)}
-					<View style={[styles.fill, style]}>{children}</View>
+					<View style={[styles.fill, style]} {...testProperties('mezonModal.fill')}>{children}</View>
 				</View>
 			</TouchableWithoutFeedback>
 			<Toast config={toastConfig} />

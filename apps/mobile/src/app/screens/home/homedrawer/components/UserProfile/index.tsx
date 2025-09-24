@@ -37,6 +37,7 @@ import useTabletLandscape from '../../../../../hooks/useTabletLandscape';
 import { getUserStatusByMetadata } from '../../../../../utils/helpers';
 import { checkNotificationPermissionAndNavigate } from '../../../../../utils/notificationPermissionHelper';
 import { DirectMessageCallMain } from '../../../../messages/DirectMessageCall';
+import { testProperties } from '../../../../../configs/testProperties';
 import { style } from './UserProfile.styles';
 import EditUserProfileBtn from './component/EditUserProfileBtn';
 import { PendingContent } from './component/PendingContent';
@@ -404,18 +405,22 @@ const UserProfile = React.memo(
 
 		if (isShowPendingContent) {
 			return (
-				<View style={[styles.wrapper]}>
+				<View style={[styles.wrapper]} {...testProperties('userProfile', true)}>
 					<PendingContent targetUser={infoFriend} onClose={() => setIsShowPendingContent(false)} />
 				</View>
 			);
 		}
 
 		return (
-			<View style={[styles.wrapper]}>
-				<View style={[styles.backdrop, { backgroundColor: userById || user?.avatar_url ? color : baseColor.gray }]}>
+			<View style={[styles.wrapper]} {...testProperties('userProfile', true)}>
+				<View
+					style={[styles.backdrop, { backgroundColor: userById || user?.avatar_url ? color : baseColor.gray }]}
+					{...testProperties('userProfile.backdrop', true)}
+				>
 					{!isCheckOwner && (
 						<View style={{ flexDirection: 'row' }}>
 							<TouchableOpacity
+								{...testProperties('userProfile.friendActionBtn')}
 								onPress={iconFriend?.action}
 								style={{
 									position: 'absolute',
@@ -429,6 +434,7 @@ const UserProfile = React.memo(
 								<MezonIconCDN icon={iconFriend?.icon} color={themeValue.text} width={size.s_20} height={size.s_20} />
 							</TouchableOpacity>
 							<TouchableOpacity
+								{...testProperties('userProfile.transferFundsBtn')}
 								onPress={() => handleTransferFunds()}
 								style={{
 									position: 'absolute',
@@ -443,7 +449,7 @@ const UserProfile = React.memo(
 							</TouchableOpacity>
 						</View>
 					)}
-					<View style={[styles.userAvatar]}>
+					<View style={[styles.userAvatar]} {...testProperties('userProfile.userAvatarWrapper', true)}>
 						<MezonAvatar
 							width={size.s_80}
 							height={size.s_80}
@@ -466,7 +472,7 @@ const UserProfile = React.memo(
 					{displayStatus ? (
 						<>
 							<View style={styles.badgeStatusTemp} />
-							<View style={styles.badgeStatus}>
+							<View style={styles.badgeStatus} {...testProperties('userProfile.statusBadge', true)}>
 								<View style={styles.badgeStatusInside} />
 								<Text numberOfLines={3} style={styles.customStatusText}>
 									{displayStatus}
@@ -477,7 +483,7 @@ const UserProfile = React.memo(
 				</View>
 
 				<View style={[styles.container]}>
-					<View style={[styles.userInfo]}>
+						<View style={[styles.userInfo]} {...testProperties('userProfile.userInfo', true)}>
 						<Text style={[styles.username]}>
 							{userById
 								? !isDM
@@ -510,7 +516,12 @@ const UserProfile = React.memo(
 									const { action, icon, id, isShow, text, textStyles } = actionItem;
 									if (!isShow) return null;
 									return (
-										<TouchableOpacity key={id} onPress={() => action?.()} style={[styles.actionItem]}>
+										<TouchableOpacity
+											key={id}
+											onPress={() => action?.()}
+											style={[styles.actionItem]}
+											{...testProperties(`userProfile.action.${id}`)}
+										>
 											{icon}
 											<Text style={[styles.actionText, textStyles && textStyles]}>{text}</Text>
 										</TouchableOpacity>
@@ -523,12 +534,14 @@ const UserProfile = React.memo(
 								<Text style={styles.receivedFriendRequestTitle}>{t('incomingFriendRequest')}</Text>
 								<View style={{ flexDirection: 'row', gap: size.s_10, marginTop: size.s_10 }}>
 									<TouchableOpacity
+										{...testProperties('userProfile.acceptFriendBtn')}
 										onPress={() => handleAcceptFriend()}
 										style={[styles.button, { backgroundColor: baseColor.green }]}
 									>
 										<Text style={styles.defaultText}>{t('accept')}</Text>
 									</TouchableOpacity>
 									<TouchableOpacity
+										{...testProperties('userProfile.ignoreFriendBtn')}
 										onPress={() => handleIgnoreFriend()}
 										style={[styles.button, { backgroundColor: baseColor.bgButtonSecondary }]}
 									>
@@ -540,9 +553,9 @@ const UserProfile = React.memo(
 					</View>
 
 					{isShowUserContent && (
-						<View style={[!isDMGroup && styles.roleGroup]}>
+						<View style={[!isDMGroup && styles.roleGroup]} {...testProperties('userProfile.roleContainer', true)}>
 							{!isDMGroup && (userById?.user?.create_time || user?.create_time || user?.user?.create_time) && (
-								<View style={styles.memberSince}>
+								<View style={styles.memberSince} {...testProperties('userProfile.memberSince', true)}>
 									<Text style={styles.title}>{t('userInfoDM.mezonMemberSince')}</Text>
 									<Text style={styles.subUserName}>
 										{formatDate(userById?.user?.create_time || user?.create_time || user?.user?.create_time)}
@@ -550,7 +563,7 @@ const UserProfile = React.memo(
 								</View>
 							)}
 							{!!userById?.user?.about_me && (
-								<View style={{ paddingVertical: size.s_16 }}>
+								<View style={{ paddingVertical: size.s_16 }} {...testProperties('userProfile.aboutMe', true)}>
 									<Text style={[styles.aboutMe]}>{t('aboutMe.headerTitle')}</Text>
 									<Text style={[styles.aboutMeText]}>{userById?.user?.about_me}</Text>
 								</View>
@@ -558,7 +571,7 @@ const UserProfile = React.memo(
 							{userRolesClan?.length && showRole && !isDM ? (
 								<View>
 									<Text style={[styles.title]}>{t('aboutMe.roles.headerTitle')}</Text>
-									<View style={[styles.roles]}>
+									<View style={[styles.roles]} {...testProperties('userProfile.roles', true)}>
 										{userRolesClan?.map((role, index) => (
 											<View style={[styles.roleItem]} key={`${role.id}_${index}`}>
 												{role?.role_icon ? (
@@ -587,7 +600,7 @@ const UserProfile = React.memo(
 								</View>
 							) : null}
 							{isDMGroup && !isCheckOwner && isChannelOwner && (
-								<View style={styles.actionGroupDM}>
+								<View style={styles.actionGroupDM} {...testProperties('userProfile.actionGroupDM', true)}>
 									<UserInfoDm currentChannel={dmChannel || (currentChannel as ChannelsEntity)} user={userById || (user as any)} />
 								</View>
 							)}

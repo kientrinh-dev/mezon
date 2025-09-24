@@ -5,6 +5,7 @@ import { Pressable } from 'react-native-gesture-handler';
 import { IconCDN } from '../../constants/icon_cdn';
 import MezonIconCDN from '../MezonIconCDN';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 interface IMezonSwitch extends SwitchProps {
 	iconOn?: ReactNode;
@@ -33,8 +34,9 @@ export const MezonSwitch = ({ value, onValueChange, iconYesNo, iconOn, iconOff, 
 			onPress={toggleSwitch}
 			disabled={disabled}
 			onStartShouldSetResponder={() => true}
+			{...testProperties('mezonSwitch.switchContainer')}
 		>
-			<View style={[styles.circle, isEnabled ? styles.circleEnabled : {}]}>
+			<View style={[styles.circle, isEnabled ? styles.circleEnabled : {}]} {...testProperties('mezonSwitch.circle')}>
 				{iconYesNo ? (
 					isEnabled ? (
 						<MezonIconCDN icon={IconCDN.checkmarkSmallIcon} color={baseColor.blurple} height={22} width={22} />

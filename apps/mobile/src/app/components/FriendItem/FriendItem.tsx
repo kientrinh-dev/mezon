@@ -9,6 +9,7 @@ import { IconCDN } from '../../constants/icon_cdn';
 import ImageNative from '../ImageNative';
 import { UserStatus } from '../UserStatus';
 import { style } from './styles';
+import { testProperties } from '../../configs/testProperties';
 
 export enum EFriendItemAction {
 	Call,
@@ -61,6 +62,7 @@ export const FriendItem = React.memo(
 				style={styles.userItem}
 				onPress={() => onPressAction(showAction ? EFriendItemAction.ShowInformation : EFriendItemAction.MessageDetail)}
 				onLongPress={() => onLongPress()}
+				{...testProperties(`friends.item.${friend?.user?.id}`)}
 			>
 				<View style={styles.avatarWrapper}>
 					{friend?.user?.avatar_url ? (
@@ -93,23 +95,23 @@ export const FriendItem = React.memo(
 							</Text>
 						</View>
 						{isFriend && showAction && !selectMode ? (
-							<View style={styles.friendAction}>
-								<Pressable onPress={() => onPressAction(EFriendItemAction.Call)}>
+						<View style={styles.friendAction}>
+							<Pressable onPress={() => onPressAction(EFriendItemAction.Call)} {...testProperties(`friends.item.${friend?.user?.id}.call`)}>
 									<MezonIconCDN icon={IconCDN.phoneCallIcon} width={24} height={18} color={themeValue.text} />
 								</Pressable>
-								<Pressable onPress={() => onPressAction(EFriendItemAction.MessageDetail)}>
+							<Pressable onPress={() => onPressAction(EFriendItemAction.MessageDetail)} {...testProperties(`friends.item.${friend?.user?.id}.message`)}>
 									<MezonIconCDN icon={IconCDN.chatIcon} width={25} height={18} color={themeValue.text} />
 								</Pressable>
 							</View>
 						) : null}
 
 						{isPendingFriendRequest && showAction && !selectMode ? (
-							<View style={styles.friendAction}>
-								<Pressable onPress={() => onPressAction(EFriendItemAction.Delete)}>
+						<View style={styles.friendAction}>
+							<Pressable onPress={() => onPressAction(EFriendItemAction.Delete)} {...testProperties(`friends.item.${friend?.user?.id}.delete`)}>
 									<MezonIconCDN icon={IconCDN.closeIcon} width={18} height={18} color={'#c7c7c7'} />
 								</Pressable>
 								{!isSentRequestFriend ? (
-									<Pressable onPress={() => onPressAction(EFriendItemAction.Approve)} style={styles.approveIcon}>
+								<Pressable onPress={() => onPressAction(EFriendItemAction.Approve)} style={styles.approveIcon} {...testProperties(`friends.item.${friend?.user?.id}.approve`)}>
 										<MezonIconCDN icon={IconCDN.checkmarkSmallIcon} width={25} height={18} color={'white'} />
 									</Pressable>
 								) : null}

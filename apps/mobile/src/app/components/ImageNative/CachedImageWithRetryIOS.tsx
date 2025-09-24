@@ -1,6 +1,7 @@
 import React, { memo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
+import { testProperties } from '../../configs/testProperties';
 
 interface ICachedImageWithRetryIOSProps {
 	source: { uri: string };
@@ -49,8 +50,8 @@ const CachedImageWithRetryIOS = memo(
 		};
 
 		return (
-			<View style={[styles.container, style]}>
-				{loading && <ActivityIndicator style={styles.loader} size="small" color="#333333" />}
+			<View style={[styles.container, style]} {...testProperties('cachedImageWithRetryIOS.container')}>
+				{loading && <ActivityIndicator style={styles.loader} size="small" color="#333333" {...testProperties('cachedImageWithRetryIOS.loader')} />}
 				<FastImage
 					key={`${key}_${source?.uri}`}
 					source={{
@@ -62,6 +63,7 @@ const CachedImageWithRetryIOS = memo(
 					onError={handleExhaustedRetries}
 					onLoadEnd={handleLoadEnd}
 					style={StyleSheet.absoluteFill}
+					{...testProperties('cachedImageWithRetryIOS.fastImage')}
 					{...props}
 				/>
 			</View>
