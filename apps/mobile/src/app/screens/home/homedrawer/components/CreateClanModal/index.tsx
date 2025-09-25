@@ -21,6 +21,7 @@ import { IconCDN } from '../../../../../constants/icon_cdn';
 import useCheckClanLimit from '../../../../../hooks/useCheckClanLimit';
 import { validInput } from '../../../../../utils/validate';
 import { style } from './CreateClanModal.styles';
+import { testProperties } from '../../../../../configs/testProperties';
 
 const CreateClanModal = memo(() => {
 	const { themeValue } = useTheme();
@@ -125,13 +126,13 @@ const CreateClanModal = memo(() => {
 
 	return (
 		<View style={styles.wrapperCreateClanModal}>
-			<Pressable onPress={onClose}>
+			<Pressable onPress={onClose} {...testProperties('createClanModal.closeButton')}>
 				<MezonIconCDN icon={IconCDN.closeIcon} color={themeValue.textStrong} height={size.s_30} width={size.s_30} />
 			</Pressable>
 			<Text style={styles.headerTitle}>{t('title')}</Text>
 			<Text style={styles.headerSubTitle}>{t('subTitle')}</Text>
 			<View style={styles.boxImage}>
-				<TouchableOpacity style={styles.uploadImage} onPress={onOpen}>
+				<TouchableOpacity style={styles.uploadImage} onPress={onOpen} {...testProperties('createClanModal.uploadImageButton')}>
 					{!urlImage ? (
 						<View style={[styles.uploadCreateClan]}>
 							<MezonIconCDN

@@ -56,9 +56,9 @@ const BottomNavigatorWrapper = memo(({ initRouteName = '' }: { initRouteName: st
 		initLoader();
 	}, [initLoader]);
 
-	if (!isReadyToRender) return <View style={{ flex: 1 }} {...testProperties('bottomNavigatorWrapper.loading', true)} />;
+	if (!isReadyToRender) return <View style={{ flex: 1 }} {...testProperties('bottomNavigatorWrapper.loading')} />;
 	return (
-		<View style={{ flex: 1 }} {...testProperties('bottomNavigatorWrapper', true)}>
+		<View style={{ flex: 1 }} {...testProperties('bottomNavigatorWrapper')}>
 			<StatusBarHeight />
 			<BottomNavigator isLastActiveTabDm={load(STORAGE_IS_LAST_ACTIVE_TAB_DM) === 'true'} />
 		</View>

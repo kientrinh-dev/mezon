@@ -14,6 +14,7 @@ import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../constants/icon_cdn';
 import { APP_SCREEN } from '../../../navigation/ScreenTypes';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 type LoginMode = 'otp' | 'password' | 'sms';
 
@@ -191,7 +192,7 @@ const LoginScreen = ({ navigation }) => {
 	};
 
 	return (
-		<ScrollView contentContainerStyle={styles.container} bounces={false} keyboardShouldPersistTaps={'handled'}>
+		<ScrollView contentContainerStyle={styles.container} bounces={false} keyboardShouldPersistTaps={'handled'} {...testProperties('login.screen')}>
 			<LinearGradient colors={['#3574FE', '#978AFF', '#DCCFFF']} style={[StyleSheet.absoluteFillObject]} />
 
 			<KeyboardAvoidingView
@@ -199,7 +200,7 @@ const LoginScreen = ({ navigation }) => {
 				behavior={'padding'}
 				keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight}
 			>
-				<View style={styles.content}>
+				<View style={styles.content} {...testProperties('login.screen')}>
 					<Text style={styles.title}>{t('login.loginToMezon')}</Text>
 					<Text style={styles.subtitle}>{t('login.gladToMeetAgain')}</Text>
 
@@ -221,6 +222,7 @@ const LoginScreen = ({ navigation }) => {
 								keyboardType="email-address"
 								autoCapitalize="none"
 								autoCorrect={false}
+								{...testProperties('login.email.input')}
 							/>
 						)}
 						{loginMode === 'sms' && (
@@ -233,13 +235,14 @@ const LoginScreen = ({ navigation }) => {
 								keyboardType={'phone-pad'}
 								autoCapitalize="none"
 								autoCorrect={false}
+								{...testProperties('login.phone.input')}
 							/>
 						)}
 					</View>
 
 					{loginMode === 'password' && (
 						<View style={styles.inputSection}>
-							<TextInput
+						<TextInput
 								style={styles.emailInput}
 								placeholder={t('login.password')}
 								placeholderTextColor={styles.placeholder.color}
@@ -248,6 +251,7 @@ const LoginScreen = ({ navigation }) => {
 								secureTextEntry={!showPassword}
 								autoCapitalize="none"
 								autoCorrect={false}
+							{...testProperties('login.password.input', true)}
 							/>
 							<TouchableOpacity style={styles.showPasswordContainer} onPress={togglePasswordVisibility}>
 								<View style={styles.checkboxContainer}>
@@ -261,7 +265,7 @@ const LoginScreen = ({ navigation }) => {
 											/>
 										)}
 									</View>
-									<Text style={styles.showPasswordText}>{t('login.showPassword')}</Text>
+								<Text style={styles.showPasswordText} {...testProperties('login.toggle.showPassword')}>{t('login.showPassword')}</Text>
 								</View>
 							</TouchableOpacity>
 						</View>
@@ -271,6 +275,7 @@ const LoginScreen = ({ navigation }) => {
 						style={[styles.otpButton, isFormValid && !isLoading ? styles.otpButtonActive : styles.otpButtonDisabled]}
 						onPress={handlePrimaryAction}
 						disabled={!isFormValid || isLoading}
+						{...testProperties('login.primary.button')}
 					>
 						{isLoading ? (
 							<ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
@@ -286,11 +291,11 @@ const LoginScreen = ({ navigation }) => {
 							<>
 								<Text style={styles.alternativeText}>{t('login.cannotAccessYourEmail')}</Text>
 								<View style={styles.alternativeOptions}>
-									<TouchableOpacity onPress={handleSMSLogin}>
+								<TouchableOpacity onPress={handleSMSLogin} {...testProperties('login.switch.sms')}>
 										<Text style={styles.linkText}>{t('login.loginWithSMS')}</Text>
 									</TouchableOpacity>
 									<Text style={styles.orText}>{t('login.or')}</Text>
-									<TouchableOpacity onPress={switchToPasswordMode}>
+								<TouchableOpacity onPress={switchToPasswordMode} {...testProperties('login.switch.password')}>
 										<Text style={styles.linkText}>{t('login.loginWithPassword')}</Text>
 									</TouchableOpacity>
 								</View>
@@ -298,7 +303,7 @@ const LoginScreen = ({ navigation }) => {
 						) : (
 							<>
 								<Text style={styles.alternativeText}>{t('login.passwordNotSet')}</Text>
-								<TouchableOpacity onPress={switchToOTPMode}>
+							<TouchableOpacity onPress={switchToOTPMode} {...testProperties('login.switch.otp')}>
 									<Text style={styles.linkText}>{t('login.loginWithOTP')}</Text>
 								</TouchableOpacity>
 							</>

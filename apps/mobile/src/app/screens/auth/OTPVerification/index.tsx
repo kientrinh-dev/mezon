@@ -12,6 +12,7 @@ import Toast from 'react-native-toast-message';
 import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../constants/icon_cdn';
 import { style } from './styles';
+import { testProperties } from '../../../configs/testProperties';
 
 interface OTPVerificationScreenProps {
 	navigation: any;
@@ -176,14 +177,14 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 	};
 
 	return (
-		<ScrollView contentContainerStyle={styles.container} bounces={false} keyboardShouldPersistTaps={'handled'}>
+		<ScrollView contentContainerStyle={styles.container} bounces={false} keyboardShouldPersistTaps={'handled'} {...testProperties('otp.screen')}>
 			<LinearGradient colors={['#3574FE', '#978AFF', '#DCCFFF']} style={[StyleSheet.absoluteFillObject]} />
 			<KeyboardAvoidingView
 				style={{ flex: 1 }}
 				behavior={'padding'}
 				keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight}
 			>
-				<View style={styles.content}>
+				<View style={styles.content} {...testProperties('otp.screen')}>
 					<Text style={styles.title}>{t('otpVerify.loginToMezon')}</Text>
 					<Text style={styles.subtitle}>{t('otpVerify.gladToMeetAgain')}</Text>
 
@@ -196,7 +197,9 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 						{otp.map((digit, index) => (
 							<TextInput
 								key={index}
-								ref={(ref) => (inputRefs.current[index] = ref)}
+								ref={(ref) => {
+									inputRefs.current[index] = ref;
+								}}
 								style={[
 									styles.input,
 									digit !== '' ? styles.inputFilled : styles.inputEmpty,
@@ -212,14 +215,16 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 								autoComplete={'sms-otp'}
 								textContentType={'oneTimeCode'}
 								selectTextOnFocus={true}
+								{...testProperties(`otp.input.${index}`)}
 							/>
 						))}
 					</View>
 
-					<TouchableOpacity
+						<TouchableOpacity
 						style={[styles.verifyButton, isValidOTP || isResendEnabled ? styles.verifyButtonActive : styles.verifyButtonDisabled]}
 						onPress={isResendEnabled ? () => handleResendOTP() : () => handleVerifyOTP(otp?.join?.(''))}
 						disabled={(!isValidOTP && !isResendEnabled) || isLoading}
+							{...testProperties('otp.verify.button')}
 					>
 						<Text style={[styles.verifyButtonText]}>
 							{isResendEnabled ? t('otpVerify.resendOTP') : `${t('otpVerify.verifyOTP')} (${countdown})`}
@@ -229,7 +234,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 					<View style={styles.alternativeSection}>
 						<Text style={styles.alternativeText}>{t('otpVerify.didNotReceiveCode')}</Text>
 						<View style={styles.alternativeOptions}>
-							<TouchableOpacity onPress={handleChangeEmail}>
+							<TouchableOpacity onPress={handleChangeEmail} {...testProperties('otp.changeEmail.button')}>
 								<Text style={styles.linkText}>{t('otpVerify.changeEmail')}</Text>
 							</TouchableOpacity>
 							{/*todo: add get help*/}

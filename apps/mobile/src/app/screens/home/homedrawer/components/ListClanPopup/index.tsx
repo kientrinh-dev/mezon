@@ -9,13 +9,13 @@ import { useSelector } from 'react-redux';
 import { ClanGroup } from '../../../../../components/ClanGroup';
 import { ClanGroupPreview } from '../../../../../components/ClanGroupPreview';
 import MezonIconCDN from '../../../../../componentUI/MezonIconCDN';
+import { testProperties } from '../../../../../configs/testProperties';
 import { IconCDN } from '../../../../../constants/icon_cdn';
 import useTabletLandscape from '../../../../../hooks/useTabletLandscape';
 import { APP_SCREEN } from '../../../../../navigation/ScreenTypes';
 import { ClanIcon } from '../ClanIcon';
 import CreateClanModal from '../CreateClanModal';
 import { style } from './styles';
-import { testProperties } from '../../../../../configs/testProperties';
 
 const GROUP = 'group';
 const CLAN = 'clan';
@@ -304,7 +304,7 @@ export const ListClanPopup = React.memo(() => {
 	};
 
 	return (
-		<View style={styles.clansBox} {...testProperties('listClanPopup.container', true)}>
+		<View style={styles.clansBox}>
 			<NestableDraggableFlatList
 				initialNumToRender={10}
 				maxToRenderPerBatch={10}
@@ -329,7 +329,7 @@ export const ListClanPopup = React.memo(() => {
 					);
 				}}
 				activationDistance={40}
-				{...testProperties('listClanPopup.list', true)}
+				{...testProperties('listClanPopup.list')}
 			/>
 		</View>
 	);

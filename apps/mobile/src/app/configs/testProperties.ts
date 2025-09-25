@@ -9,4 +9,11 @@ function testProperties(id: string, disableAccessible = false): { accessible?: b
 	return { ...disableAccessibility, accessibilityLabel: id };
 }
 
-export { testProperties };
+function testTabProperties(id: string) {
+	return Platform.select({
+		ios: { tabBarTestID: id, tabBarAccessibilityLabel: id },
+		android: { tabBarAccessibilityLabel: id }
+	});
+}
+
+export { testProperties, testTabProperties };

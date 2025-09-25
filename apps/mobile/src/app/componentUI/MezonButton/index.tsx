@@ -84,7 +84,7 @@ const MezonButton = ({
 			]}
 			disabled={disabled}
 			onPress={onPress}
-			{...testProperties('mezonButton.container')}
+			{...testProperties('mezonButton')}
 		>
 			{icon}
 			{title && <Text style={[styles.title, titleStyle]} {...testProperties('mezonButton.title')}>{title}</Text>}

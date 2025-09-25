@@ -3,11 +3,11 @@ import { sleep } from '@mezon/utils';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { StyleProp, Text, TextInput, TextStyle, TouchableOpacity, View, ViewProps, ViewStyle } from 'react-native';
 import { ErrorInput } from '../../components/ErrorInput';
+import { testProperties } from '../../configs/testProperties';
 import { IconCDN } from '../../constants/icon_cdn';
 import { validInput } from '../../utils/validate';
 import MezonIconCDN from '../MezonIconCDN';
 import { style } from './styles';
-import { testProperties } from '../../configs/testProperties';
 
 interface IMezonInputProps extends ViewProps {
 	placeHolder?: string;
@@ -103,11 +103,15 @@ export default function MezonInput({
 		}
 	};
 
-    return (
-        <View style={styles.container} {...rest} {...testProperties('mezonInput.container')}>
-			{label && <Text style={[styles.label, titleUppercase ? styles.titleUppercase : {}, titleStyle]} {...testProperties('mezonInput.label')}>{label}</Text>}
+	return (
+		<View style={styles.container} {...rest}>
+			{label && (
+				<Text style={[styles.label, titleUppercase ? styles.titleUppercase : {}, titleStyle]} {...testProperties('mezonInput.label')}>
+					{label}
+				</Text>
+			)}
 			<View style={[styles.fakeInput, textarea && { paddingTop: 10 }, renderBorder(), inputWrapperStyle]}>
-				<View style={styles.inputBox} {...testProperties('mezonInput.inputBox')}>
+				<View style={styles.inputBox}>
 					{prefixIcon}
 					<TextInput
 						ref={ref}
@@ -136,12 +140,14 @@ export default function MezonInput({
 				</View>
 
 				{textarea && (
-					<View style={[styles.lineCountWrapper, { opacity: showCount ? 1 : 0 }]} {...testProperties('mezonInput.lineCountWrapper')}>
+					<View style={[styles.lineCountWrapper, { opacity: showCount ? 1 : 0 }]}>
 						<Text style={styles.count} {...testProperties('mezonInput.count')}>{`${value?.length || '0'}/${maxCharacter}`}</Text>
 					</View>
 				)}
 			</View>
-			{(!isCheckValid || !isValid) && errorMessage && <ErrorInput style={styles.errorInput} errorMessage={errorMessage} {...testProperties('mezonInput.errorInput')} />}
+			{(!isCheckValid || !isValid) && errorMessage && (
+				<ErrorInput style={styles.errorInput} errorMessage={errorMessage} {...testProperties('mezonInput.errorInput')} />
+			)}
 		</View>
 	);
 }
