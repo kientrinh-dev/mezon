@@ -5,6 +5,7 @@ import React, { useMemo } from 'react';
 import { Pressable, Text, TouchableOpacity, View } from 'react-native';
 import BouncyCheckbox from 'react-native-bouncy-checkbox/build/dist/BouncyCheckbox';
 import MezonIconCDN from '../../componentUI/MezonIconCDN';
+import { testProperties } from '../../configs/testProperties';
 import { IconCDN } from '../../constants/icon_cdn';
 import ImageNative from '../ImageNative';
 import { UserStatus } from '../UserStatus';
@@ -105,11 +106,18 @@ export const FriendItem = React.memo(
 
 						{isPendingFriendRequest && showAction && !selectMode ? (
 							<View style={styles.friendAction}>
-								<Pressable onPress={() => onPressAction(EFriendItemAction.Delete)}>
+								<Pressable
+									onPress={() => onPressAction(EFriendItemAction.Delete)}
+									{...testProperties(`friend.button.deleteFriend.${friend.user.username}`)}
+								>
 									<MezonIconCDN icon={IconCDN.closeIcon} width={18} height={18} color={'#c7c7c7'} />
 								</Pressable>
 								{!isSentRequestFriend ? (
-									<Pressable onPress={() => onPressAction(EFriendItemAction.Approve)} style={styles.approveIcon}>
+									<Pressable
+										onPress={() => onPressAction(EFriendItemAction.Approve)}
+										style={styles.approveIcon}
+										{...testProperties(`friend.button.approveFriend`)}
+									>
 										<MezonIconCDN icon={IconCDN.checkmarkSmallIcon} width={25} height={18} color={'white'} />
 									</Pressable>
 								) : null}

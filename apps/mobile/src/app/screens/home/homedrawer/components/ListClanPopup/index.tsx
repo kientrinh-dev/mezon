@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { ClanGroup } from '../../../../../components/ClanGroup';
 import { ClanGroupPreview } from '../../../../../components/ClanGroupPreview';
 import MezonIconCDN from '../../../../../componentUI/MezonIconCDN';
+import { testProperties } from '../../../../../configs/testProperties';
 import { IconCDN } from '../../../../../constants/icon_cdn';
 import useTabletLandscape from '../../../../../hooks/useTabletLandscape';
 import { APP_SCREEN } from '../../../../../navigation/ScreenTypes';
@@ -333,11 +334,15 @@ export const ListClanPopup = React.memo(() => {
 							{clans?.length === 0 && (
 								<TouchableOpacity style={styles.createClan} onPress={onJoinNewClanModal}>
 									<View style={styles.wrapperPlusClan}>
-										<MezonIconCDN icon={IconCDN.joinClanIcon} useOriginalColor={true} width={size.s_30} height={size.s_30} />
+										<MezonIconCDN icon={IconCDN.addFriendImage} useOriginalColor={true} width={size.s_30} height={size.s_30} />
 									</View>
 								</TouchableOpacity>
 							)}
-							<TouchableOpacity style={styles.createClan} onPress={onCreateClanModal}>
+							<TouchableOpacity
+								style={styles.createClan}
+								onPress={onCreateClanModal}
+								{...testProperties('listClanPopup.createClanButton')}
+							>
 								<View style={styles.wrapperPlusClan}>
 									<MezonIconCDN icon={IconCDN.plusLargeIcon} color={baseColor.blurple} width={size.s_18} height={size.s_18} />
 								</View>
@@ -346,6 +351,7 @@ export const ListClanPopup = React.memo(() => {
 					);
 				}}
 				activationDistance={40}
+				{...testProperties('listClanPopup.list')}
 			/>
 		</View>
 	);

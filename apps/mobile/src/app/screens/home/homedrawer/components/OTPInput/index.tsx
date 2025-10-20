@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { NativeEventEmitter, NativeModules, Platform, TextInput, View } from 'react-native';
+import { testProperties } from '../../../../../configs/testProperties';
 import { style } from './styles';
 
 const OTP_LENGTH = 6;
@@ -143,6 +144,7 @@ const OTPInput: React.FC<OTPInputProps> = ({ onOtpChange, onOtpComplete, isError
 					selectTextOnFocus={true}
 					autoComplete={isSms ? 'sms-otp' : undefined}
 					textContentType={isSms ? 'oneTimeCode' : undefined}
+					{...testProperties(`otp.input.${index}`)}
 				/>
 			))}
 		</View>

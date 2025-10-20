@@ -25,6 +25,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-toast-message';
 import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import { ErrorInput } from '../../../components/ErrorInput';
+import { testProperties } from '../../../configs/testProperties';
 import { IconCDN } from '../../../constants/icon_cdn';
 import useTabletLandscape from '../../../hooks/useTabletLandscape';
 import { APP_SCREEN } from '../../../navigation/ScreenTypes';
@@ -378,6 +379,7 @@ const LoginScreen = ({ navigation }) => {
 										autoFocus={true}
 										onSubmitEditing={handlePrimaryAction}
 										underlineColorAndroid="transparent"
+										{...testProperties('login.phone.input')}
 									/>
 								</View>
 								<CountryDropdown
@@ -407,6 +409,7 @@ const LoginScreen = ({ navigation }) => {
 										autoFocus={true}
 										onSubmitEditing={handlePrimaryAction}
 										underlineColorAndroid="transparent"
+										{...testProperties('login.email.input')}
 									/>
 								)}
 							</View>
@@ -432,6 +435,7 @@ const LoginScreen = ({ navigation }) => {
 									autoCapitalize="none"
 									autoCorrect={false}
 									onSubmitEditing={handlePrimaryAction}
+									{...testProperties('login.password.input')}
 								/>
 							</View>
 							<TouchableOpacity style={styles.showPasswordContainer} onPress={togglePasswordVisibility}>
@@ -456,6 +460,7 @@ const LoginScreen = ({ navigation }) => {
 						style={[styles.otpButton, !isFormValid && styles.otpButtonDisabled]}
 						onPress={handlePrimaryAction}
 						disabled={!isFormValid || isLoading}
+						{...testProperties('login.primary.button')}
 					>
 						{isLoading ? (
 							<ActivityIndicator size="small" color="#FFFFFF" style={{ zIndex: 10 }} />
@@ -483,10 +488,16 @@ const LoginScreen = ({ navigation }) => {
 									: t('login.passwordNotSet')}
 						</Text>
 						<View style={styles.alternativeOptions}>
-							<TouchableOpacity onPress={loginMode === 'otp' ? () => handleSMSLogin() : () => switchToOTPMode()}>
+							<TouchableOpacity
+								onPress={loginMode === 'otp' ? () => handleSMSLogin() : () => switchToOTPMode()}
+								{...testProperties('login.switch.SMS')}
+							>
 								<Text style={styles.linkText}>{loginMode === 'otp' ? t('login.loginWithSMS') : t('login.loginWithEmailOTP')}</Text>
 							</TouchableOpacity>
-							<TouchableOpacity onPress={loginMode !== 'password' ? switchToPasswordMode : handleSMSLogin}>
+							<TouchableOpacity
+								onPress={loginMode !== 'password' ? switchToPasswordMode : handleSMSLogin}
+								{...testProperties('login.switch.password')}
+							>
 								<Text style={styles.linkText}>
 									{loginMode !== 'password' ? t('login.loginWithPassword') : t('login.loginWithSMS')}
 								</Text>

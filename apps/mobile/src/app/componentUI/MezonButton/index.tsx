@@ -1,6 +1,7 @@
 import { useTheme } from '@mezon/mobile-ui';
 import { memo, useMemo } from 'react';
 import { Pressable, StyleProp, Text, TextStyle, ViewStyle } from 'react-native';
+import { testProperties } from '../../configs/testProperties';
 import { style } from './styles';
 
 export enum EMezonButtonTheme {
@@ -83,6 +84,7 @@ const MezonButton = ({
 			]}
 			disabled={disabled}
 			onPress={onPress}
+			{...testProperties('mezonButton')}
 		>
 			{icon}
 			{title && <Text style={[styles.title, titleStyle]}>{title}</Text>}

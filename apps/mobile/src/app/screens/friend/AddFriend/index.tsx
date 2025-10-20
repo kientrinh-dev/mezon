@@ -8,6 +8,7 @@ import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { SeparatorWithLine } from '../../../components/Common';
 import { EFriendItemAction, FriendItem } from '../../../components/FriendItem';
 import { UserInformationBottomSheet } from '../../../components/UserInformationBottomSheet';
+import { testProperties } from '../../../configs/testProperties';
 import { EFriendRequest } from '../RequestFriend';
 import { EmptyFriendRequest } from '../RequestFriend/EmptyFriendRequest';
 import { AddFriendModal } from './components/AddFriendModal';
@@ -54,7 +55,7 @@ export const AddFriendScreen = () => {
 	return (
 		<View style={styles.addFriendContainer}>
 			<View style={styles.groupWrapper}>
-				<TouchableOpacity onPress={() => setCurrentAddFriendShow(true)} style={styles.addFriendItem}>
+				<TouchableOpacity onPress={() => setCurrentAddFriendShow(true)} style={styles.addFriendItem} {...testProperties('addFriend.button')}>
 					<Text style={styles.addFriendText}>{t('addFriend.addByUserName')}</Text>
 				</TouchableOpacity>
 			</View>

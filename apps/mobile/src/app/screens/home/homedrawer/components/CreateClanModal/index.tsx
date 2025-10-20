@@ -4,6 +4,7 @@ import { size, useTheme } from '@mezon/mobile-ui';
 import { channelsActions, checkDuplicateNameClan, clansActions, getStoreAsync, selectCurrentChannel } from '@mezon/store-mobile';
 import { handleUploadFileMobile, useMezon } from '@mezon/transport';
 import { MAX_FILE_SIZE_1MB } from '@mezon/utils';
+import { testProperties } from 'apps/mobile/src/app/configs/testProperties';
 import React, { memo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -136,14 +137,14 @@ const CreateClanModal = memo(() => {
 			/>
 
 			<View style={{ marginBottom: size.s_40, paddingTop: size.s_20 }}>
-				<TouchableOpacity style={styles.backButton} onPress={onClose} activeOpacity={0.7}>
+				<TouchableOpacity style={styles.backButton} onPress={onClose} activeOpacity={0.7} {...testProperties('createClanModal.closeButton')}>
 					<MezonIconCDN icon={IconCDN.closeIcon} color={themeValue.text} width={size.s_30} height={size.s_30} />
 				</TouchableOpacity>
 				<Text style={[styles.title, { color: themeValue.text }]}>{t('title')}</Text>
 				<Text style={[styles.description, { color: themeValue.textDisabled }]}>{t('subTitle')}</Text>
 			</View>
 			<View style={styles.boxImage}>
-				<TouchableOpacity style={styles.uploadImage} onPress={onOpen}>
+				<TouchableOpacity style={styles.uploadImage} onPress={onOpen} {...testProperties('createClanModal.uploadImageButton')}>
 					{!urlImage ? (
 						<View style={[styles.uploadCreateClan]}>
 							<MezonIconCDN

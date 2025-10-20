@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import MezonButton from '../../../../../componentUI/MezonButton';
 import MezonIconCDN from '../../../../../componentUI/MezonIconCDN';
 import { MezonModal } from '../../../../../componentUI/MezonModal';
+import { testProperties } from '../../../../../configs/testProperties';
 import { IconCDN } from '../../../../../constants/icon_cdn';
 import { style } from './styles';
 interface IAddFriendModal {
@@ -133,6 +134,7 @@ export const AddFriendModal = React.memo((props: IAddFriendModal) => {
 									style={styles.searchInput}
 									onChangeText={handleTextChange}
 									autoCapitalize="none"
+									{...testProperties('addFriend.input.username')}
 								/>
 							</View>
 							<View style={styles.byTheWayText}>

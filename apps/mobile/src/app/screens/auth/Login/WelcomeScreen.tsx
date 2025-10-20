@@ -7,6 +7,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { APP_SCREEN } from '../../../navigation/ScreenTypes';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
+import { testProperties } from '../../../configs/testProperties';
 import FEATURE_BG from './featureBg.png';
 import { style } from './styles';
 
@@ -39,7 +40,7 @@ const WelcomeScreen = ({ navigation }) => {
 					resizeMode={FastImage.resizeMode.contain}
 				/>
 			</View>
-			<TouchableOpacity style={[styles.otpButton, { bottom: 0 }]} onPress={() => onGetStarted()}>
+			<TouchableOpacity style={[styles.otpButton, { bottom: 0 }]} onPress={() => onGetStarted()} {...testProperties('started.button')}>
 				<Text style={[styles.otpButtonText]}>{t('login.getStarted')}</Text>
 				<LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={['#501794', '#3E70A1']} style={[StyleSheet.absoluteFillObject]} />
 			</TouchableOpacity>
