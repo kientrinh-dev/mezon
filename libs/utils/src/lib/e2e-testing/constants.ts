@@ -463,6 +463,12 @@ export const DATA_E2E_IDENTIFIER = {
 			add_to_group: {
 				button: ''
 			},
+			unblock: {
+				button: ''
+			},
+			block: {
+				button: ''
+			},
 
 			menu: {
 				leave_group: {
