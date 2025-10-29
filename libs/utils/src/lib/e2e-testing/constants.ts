@@ -532,6 +532,9 @@ export const DATA_E2E_IDENTIFIER = {
 				item: {
 					actions: ''
 				}
+			},
+			inbox: {
+				mentions: ''
 			}
 		},
 		mention: {
