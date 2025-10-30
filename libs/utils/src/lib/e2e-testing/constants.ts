@@ -438,7 +438,8 @@ export const DATA_E2E_IDENTIFIER = {
 			button: {
 				add_user: '',
 				create_group: '',
-				button_plus: ''
+				button_plus: '',
+				search: ''
 			},
 			edit_group: {
 				button: '',
@@ -664,6 +665,18 @@ export const DATA_E2E_IDENTIFIER = {
 			button: {
 				control_item: ''
 			}
+		},
+		forward_message: {
+			button: {
+				cancel: '',
+				send: ''
+			},
+			input: {
+				search: ''
+			}
+		},
+		search: {
+			input: ''
 		}
 	},
 	icon: {
