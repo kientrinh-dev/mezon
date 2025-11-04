@@ -583,7 +583,8 @@ export const DATA_E2E_IDENTIFIER = {
 			},
 			button: {
 				view_topic: ''
-			}
+			},
+			number_replies: ''
 		}
 	},
 	onboarding: {
