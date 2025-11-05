@@ -399,6 +399,27 @@ export const DATA_E2E_IDENTIFIER = {
 			input: {
 				avatar_channel_webhook: ''
 			}
+		},
+		quick_menu: {
+			tab: '',
+			button: {
+				add: ''
+			},
+			modal: {
+				input: {
+					command_name: '',
+					message_content: ''
+				},
+				button: {
+					submit: '',
+					cancel: ''
+				}
+			},
+			item: {
+				command: '',
+				type: '',
+				message_content: ''
+			}
 		}
 	},
 	chat: {
