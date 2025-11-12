@@ -138,7 +138,8 @@ export const DATA_E2E_IDENTIFIER = {
 				button: {
 					confirm: '',
 					cancel: ''
-				}
+				},
+				error_message: ''
 			},
 			create_clan: {
 				input: {
