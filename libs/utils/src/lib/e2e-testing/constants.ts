@@ -690,6 +690,7 @@ export const DATA_E2E_IDENTIFIER = {
 		},
 		voice_management: {
 			button: {
+				copy_link: '',
 				control_item: ''
 			}
 		},
