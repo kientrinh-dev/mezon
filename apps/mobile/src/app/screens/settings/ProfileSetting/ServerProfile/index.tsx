@@ -165,15 +165,17 @@ const ServerProfile = forwardRef(function ServerProfile({ navigation }: IServerP
 
 	return (
 		<KeyboardAvoidingView behavior={'position'} style={[styles.keyboardAvoidingView, { width: Dimensions.get('screen').width }]}>
-			<TouchableOpacity onPress={() => openBottomSheet()} style={styles.actionItem}>
-				<View style={[styles.clanAvatarWrapper]}>
-					<MezonClanAvatar image={selectedClan?.logo} alt={selectedClan?.clan_name} />
-				</View>
-				<View style={styles.clanNameWrapper}>
-					<Text style={styles.clanName}>{selectedClan?.clan_name}</Text>
-				</View>
-				<MezonIconCDN icon={IconCDN.chevronSmallRightIcon} height={size.s_15} width={size.s_15} color={themeValue.text} />
-			</TouchableOpacity>
+			{!!clans?.length && (
+				<TouchableOpacity onPress={() => openBottomSheet()} style={styles.actionItem}>
+					<View style={[styles.clanAvatarWrapper]}>
+						<MezonClanAvatar image={selectedClan?.logo} alt={selectedClan?.clan_name} />
+					</View>
+					<View style={styles.clanNameWrapper}>
+						<Text style={styles.clanName}>{selectedClan?.clan_name}</Text>
+					</View>
+					<MezonIconCDN icon={IconCDN.chevronSmallRightIcon} height={size.s_15} width={size.s_15} color={themeValue.text} />
+				</TouchableOpacity>
+			)}
 
 			<BannerAvatar
 				avatar={currentClanProfileValue?.imgUrl || userProfile?.user?.avatar_url}
@@ -193,7 +195,7 @@ const ServerProfile = forwardRef(function ServerProfile({ navigation }: IServerP
 				<MezonInput
 					value={currentClanProfileValue?.displayName}
 					onTextChange={(newValue) => onValueChange({ displayName: newValue })}
-					placeHolder={currentClanProfileValue?.username}
+					placeHolder={currentClanProfileValue?.displayName || userProfile?.user?.display_name || userProfile?.user?.username}
 					maxCharacter={32}
 					label={t('fields.clanNickname.label')}
 					errorMessage={isDuplicateClanNickname ? 'The nick name already exists in the clan. Please enter another nick name.' : ''}
