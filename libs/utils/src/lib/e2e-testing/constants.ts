@@ -290,6 +290,18 @@ export const DATA_E2E_IDENTIFIER = {
 			overview: {
 				input: {
 					clan_name: ''
+				},
+				system_messages_channel: {
+					selection: {
+						item: {
+							channel_name: '',
+							category_name: ''
+						},
+						selected: {
+							channel_name: '',
+							category_name: ''
+						}
+					}
 				}
 			},
 			upload: {
