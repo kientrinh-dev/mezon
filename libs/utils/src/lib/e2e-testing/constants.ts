@@ -90,6 +90,7 @@ export const DATA_E2E_IDENTIFIER = {
 			}
 		},
 		side_bar: {
+			DM_item: '',
 			clan_item: {
 				name: ''
 			},
