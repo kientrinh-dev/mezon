@@ -107,10 +107,6 @@ export const refreshSession = createAsyncThunk('auth/refreshSession', async (_, 
 		return thunkAPI.rejectWithValue('Invalid session tokens');
 	}
 
-	if (mezon.sessionRef.current?.token && mezon.sessionRef.current?.token === sessionState?.token) {
-		return sessionState;
-	}
-
 	let session = new Session(sessionState.token, sessionState.refresh_token, sessionState.created, sessionState.api_url, !!sessionState.is_remember);
 
 	try {
@@ -293,11 +289,15 @@ export const authSlice = createSlice({
 		},
 
 		updateSession(state, action: PayloadAction<ISession>) {
-			if (action.payload.user_id && state.session && state.session[action.payload.user_id]) {
-				state.session[action.payload.user_id] = {
-					...state.session[action.payload.user_id],
-					...action.payload
-				};
+			if (action?.payload?.user_id && state.session && state.session[action.payload.user_id]) {
+				const currentSession = state.session[action.payload.user_id];
+
+				if (currentSession.token !== action.payload.token || currentSession.refresh_token !== action.payload.refresh_token) {
+					state.session[action.payload.user_id] = {
+						...currentSession,
+						...action.payload
+					};
+				}
 			}
 		},
 		setLogout(state) {

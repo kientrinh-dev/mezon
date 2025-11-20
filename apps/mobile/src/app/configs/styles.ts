@@ -1,4 +1,5 @@
-import { Attributes, baseColor, size } from '@mezon/mobile-ui';
+import type { Attributes } from '@mezon/mobile-ui';
+import { baseColor, size } from '@mezon/mobile-ui';
 import { StyleSheet } from 'react-native';
 
 export const style = (colors: Attributes) =>
@@ -87,10 +88,11 @@ export const style = (colors: Attributes) =>
 			backgroundColor: '#b6e1c6'
 		},
 		contentContainerStyle: {
-			paddingHorizontal: size.s_20
+			paddingLeft: size.s_20,
+			paddingRight: size.s_30
 		},
 		trailingIconContainer: {
-			marginRight: -size.s_30
+			marginRight: -size.s_40
 		},
 		notificationTextContainer: {
 			flexDirection: 'column',

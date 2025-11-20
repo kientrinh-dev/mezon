@@ -4,6 +4,7 @@ import {
 	EStateFriend,
 	channelMembersActions,
 	channelUsersActions,
+	clansActions,
 	selectAllAccount,
 	selectBanMemberCurrentClanById,
 	selectCurrentChannelCreatorId,
@@ -12,17 +13,19 @@ import {
 	selectCurrentClanCreatorId,
 	selectCurrentClanId,
 	selectFriendStatus,
+	toastActions,
 	useAppDispatch,
 	useAppSelector,
 	usersClanActions
 } from '@mezon/store';
 import { Menu as MenuDropdown } from '@mezon/ui';
-import { EPermission } from '@mezon/utils';
+import { EPermission, FOR_15_MINUTES_SEC, FOR_1_HOUR_SEC, FOR_24_HOURS_SEC, FOR_3_HOURS_SEC, FOR_8_HOURS_SEC } from '@mezon/utils';
 import { ChannelType } from 'mezon-js';
 import type { CSSProperties, FC } from 'react';
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { Menu, useContextMenu } from 'react-contexify';
 import { useTranslation } from 'react-i18next';
+import { useModal } from 'react-modal-hook';
 import { useSelector } from 'react-redux';
 import ModalRemoveMemberClan from '../../components/MemberProfile/ModalRemoveMemberClan';
 import ItemPanel from '../../components/PanelChannel/ItemPanel';
@@ -51,9 +54,63 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 	const { createDirectMessageWithUser } = useDirect();
 	const { toDmGroupPageFromMainApp, navigate } = useAppNavigation();
 
-	const { openModalRemoveMember, closeRemoveMemberModal, handleRemoveMember, openUserProfile, openProfileItem, openRemoveMemberModal } = useModals({
+	const { openUserProfile, openProfileItem, hideProfileItemModal, hideUserProfileModal } = useModals({
 		currentUser
 	});
+	const handleRemoveMember = useCallback(async () => {
+		if (!currentUser?.user?.id || !currentClanId) return;
+
+		try {
+			await dispatch(
+				clansActions.removeClanUsers({
+					clanId: currentClanId,
+					userIds: [currentUser.user.id]
+				})
+			);
+			dispatch(
+				toastActions.addToast({
+					message: 'Member removed successfully',
+					type: 'success'
+				})
+			);
+		} catch (error) {
+			dispatch(
+				toastActions.addToast({
+					message: 'Failed to remove member',
+					type: 'error'
+				})
+			);
+		}
+	}, [currentUser, currentClanId, dispatch]);
+	const [showRemoveMemberModal, hideRemoveMemberModal] = useModal(() => {
+		if (!currentUser) return null;
+
+		return (
+			<ModalRemoveMemberClan
+				username={currentUser?.user?.username}
+				onClose={hideRemoveMemberModal}
+				onRemoveMember={async () => {
+					await handleRemoveMember();
+					hideRemoveMemberModal();
+				}}
+			/>
+		);
+	}, [currentUser, handleRemoveMember]);
+	const openRemoveMemberModal = useCallback(
+		(user?: ChannelMembersEntity) => {
+			if (user) {
+				setCurrentUser(user);
+			}
+			if (hideProfileItemModal) {
+				hideProfileItemModal();
+			}
+			if (hideUserProfileModal) {
+				hideUserProfileModal();
+			}
+			showRemoveMemberModal();
+		},
+		[hideProfileItemModal, hideUserProfileModal, setCurrentUser, showRemoveMemberModal]
+	);
 
 	const [currentHandlers, setCurrentHandlers] = useState<MemberContextMenuHandlers | null>(null);
 
@@ -109,7 +166,7 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 			case 'markAsRead':
 				return !!currentUser;
 			case 'banChat':
-				return hasAdminPermission;
+				return hasAdminPermission && !isSelf;
 			default:
 				return true;
 		}
@@ -316,11 +373,11 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 			return <></>;
 		}
 		const menuItems = [
-			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, Infinity)}>{t('muteFor15Minutes')}</ItemPanel>,
-			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, Infinity)}>{t('muteFor1Hour')}</ItemPanel>,
-			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, Infinity)}>{t('muteFor3Hours')}</ItemPanel>,
-			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, Infinity)}>{t('muteFor8Hours')}</ItemPanel>,
-			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, Infinity)}>{t('muteFor24Hours')}</ItemPanel>,
+			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, FOR_15_MINUTES_SEC)}>{t('muteFor15Minutes')}</ItemPanel>,
+			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, FOR_1_HOUR_SEC)}>{t('muteFor1Hour')}</ItemPanel>,
+			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, FOR_3_HOURS_SEC)}>{t('muteFor3Hours')}</ItemPanel>,
+			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, FOR_8_HOURS_SEC)}>{t('muteFor8Hours')}</ItemPanel>,
+			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, FOR_24_HOURS_SEC)}>{t('muteFor24Hours')}</ItemPanel>,
 			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, Infinity)}>{t('muteUntilTurnedBack')}</ItemPanel>
 		];
 		return <>{menuItems}</>;
@@ -368,7 +425,12 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 								className="bg-theme-contexify text-theme-primary border-theme-primary ml-[3px] py-[6px] px-[8px] w-[200px]"
 							>
 								<div>
-									<ItemPanel dropdown="change here">{t('member.banChat')}</ItemPanel>
+									<MemberMenuItem
+										label={t('member.banChat')}
+										onClick={() => currentHandlers.handleBanChat(true)}
+										isWarning={true}
+										setWarningStatus={setWarningStatus}
+									/>
 								</div>
 							</MenuDropdown>
 						)}
@@ -402,10 +464,6 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 					</>
 				)}
 			</Menu>
-
-			{openModalRemoveMember && currentUser && (
-				<ModalRemoveMemberClan username={currentUser?.user?.username} onClose={closeRemoveMemberModal} onRemoveMember={handleRemoveMember} />
-			)}
 		</MemberContextMenuContext.Provider>
 	);
 };

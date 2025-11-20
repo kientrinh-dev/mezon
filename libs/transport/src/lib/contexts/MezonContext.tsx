@@ -2,12 +2,7 @@ import EventEmitter from 'events';
 import type { Client, Socket } from 'mezon-js';
 import { Session } from 'mezon-js';
 import { WebSocketAdapterPb } from 'mezon-js-protobuf';
-import type {
-	ApiConfirmLoginRequest,
-	ApiLinkAccountConfirmRequest,
-	ApiLoginIDResponse,
-	ApiSession
-} from 'mezon-js/dist/api.gen';
+import type { ApiConfirmLoginRequest, ApiLinkAccountConfirmRequest, ApiLoginIDResponse, ApiSession } from 'mezon-js/dist/api.gen';
 import type { IndexerClient, MmnClient, ZkClient } from 'mmn-client-js';
 import React, { useCallback } from 'react';
 import type { CreateMezonClientOptions } from '../mezon';
@@ -238,6 +233,7 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 					sessionData.is_remember || false
 				);
 
+				console.log('sessionRef.current = ', 'onRefreshSession', { token: newSession?.token, user_id: newSession?.user_id });
 				sessionRef.current = newSession;
 				if (isFromMobile) {
 					MobileEventSessionEmitter.emit('mezon:session-refreshed', {
@@ -315,6 +311,7 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 				throw new Error('Mezon client not initialized');
 			}
 			const session = await clientRef.current.authenticateMezon(token, undefined, undefined, isFromMobile ? true : (isRemember ?? false));
+			console.log('sessionRef.current = ', 'authenticateMezon', { token: session?.token, user_id: session?.user_id });
 			sessionRef.current = session;
 
 			const config = extractAndSaveConfig(session, isFromMobile);
@@ -342,6 +339,7 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 				throw new Error('Mezon client not initialized');
 			}
 			const session = await clientRef.current.authenticateEmail(email, password);
+			console.log('sessionRef.current = ', 'authenticateEmail', { token: session?.token, user_id: session?.user_id });
 			sessionRef.current = session;
 
 			const config = extractAndSaveConfig(session);
@@ -377,6 +375,7 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 			}
 
 			const session = await clientRef.current.confirmEmailOTP(data);
+			console.log('sessionRef.current = ', 'confirmEmailOTP', { token: session?.token, user_id: session?.user_id });
 			sessionRef.current = session;
 
 			const config = extractAndSaveConfig(session);
@@ -425,6 +424,7 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 					platform || ''
 				);
 
+				console.log('sessionRef.current = ', 'logOutMezon', null);
 				sessionRef.current = null;
 				if (clearSession) {
 					clearSessionFromStorage();
@@ -468,6 +468,7 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 				new Session(session?.token, session?.refresh_token, session.created, session.api_url, session.is_remember)
 			);
 
+			console.log('sessionRef.current = ', 'refreshSession', { token: newSession?.token, user_id: newSession?.user_id });
 			sessionRef.current = newSession;
 			extractAndSaveConfig(newSession, isFromMobile);
 
@@ -486,13 +487,13 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 			if (!clientRef.current) {
 				throw new Error('Mezon client not initialized');
 			}
+			console.log('sessionRef.current = ', 'connectWithSession', { token: session?.token, user_id: session?.user_id });
 			sessionRef.current = session;
 			extractAndSaveConfig(session, isFromMobile);
 			if (!socketRef.current) {
 				return session;
 			}
-			const session2 = await socketRef.current.connect(session, true, isFromMobile ? '1' : '0');
-			sessionRef.current = session2;
+			await socketRef.current.connect(session, true, isFromMobile ? '1' : '0');
 			return session;
 		},
 		[clientRef, socketRef, isFromMobile]
@@ -540,12 +541,8 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 							);
 						}
 
-						const connectedSession = await socket.connect(newSession || sessionRef.current, true, isFromMobile ? '1' : '0');
+						await socket.connect(newSession || sessionRef.current, true, isFromMobile ? '1' : '0');
 						await socket.joinClanChat(clanId);
-
-						socketRef.current = socket;
-						sessionRef.current = connectedSession;
-						extractAndSaveConfig(connectedSession, isFromMobile);
 
 						return socket;
 					} catch (error) {
@@ -638,6 +635,40 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 			});
 		}
 	}, [connect, createClient, createSocket]);
+
+	React.useEffect(() => {
+		if (typeof window === 'undefined' || isFromMobile) return;
+
+		const handleSessionRefresh = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			const sessionData = customEvent.detail?.session;
+
+			if (sessionData && sessionRef.current?.token !== sessionData.token) {
+				const newSession = new Session(
+					sessionData.token,
+					sessionData.refresh_token,
+					sessionData.created || false,
+					sessionData.api_url,
+					sessionData.is_remember || false
+				);
+
+				if (sessionData.username) newSession.username = sessionData.username;
+				if (sessionData.user_id) newSession.user_id = sessionData.user_id;
+				if (sessionData.vars) newSession.vars = sessionData.vars;
+				if (sessionData.expires_at) newSession.expires_at = sessionData.expires_at;
+				if (sessionData.refresh_expires_at) newSession.refresh_expires_at = sessionData.refresh_expires_at;
+
+				console.log('sessionRef.current = ', 'window event listener', { token: newSession?.token, user_id: newSession?.user_id });
+				sessionRef.current = newSession;
+			}
+		};
+
+		window.addEventListener('mezon:session-refreshed', handleSessionRefresh);
+
+		return () => {
+			window.removeEventListener('mezon:session-refreshed', handleSessionRefresh);
+		};
+	}, [isFromMobile]);
 
 	return <MezonContext.Provider value={value}>{children}</MezonContext.Provider>;
 };
