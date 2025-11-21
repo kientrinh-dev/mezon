@@ -29,6 +29,9 @@ export const DATA_E2E_IDENTIFIER = {
 		selected_file: '',
 		text: {
 			about_me: ''
+		},
+		banned: {
+			time: ''
 		}
 	},
 	discussion: {
