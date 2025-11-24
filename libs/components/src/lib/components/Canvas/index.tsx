@@ -13,7 +13,7 @@ import {
 	selectTheme,
 	selectTitle
 } from '@mezon/store';
-import { EEventAction } from '@mezon/utils';
+import { EEventAction, generateE2eId } from '@mezon/utils';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
@@ -199,8 +199,9 @@ const Canvas = () => {
 				rows={1}
 				disabled={!isEditAndDelCanvas}
 				className="w-full px-4 py-2 mt-[25px] text-theme-message bg-inherit focus:outline-none text-[28px] resize-none leading-[34px] font-bold "
+				data-e2e={generateE2eId('clan_page.screen.canvas_editor.input.title')}
 			/>
-			<div className="w-full">
+			<div className="w-full" data-e2e={generateE2eId('clan_page.screen.canvas_editor.input.content')}>
 				<Suspense fallback={<CanvasContentPlaceholder />}>
 					<CanvasContent
 						key={idCanvas}
