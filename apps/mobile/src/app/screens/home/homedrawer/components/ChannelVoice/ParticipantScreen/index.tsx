@@ -2,7 +2,7 @@ import { useParticipants, useRoomContext, useTracks, VideoTrack } from '@livekit
 import { usePermissionChecker } from '@mezon/core';
 import { ActionEmitEvent } from '@mezon/mobile-components';
 import { size, useTheme } from '@mezon/mobile-ui';
-import { getStore, selectAllAccount, selectCurrentClanId, selectIsPiPMode, useAppDispatch, useAppSelector, voiceActions } from '@mezon/store-mobile';
+import { selectAllAccount, selectCurrentClanId, selectIsPiPMode, useAppDispatch, useAppSelector, voiceActions } from '@mezon/store-mobile';
 import { EPermission } from '@mezon/utils';
 import type { Participant } from 'livekit-client';
 import { RoomEvent, Track } from 'livekit-client';
@@ -15,7 +15,8 @@ import { IconCDN } from '../../../../../../../../src/app/constants/icon_cdn';
 import MezonAvatar from '../../../../../../componentUI/MezonAvatar';
 import MezonConfirm from '../../../../../../componentUI/MezonConfirm';
 import useTabletLandscape from '../../../../../../hooks/useTabletLandscape';
-import UserProfile, { IActionVoiceUser, IManageVoiceUser } from '../../UserProfile';
+import type { IManageVoiceUser } from '../../UserProfile';
+import UserProfile, { IActionVoiceUser } from '../../UserProfile';
 import { style } from '../styles';
 
 const ParticipantItem = memo(
@@ -34,7 +35,6 @@ const ParticipantItem = memo(
 		member
 	}: any) => {
 		const isTabletLandscape = useTabletLandscape();
-		const store = getStore();
 		const { themeValue } = useTheme();
 		const styles = style(themeValue);
 		const { t } = useTranslation(['channelVoice']);
@@ -108,8 +108,8 @@ const ParticipantItem = memo(
 				const data = {
 					snapPoints: ['60%'],
 					hiddenHeaderIndicator: true,
-					containerStyle: { zIndex: 1001 },
-					backdropStyle: { zIndex: 1001 },
+					containerStyle: styles.bottomSheetZIndex,
+					backdropStyle: styles.bottomSheetZIndex,
 					children: (
 						<UserProfile
 							user={member?.user || { username }}
@@ -131,15 +131,7 @@ const ParticipantItem = memo(
 				{screenTrackRef && (
 					<TouchableOpacity
 						onPress={handleFocusScreen}
-						style={[
-							styles.userView,
-							isTabletLandscape && { height: size.s_150 + size.s_100 },
-							isPiPMode && {
-								width: '100%',
-								height: size.s_100 * 1.2,
-								marginBottom: size.s_100
-							}
-						]}
+						style={[styles.userView, isTabletLandscape && styles.userViewTabletHeight, isPiPMode && styles.userViewPiPScreenShare]}
 					>
 						<VideoTrack
 							objectFit={'contain'}
@@ -149,9 +141,9 @@ const ParticipantItem = memo(
 						/>
 						{!isPiPMode && hasActiveSoundReaction && renderSoundEffectIcon()}
 						{!isPiPMode && (
-							<View style={[styles.userName, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '90%' }]}>
+							<View style={[styles.userName, styles.userNameFullWidth]}>
 								<MezonIconCDN icon={IconCDN.shareScreenIcon} height={size.s_14} />
-								<Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subTitle, { width: '100%' }]}>
+								<Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subTitle, styles.subTitleFullWidth]}>
 									{voiceUsername} Share Screen
 								</Text>
 							</View>
@@ -170,9 +162,9 @@ const ParticipantItem = memo(
 						onLongPress={() => onPressInfoUser(isMicrophoneEnabled)}
 						style={[
 							styles.userView,
-							isTabletLandscape && { height: size.s_150 + size.s_100 },
-							isPiPMode && { height: size.s_60 * 2, width: '45%', marginHorizontal: size.s_4 },
-							isSpeaking && { borderWidth: 1, borderColor: themeValue.textLink }
+							isTabletLandscape && styles.userViewTabletHeight,
+							isPiPMode && styles.userViewPiPVideo,
+							isSpeaking && [styles.userViewSpeaking, { borderColor: themeValue.textLink }]
 						]}
 					>
 						<VideoTrack
@@ -181,7 +173,7 @@ const ParticipantItem = memo(
 							iosPIP={{ enabled: true, startAutomatically: true, preferredSize: { width: 12, height: 8 } }}
 						/>
 						{hasActiveSoundReaction && renderSoundEffectIcon()}
-						<View style={[styles.userName, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}>
+						<View style={[styles.userName, styles.userNameCentered]}>
 							{isMicrophoneEnabled ? (
 								<MezonIconCDN icon={IconCDN.microphoneIcon} height={size.s_14} color={themeValue.text} />
 							) : (
@@ -200,13 +192,13 @@ const ParticipantItem = memo(
 						onLongPress={() => onPressInfoUser(isMicrophoneEnabled)}
 						style={[
 							styles.userView,
-							isTabletLandscape && { height: size.s_150 + size.s_100 },
-							isPiPMode && { height: size.s_60 * 2, width: '45%', marginHorizontal: size.s_4 },
-							isSpeaking && { borderWidth: 1, borderColor: themeValue.textLink }
+							isTabletLandscape && styles.userViewTabletHeight,
+							isPiPMode && styles.userViewPiPVideo,
+							isSpeaking && [styles.userViewSpeaking, { borderColor: themeValue.textLink }]
 						]}
 					>
 						{hasActiveSoundReaction && renderSoundEffectIcon()}
-						<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: size.s_10 }}>
+						<View style={styles.avatarContainer}>
 							{!voiceUsername ? (
 								<MezonIconCDN icon={IconCDN.loadingIcon} width={24} height={24} />
 							) : (
@@ -252,6 +244,8 @@ const ParticipantItem = memo(
 
 const ParticipantScreen = ({ setFocusedScreenShare, activeSoundReactions, isGroupCall, clanId, channelId, clanUsers }) => {
 	const participants = useParticipants();
+	const { themeValue } = useTheme();
+	const styles = style(themeValue);
 	const tracks = useTracks(
 		[
 			{ source: Track.Source.Camera, withPlaceholder: true },
@@ -301,7 +295,7 @@ const ParticipantScreen = ({ setFocusedScreenShare, activeSoundReactions, isGrou
 
 	return (
 		<ScrollView
-			style={{ marginHorizontal: isPiPMode ? 0 : size.s_10 }}
+			style={isPiPMode ? styles.scrollViewMarginZero : styles.scrollViewMargin}
 			showsVerticalScrollIndicator={false}
 			removeClippedSubviews={true}
 			scrollEventThrottle={16}
@@ -315,15 +309,7 @@ const ParticipantScreen = ({ setFocusedScreenShare, activeSoundReactions, isGrou
 			automaticallyAdjustContentInsets={false}
 			automaticallyAdjustKeyboardInsets={false}
 		>
-			<View
-				style={{
-					flexDirection: 'row',
-					flexWrap: 'wrap',
-					justifyContent: isPiPMode ? 'space-between' : 'center',
-					gap: isPiPMode ? size.s_2 : size.s_10,
-					alignItems: isPiPMode ? 'flex-start' : 'center'
-				}}
-			>
+			<View style={isPiPMode ? styles.participantContainerPiP : styles.participantContainer}>
 				{sortedParticipants?.length > 0 &&
 					sortedParticipants?.map((participant) => {
 						const isSpeaking = participant?.isSpeaking;
@@ -363,7 +349,7 @@ const ParticipantScreen = ({ setFocusedScreenShare, activeSoundReactions, isGrou
 						);
 					})}
 			</View>
-			<View style={{ height: size.s_300 }} />
+			<View style={styles.spacer} />
 		</ScrollView>
 	);
 };

@@ -1,5 +1,5 @@
 import { ActionEmitEvent } from '@mezon/mobile-components';
-import { baseColor, size, useTheme } from '@mezon/mobile-ui';
+import { size, useTheme } from '@mezon/mobile-ui';
 import { DMCallActions, selectAllAccount, selectSignalingDataByUserId, useAppDispatch, useAppSelector } from '@mezon/store-mobile';
 import { IMessageTypeCallLog } from '@mezon/utils';
 import notifee from '@notifee/react-native';
@@ -163,12 +163,9 @@ export const DirectMessageCallMain = memo(({ route }: IDirectMessageCallProps) =
 		if (isAnswerCall) {
 			handleToggleIsConnected(false);
 		}
-		const timer = setTimeout(() => {
-			startCall(isVideoCall, isAnswerCall);
-		}, 1000);
+		startCall(isVideoCall, isAnswerCall);
 
 		return () => {
-			clearTimeout(timer);
 			InCallManager.stop();
 		};
 	}, [isAnswerCall, isVideoCall]);
@@ -183,10 +180,10 @@ export const DirectMessageCallMain = memo(({ route }: IDirectMessageCallProps) =
 				style={[StyleSheet.absoluteFillObject]}
 			/>
 			<View style={[styles.menuHeader]}>
-				<View style={{ flexDirection: 'row', alignItems: 'center', gap: size.s_20 }}>
+				<View style={styles.headerControlsLeft}>
 					<TouchableOpacity
 						onPress={() => {
-							Alert.alert('End Call', 'Are you sure you want to end the call?', [
+							Alert.alert('End Call', 'Please confirm if you would like to end the call?', [
 								{
 									text: 'Cancel',
 									style: 'cancel'
@@ -204,7 +201,7 @@ export const DirectMessageCallMain = memo(({ route }: IDirectMessageCallProps) =
 						<MezonIconCDN icon={IconCDN.closeIcon} color={themeValue.white} height={size.s_24} width={size.s_24} />
 					</TouchableOpacity>
 				</View>
-				<View style={{ flexDirection: 'row', alignItems: 'center', gap: size.s_10 }}>
+				<View style={styles.headerControlsRight}>
 					{callState.localStream && localMediaControl?.camera && (
 						<View>
 							<TouchableOpacity onPress={handleSwitchCamera} style={[styles.buttonCircle]}>
@@ -242,7 +239,7 @@ export const DirectMessageCallMain = memo(({ route }: IDirectMessageCallProps) =
 					<Text style={styles.textDescControl}>{t('speaker')}</Text>
 				</View>
 				<View>
-					<TouchableOpacity onPress={onCancelCall} style={{ ...styles.menuIcon, backgroundColor: baseColor.redStrong, opacity: 1 }}>
+					<TouchableOpacity onPress={onCancelCall} style={styles.endCallButton}>
 						<MezonIconCDN icon={IconCDN.phoneCallIcon} />
 					</TouchableOpacity>
 					<Text style={styles.textDescControl}>{t('end')}</Text>

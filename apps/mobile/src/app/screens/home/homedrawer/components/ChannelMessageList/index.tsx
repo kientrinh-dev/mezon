@@ -1,8 +1,8 @@
 import { ELoadMoreDirection } from '@mezon/chat-scroll';
 import { size, useTheme } from '@mezon/mobile-ui';
-import { MessagesEntity } from '@mezon/store-mobile';
-import React, { useCallback, useMemo } from 'react';
-import { Keyboard, View } from 'react-native';
+import type { MessagesEntity } from '@mezon/store-mobile';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Keyboard, Platform, View } from 'react-native';
 import { Flow } from 'react-native-animated-spinkit';
 import { FlatList } from 'react-native-gesture-handler';
 import { style } from './styles';
@@ -14,6 +14,7 @@ interface IChannelListMessageProps {
 	renderItem: ({ item }: { item: MessagesEntity }) => React.ReactElement;
 	onLoadMore: (direction: ELoadMoreDirection) => void;
 	isLoadMoreBottom: boolean;
+	lastSeenMessageId?: string;
 }
 
 export const ViewLoadMore = ({ isLoadMoreTop = false }: { isLoadMoreTop?: boolean }) => {
@@ -28,10 +29,10 @@ export const ViewLoadMore = ({ isLoadMoreTop = false }: { isLoadMoreTop?: boolea
 };
 
 const ChannelListMessage = React.memo(
-	({ flatListRef, messages, handleScroll, renderItem, onLoadMore, isLoadMoreBottom }: IChannelListMessageProps) => {
+	({ flatListRef, messages, handleScroll, renderItem, onLoadMore, isLoadMoreBottom, lastSeenMessageId }: IChannelListMessageProps) => {
 		const { themeValue } = useTheme();
 		const styles = style(themeValue);
-
+		const hasJumpedToLastSeen = useRef(false);
 		const keyExtractor = useCallback((message) => `${message?.id}_${message?.channel_id}`, []);
 
 		const isCannotLoadMore = useMemo(() => {
@@ -45,12 +46,32 @@ const ChannelListMessage = React.memo(
 				onLoadMore(ELoadMoreDirection.top);
 			}
 		};
+
+		useEffect(() => {
+			if (!lastSeenMessageId || !messages?.length || hasJumpedToLastSeen.current) {
+				return;
+			}
+
+			const indexToJump = messages?.findIndex?.((message: { id: string }) => message.id === lastSeenMessageId);
+			hasJumpedToLastSeen.current = true;
+
+			if (indexToJump !== -1 && indexToJump >= 5) {
+				flatListRef.current?.scrollToIndex({
+					index: indexToJump,
+					animated: true,
+					viewOffset: 0,
+					viewPosition: 0.5
+				});
+			}
+		}, [flatListRef, lastSeenMessageId, messages]);
+
 		return (
 			<FlatList
 				data={messages}
 				renderItem={renderItem}
 				keyExtractor={keyExtractor}
 				inverted={true}
+				bounces={false}
 				showsVerticalScrollIndicator={true}
 				contentContainerStyle={styles.listChannels}
 				initialNumToRender={5}
@@ -58,19 +79,14 @@ const ChannelListMessage = React.memo(
 				windowSize={10}
 				onEndReachedThreshold={0.2}
 				maintainVisibleContentPosition={{
-					minIndexForVisible: 0,
-					autoscrollToTopThreshold: isLoadMoreBottom ? undefined : 100
+					minIndexForVisible: 1,
+					autoscrollToTopThreshold: isLoadMoreBottom ? undefined : 1000
 				}}
 				ref={flatListRef}
-				// overrideProps={{ isInvertedVirtualizedList: true }}
-				onMomentumScrollEnd={handleScroll}
+				onScroll={handleScroll}
 				keyboardShouldPersistTaps={'handled'}
-				// removeClippedSubviews={false}
-				// decelerationRate={'fast'}
-				// updateCellsBatchingPeriod={100}
+				keyboardDismissMode={'interactive'}
 				onEndReached={handleEndReached}
-				// scrollEventThrottle={16}
-				// estimatedItemSize={220}
 				onScrollBeginDrag={() => {
 					Keyboard.dismiss();
 				}}
@@ -90,7 +106,7 @@ const ChannelListMessage = React.memo(
 						});
 					}
 				}}
-				disableVirtualization
+				disableVirtualization={Platform.OS === 'ios'}
 			/>
 		);
 	}

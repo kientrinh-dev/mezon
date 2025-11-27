@@ -1,7 +1,7 @@
 import { MediaType, selectCurrentClanId, soundEffectActions, useAppDispatch } from '@mezon/store';
 import { handleUploadEmoticon, useMezon } from '@mezon/transport';
-import { Icons, Modal } from '@mezon/ui';
-import { generateE2eId } from '@mezon/utils';
+import { Icons, InputField, Modal } from '@mezon/ui';
+import { generateE2eId, getIdSaleItemFromSource } from '@mezon/utils';
 import { Snowflake } from '@theinternetfolks/snowflake';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -110,12 +110,13 @@ const ModalUploadSound = ({ sound, onSuccess, onClose }: ModalUploadSoundProps) 
 
 			if (!file) return;
 
-			const id = sound?.id || Snowflake.generate();
-			const path = `sounds/${id}.${file.name.split('.').pop()}`;
+			const tempId = sound?.id || Snowflake.generate();
+			const path = `sounds/${tempId}.${file.name.split('.').pop()}`;
 
 			const attachment = await handleUploadEmoticon(client, session, path, file);
 
 			if (attachment && attachment.url) {
+				const id = getIdSaleItemFromSource(attachment.url);
 				const request = {
 					id,
 					category: 'Among Us',
@@ -269,19 +270,28 @@ const ModalUploadSound = ({ sound, onSuccess, onClose }: ModalUploadSoundProps) 
 								</div>
 
 								<div className="w-full md:w-1/2 flex flex-col gap-1">
-									<p className="text-xs font-bold uppercase text-theme-primary-active	">{t('modal.soundName')}</p>
+									<p className="text-xs font-bold uppercase text-theme-primary-active	">
+										{t('modal.soundName')}{' '}
+										<span title={t('modal.characters')} className="text-red-500 cursor-pointer">
+											*
+										</span>
+									</p>
 									<div className="relative border-theme-primary bg-item-theme rounded-md h-[60px] flex items-center">
-										<input
+										<InputField
 											type="text"
 											placeholder={t('modal.placeholder')}
 											value={name}
-											maxLength={30}
+											maxLength={62}
 											onChange={(e) => setName(e.target.value)}
-											className="w-full h-full px-3 py-2 bg-transparent text-theme-messaga=e border-none rounded-md text-sm focus:outline-none focus:ring-0 focus:border-none "
+											className="w-full h-full px-3 py-2 bg-transparent text-theme-messaga=e border-none rounded-md text-sm focus:outline-none focus:ring-0 focus:border-none pr-[50px]"
 										/>
 										<div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-											<span className={`text-xs font-medium ${name.length > 25 ? 'text-[#faa61a]' : ''}`}>
-												{name.length}/30
+											<span
+												className={`text-xs font-medium ${
+													(name.length ?? 0) > 59 ? 'text-red-500' : (name.length ?? 0) > 40 ? 'text-[#faa61a]' : ''
+												}`}
+											>
+												{name.length ?? 0}/62
 											</span>
 										</div>
 									</div>
@@ -316,7 +326,7 @@ const ModalUploadSound = ({ sound, onSuccess, onClose }: ModalUploadSoundProps) 
 							<button
 								className="px-3 py-1.5 bg-[#5865f2] hover:bg-[#4752c4] text-white rounded-md text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
 								onClick={handleUpload}
-								disabled={(!file && !sound) || !name.trim() || isUploading}
+								disabled={(!file && !sound) || !name.trim() || isUploading || name.length < 3 || name.length > 64}
 							>
 								{isUploading ? (
 									<span className="flex items-center gap-1.5">

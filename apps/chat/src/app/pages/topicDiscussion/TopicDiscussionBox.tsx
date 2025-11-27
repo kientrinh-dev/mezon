@@ -4,9 +4,12 @@ import {
 	fetchMessages,
 	referencesActions,
 	selectAllChannelMemberIds,
+	selectBanMeInChannel,
 	selectCloseMenu,
-	selectCurrentChannel,
+	selectCurrentChannelClanId,
 	selectCurrentChannelId,
+	selectCurrentChannelPrivate,
+	selectCurrentChannelType,
 	selectCurrentClanId,
 	selectCurrentTopicId,
 	selectDataReferences,
@@ -31,17 +34,22 @@ import { ChannelStreamMode, ChannelType } from 'mezon-js';
 import type { ApiMessageAttachment, ApiMessageMention, ApiMessageRef } from 'mezon-js/api.gen';
 import type { DragEvent } from 'react';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { useThrottledCallback } from 'use-debounce';
+import { BanCountDown } from '../channel';
 import MemoizedChannelMessages from '../channel/ChannelMessages';
 import { ChannelTyping } from '../channel/ChannelTyping';
 
 const TopicDiscussionBox = () => {
+	const { t } = useTranslation('common');
 	const dispatch = useAppDispatch();
 	const currentChannelId = useSelector(selectCurrentChannelId);
-	const currentChannel = useSelector(selectCurrentChannel);
+	const currentChannelType = useSelector(selectCurrentChannelType);
+	const currentChannelClanId = useSelector(selectCurrentChannelClanId);
+	const currentChannelPrivate = useSelector(selectCurrentChannelPrivate);
 	const currentClanId = useSelector(selectCurrentClanId);
-	const allUserIdsInChannel = useAppSelector((state) => selectAllChannelMemberIds(state, currentChannelId, false));
+	const allUserIdsInChannel = useAppSelector((state) => selectAllChannelMemberIds(state, currentChannelId as string, false));
 	const sessionUser = useSelector(selectSession);
 	const currentTopicId = useSelector(selectCurrentTopicId);
 	const [isFetchMessageDone, setIsFetchMessageDone] = useState(false);
@@ -53,20 +61,21 @@ const TopicDiscussionBox = () => {
 	const closeMenu = useSelector(selectCloseMenu);
 	const statusMenu = useSelector(selectStatusMenu);
 	const isDesktop = isElectron();
+	const isBanned = useAppSelector((state) => selectBanMeInChannel(state, currentChannelId));
 
 	const mode =
-		currentChannel?.type === ChannelType.CHANNEL_TYPE_THREAD ? ChannelStreamMode.STREAM_MODE_THREAD : ChannelStreamMode.STREAM_MODE_CHANNEL;
+		currentChannelType === ChannelType.CHANNEL_TYPE_THREAD ? ChannelStreamMode.STREAM_MODE_THREAD : ChannelStreamMode.STREAM_MODE_CHANNEL;
 	const handleChildContextMenu = (event: React.MouseEvent) => {
 		event.stopPropagation();
 	};
 
 	const { sendMessage, sendMessageTyping } = useChatSending({
 		mode,
-		channelOrDirect: currentChannel
+		channelOrDirect: currentChannelId
 			? {
-					channel_id: currentChannel.channel_id,
-					clan_id: currentChannel.clan_id,
-					channel_private: currentChannel.channel_private
+					channel_id: currentChannelId,
+					clan_id: currentChannelClanId,
+					channel_private: currentChannelPrivate
 				}
 			: undefined,
 		fromTopic: true
@@ -230,7 +239,10 @@ const TopicDiscussionBox = () => {
 			setIsFetchMessageDone(true);
 		}
 	}, [currentTopicId, currentChannelId, currentClanId, dispatch]);
-
+	const mentionsList = UserMentionList({
+		channelID: currentChannelId as string,
+		channelMode: ChannelStreamMode.STREAM_MODE_CHANNEL
+	});
 	return (
 		<div
 			onDragEnter={handleDragEnter}
@@ -243,14 +255,14 @@ const TopicDiscussionBox = () => {
 			{topicDraggingState && (
 				<div className="absolute inset-0 bg-blue-500 bg-opacity-20 border-2 border-dashed border-blue-500 rounded-lg z-50 flex items-center justify-center">
 					<div className="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg">
-						<p className="text-lg font-semibold">Drop files here to upload to topic</p>
+						<p className="text-lg font-semibold">{t('dropFilesToUploadToTopic')}</p>
 					</div>
 				</div>
 			)}
 			{(isFetchMessageDone || firstMessageOfThisTopic) && (
 				<div className={`relative flex-1 ${isElectron() ? 'h-[calc(100%_-_50px_-_30px)]' : 'h-full'}`}>
 					<MemoizedChannelMessages
-						isPrivate={currentChannel?.channel_private}
+						isPrivate={currentChannelPrivate}
 						channelId={currentTopicId as string}
 						clanId={currentClanId as string}
 						type={ChannelType.CHANNEL_TYPE_CHANNEL}
@@ -263,59 +275,73 @@ const TopicDiscussionBox = () => {
 			)}
 
 			<div className={`flex-shrink flex flex-col bg-theme-chat h-auto relative ${isDesktop && 'pb-5'}`}>
-				{dataReferences.message_ref_id && (
-					<div className="w-full ">
-						<ReplyMessageBox channelId={currentTopicId ?? ''} dataReferences={dataReferences} />
-					</div>
-				)}
-				{checkAttachment && (
-					<div className={`${checkAttachment ? 'px-3  pb-1 pt-5  border-b-[1px] border-color-primary' : ''} bg-item-theme max-h-full`}>
-						<div className={`max-h-full flex gap-6 !overflow-y-hidden !overflow-x-auto thread-scroll `}>
-							{attachmentFilteredByChannelId?.files?.map((item: ApiMessageAttachment, index: number) => {
-								return (
-									<Fragment key={index}>
-										<AttachmentPreviewThumbnail
-											attachment={item}
-											channelId={currentInputChannelId}
-											onRemove={removeAttachmentByIndex}
-											indexOfItem={index}
-										/>
-									</Fragment>
-								);
-							})}
-						</div>
-					</div>
-				)}
-				<div className="mx-3 relative">
-					<div
-						className={`flex flex-inline items-start gap-2 box-content max-sm:mb-0
+				{isBanned ? (
+					<BanCountDown
+						banTime={isBanned.ban_time ? isBanned.ban_time - Date.now() : Infinity}
+						channelId={currentChannelId || ''}
+						clanId={currentClanId || ''}
+						userId={sessionUser?.user_id || ''}
+					/>
+				) : (
+					<>
+						{dataReferences.message_ref_id && (
+							<div className="w-full ">
+								<ReplyMessageBox channelId={currentTopicId ?? ''} dataReferences={dataReferences} />
+							</div>
+						)}
+						{checkAttachment && (
+							<div
+								className={`${checkAttachment ? 'px-3  pb-1 pt-5  border-b-[1px] border-color-primary' : ''} bg-item-theme max-h-full`}
+							>
+								<div className={`max-h-full flex gap-6 !overflow-y-hidden !overflow-x-auto thread-scroll `}>
+									{attachmentFilteredByChannelId?.files?.map((item: ApiMessageAttachment, index: number) => {
+										return (
+											<Fragment key={index}>
+												<AttachmentPreviewThumbnail
+													attachment={item}
+													channelId={currentInputChannelId}
+													onRemove={removeAttachmentByIndex}
+													indexOfItem={index}
+												/>
+											</Fragment>
+										);
+									})}
+								</div>
+							</div>
+						)}
+						<div className="mx-3 relative">
+							<div
+								className={`flex flex-inline items-start gap-2 box-content max-sm:mb-0
 						bg-theme-surface rounded-lg relative shadow-md border-theme-primary ${checkAttachment || (dataReferences && dataReferences.message_ref_id) ? 'rounded-t-none' : 'rounded-t-lg'}
 						${closeMenu && !statusMenu ? 'max-w-wrappBoxChatViewMobile' : 'w-wrappBoxChatView'}`}
-					>
-						<FileSelectionButton currentChannelId={currentInputChannelId} />
-
-						<div className={`w-[calc(100%_-_58px)] bg-theme-surface gap-3 flex items-center rounded-e-md`}>
-							<div
-								className={`w-full border-none rounded-r-lg gap-3 relative whitespace-pre-wrap`}
-								onContextMenu={handleChildContextMenu}
 							>
-								<MentionReactInput
-									handlePaste={onPastedFiles}
-									onSend={handleSend}
-									onTyping={handleTypingDebounced}
-									listMentions={UserMentionList({
-										channelID: currentChannel?.channel_id as string,
-										channelMode: ChannelStreamMode.STREAM_MODE_CHANNEL
-									})}
-									isTopic
-									handleConvertToFile={onConvertToFiles}
-									currentChannelId={currentInputChannelId}
-								/>
+								<FileSelectionButton currentChannelId={currentInputChannelId} />
+
+								<div className={`w-[calc(100%_-_58px)] bg-theme-surface gap-3 flex items-center rounded-e-md`}>
+									<div
+										className={`w-full border-none rounded-r-lg gap-3 relative whitespace-pre-wrap`}
+										onContextMenu={handleChildContextMenu}
+									>
+										<MentionReactInput
+											handlePaste={onPastedFiles}
+											onSend={handleSend}
+											onTyping={handleTypingDebounced}
+											listMentions={mentionsList}
+											isTopic
+											handleConvertToFile={onConvertToFiles}
+											currentChannelId={currentInputChannelId}
+										/>
+									</div>
+								</div>
 							</div>
 						</div>
-					</div>
-				</div>
-				{currentTopicId ? <ChannelTyping channelId={currentTopicId || ''} mode={mode} isPublic isDM={false} /> : <div className="h-4"></div>}
+						{currentTopicId ? (
+							<ChannelTyping channelId={currentTopicId || ''} mode={mode} isPublic isDM={false} />
+						) : (
+							<div className="h-4"></div>
+						)}
+					</>
+				)}
 			</div>
 		</div>
 	);

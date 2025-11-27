@@ -1,4 +1,5 @@
-import { Attributes, size } from '@mezon/mobile-ui';
+import type { Attributes } from '@mezon/mobile-ui';
+import { size } from '@mezon/mobile-ui';
 import { StyleSheet } from 'react-native';
 
 export const style = (colors: Attributes) =>
@@ -83,7 +84,8 @@ export const style = (colors: Attributes) =>
 		},
 		username: {
 			color: colors.text,
-			paddingHorizontal: size.s_10
+			paddingHorizontal: size.s_10,
+			maxWidth: '90%'
 		},
 		searchText: {
 			paddingHorizontal: size.s_10
@@ -185,5 +187,36 @@ export const style = (colors: Attributes) =>
 			fontSize: size.s_18,
 			fontWeight: 'bold',
 			color: colors.white
+		},
+		viewShotContainer: {
+			flex: 1
+		},
+		wrapperContainer: {
+			flex: 1
+		},
+		bottomSheetStyle: {
+			paddingHorizontal: size.s_20,
+			paddingVertical: size.s_10,
+			flex: 1,
+			gap: size.s_10
+		},
+		flatListContentStyle: {
+			paddingBottom: size.s_20
+		},
+		flatListStyle: {
+			borderRadius: size.s_8,
+			marginTop: size.s_10
+		},
+		btnCopyAddress: {
+			height: '100%',
+			paddingHorizontal: size.s_10,
+			justifyContent: 'center'
+		},
+		selectSendTokenTo: {
+			height: size.s_40,
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'space-between',
+			paddingRight: size.s_10
 		}
 	});

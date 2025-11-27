@@ -3,12 +3,14 @@ import type { LoadingStatus } from '@mezon/utils';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 import { t } from 'i18next';
-import type { Session } from 'mezon-js';
+import { Session } from 'mezon-js';
 import type { ApiLinkAccountConfirmRequest } from 'mezon-js/dist/api.gen';
 import { toast } from 'react-toastify';
 import { clearApiCallTracker } from '../cache-metadata';
+import { listChannelsByUserActions } from '../channels/channelUser.slice';
 import { ensureClientAsync, ensureSession, getMezonCtx, restoreLocalStorage } from '../helpers';
 import { walletActions } from '../wallet/wallet.slice';
+
 export const AUTH_FEATURE_KEY = 'auth';
 
 export interface AuthState {
@@ -34,6 +36,7 @@ export interface ISession {
 	vars?: object;
 	is_remember?: boolean;
 	api_url: string;
+	id_token?: string;
 }
 
 export const initialAuthState: AuthState = {
@@ -47,7 +50,7 @@ export const initialAuthState: AuthState = {
 };
 
 function normalizeSession(session: Session): ISession {
-	return session;
+	return session as ISession;
 }
 
 export const authenticateApple = createAsyncThunk('auth/authenticateApple', async (token: string, thunkAPI) => {
@@ -74,6 +77,14 @@ export type AuthenticatePhoneSMSOTPRequestPayload = {
 export const authenticateEmail = createAsyncThunk('auth/authenticateEmail', async ({ email, password }: AuthenticateEmailPayload, thunkAPI) => {
 	const mezon = getMezonCtx(thunkAPI);
 	const session = await mezon?.authenticateEmail(email, password);
+	if (session && session?.id_token && session?.user_id) {
+		const proofInput = {
+			userId: session?.user_id?.toString() || '',
+			jwt: session.id_token
+		};
+
+		await thunkAPI.dispatch(walletActions.fetchZkProofs(proofInput));
+	}
 	if (!session) {
 		return thunkAPI.rejectWithValue('Invalid session');
 	}
@@ -87,6 +98,14 @@ export const authenticateMezon = createAsyncThunk('auth/authenticateMezon', asyn
 			console.error(data.message);
 		});
 	});
+	if (session && session.id_token && session.user_id) {
+		const proofInput = {
+			userId: session.user_id,
+			jwt: session.id_token
+		};
+
+		await thunkAPI.dispatch(walletActions.fetchZkProofs(proofInput));
+	}
 
 	if (!session) {
 		return thunkAPI.rejectWithValue('Invalid session');
@@ -102,16 +121,24 @@ export const refreshSession = createAsyncThunk('auth/refreshSession', async (_, 
 		return thunkAPI.rejectWithValue('Invalid refreshSession');
 	}
 
-	if (mezon.sessionRef.current?.token && mezon.sessionRef.current?.token === sessionState?.token) {
-		return sessionState;
+	if (!sessionState.token || !sessionState.refresh_token) {
+		return thunkAPI.rejectWithValue('Invalid session tokens');
 	}
 
-	let session;
+	let session = new Session(
+		sessionState.token,
+		sessionState.refresh_token,
+		sessionState.created,
+		sessionState.api_url,
+		sessionState.id_token || '',
+		!!sessionState.is_remember
+	);
+
 	try {
-		session = await mezon?.refreshSession({
-			...sessionState,
-			is_remember: sessionState.is_remember ?? false
-		});
+		session = (await mezon?.refreshSession({
+			...session,
+			is_remember: session.is_remember ?? false
+		})) as Session;
 	} catch (error: any) {
 		return thunkAPI.rejectWithValue(error);
 	}
@@ -125,20 +152,16 @@ export const refreshSession = createAsyncThunk('auth/refreshSession', async (_, 
 
 export const checkSessionWithToken = createAsyncThunk('auth/checkSessionWithToken', async (_, thunkAPI) => {
 	const mezon = await ensureClientAsync(getMezonCtx(thunkAPI));
-	const sessionState = selectSession(thunkAPI.getState() as unknown as { [AUTH_FEATURE_KEY]: AuthState });
 
-	if (!sessionState) {
+	if (!mezon.sessionRef.current) {
 		return thunkAPI.rejectWithValue('Invalid checkSessionWithToken');
 	}
 
-	if (mezon.sessionRef.current?.token === sessionState?.token) {
-		return sessionState;
-	}
 	let session;
 	try {
 		session = await mezon?.connectWithSession({
-			...sessionState,
-			is_remember: sessionState.is_remember ?? false
+			...mezon.sessionRef.current,
+			is_remember: mezon.sessionRef.current.is_remember ?? false
 		});
 	} catch (error: any) {
 		return thunkAPI.rejectWithValue('Redirect Login');
@@ -163,9 +186,16 @@ export const authenticateEmailOTPRequest = createAsyncThunk(
 	}
 );
 
-export const confirmEmailOTP = createAsyncThunk('auth/confirmEmailOTP', async (data: ApiLinkAccountConfirmRequest, thunkAPI) => {
+export const confirmAuthenticateOTP = createAsyncThunk('auth/confirmAuthenticateOTP', async (data: ApiLinkAccountConfirmRequest, thunkAPI) => {
 	const mezon = getMezonCtx(thunkAPI);
-	const session = await mezon?.confirmEmailOTP(data);
+	const session = await mezon?.confirmAuthenticateOTP(data);
+	if (session && session?.id_token && session?.user_id) {
+		const proofInput = {
+			userId: session.user_id?.toString() || '',
+			jwt: session.id_token
+		};
+		await thunkAPI.dispatch(walletActions.fetchZkProofs(proofInput));
+	}
 	if (!session) {
 		return thunkAPI.rejectWithValue('Invalid session');
 	}
@@ -190,16 +220,9 @@ export const logOut = createAsyncThunk('auth/logOut', async ({ device_id, platfo
 	await mezon?.logOutMezon(device_id, platform, !sessionState);
 	thunkAPI.dispatch(authActions.setLogout());
 	thunkAPI.dispatch(walletActions.setLogout());
+	thunkAPI.dispatch(listChannelsByUserActions.removeAll());
 	clearApiCallTracker();
-	const restoreKey = [
-		'persist:apps',
-		'persist:categories',
-		'persist:clans',
-		'current-theme',
-		'hideNotificationContent',
-		'remember_channel',
-		'i18nextLng'
-	];
+	const restoreKey = ['persist:apps', 'current-theme', 'hideNotificationContent', 'i18nextLng'];
 	if (sessionState) {
 		restoreKey.push('mezon_session');
 	}
@@ -223,6 +246,14 @@ export const checkLoginRequest = createAsyncThunk(
 
 		const session = await mezon?.checkLoginRequest({ login_id: loginId, is_remember: isRemember });
 		if (session) {
+			if (session.id_token && session.user_id) {
+				const proofInput = {
+					userId: session.user_id,
+					jwt: session.id_token
+				};
+
+				await thunkAPI.dispatch(walletActions.fetchZkProofs(proofInput));
+			}
 			return normalizeSession(session);
 		}
 		return null;
@@ -233,6 +264,14 @@ export const confirmLoginRequest = createAsyncThunk('auth/confirmLoginRequest', 
 	const mezon = getMezonCtx(thunkAPI);
 
 	const session = await mezon?.confirmLoginRequest({ login_id: loginId });
+	if (session?.id_token && session?.user_id) {
+		const proofInput = {
+			userId: session.user_id,
+			jwt: session.id_token
+		};
+
+		await thunkAPI.dispatch(walletActions.fetchZkProofs(proofInput));
+	}
 	if (session) {
 		return normalizeSession(session);
 	}
@@ -256,6 +295,7 @@ export const registrationPassword = createAsyncThunk(
 			if (!response) {
 				return thunkAPI.rejectWithValue('Failed to register password');
 			}
+			toast.success(t(`accountSetting:setPasswordAccount.toast.success`));
 			return response;
 		} catch (error: any) {
 			captureSentryError(error, `auth/registrationPassword`);
@@ -268,7 +308,7 @@ export const registrationPassword = createAsyncThunk(
 					: t('accountSetting:setPasswordAccount.error.createFail')
 			);
 			if (isMobile) {
-				return thunkAPI.rejectWithValue(error);
+				return thunkAPI.rejectWithValue({ ...error, message: errPayload?.message || '' });
 			}
 		}
 	}
@@ -295,6 +335,17 @@ export const authSlice = createSlice({
 			}
 			state.isLogin = true;
 		},
+
+		updateSession(state, action: PayloadAction<ISession>) {
+			if (action?.payload?.user_id && state.session && state.session[action.payload.user_id]) {
+				const currentSession = state.session[action.payload.user_id];
+
+				state.session[action.payload.user_id] = {
+					...currentSession,
+					...action.payload
+				};
+			}
+		},
 		setLogout(state) {
 			if (state.session && state.activeAccount && Object.keys(state.session).length >= 2) {
 				delete state.session?.[state.activeAccount];
@@ -312,8 +363,7 @@ export const authSlice = createSlice({
 			state.loadingStatusEmail = 'not loaded';
 		},
 		checkFormatSession(state) {
-			const newSession: any = state.session;
-			if (newSession.token || !state.activeAccount) {
+			if (!state.activeAccount || !state.session) {
 				state.session = null;
 				state.isLogin = false;
 				state.activeAccount = null;
@@ -469,10 +519,10 @@ export const authSlice = createSlice({
 				state.error = action.error.message;
 			});
 		builder
-			.addCase(confirmEmailOTP.pending, (state: AuthState) => {
+			.addCase(confirmAuthenticateOTP.pending, (state: AuthState) => {
 				state.loadingStatus = 'loading';
 			})
-			.addCase(confirmEmailOTP.fulfilled, (state: AuthState, action) => {
+			.addCase(confirmAuthenticateOTP.fulfilled, (state: AuthState, action) => {
 				state.loadingStatus = 'loaded';
 				if (action.payload.user_id) {
 					if (!state.session) {
@@ -486,7 +536,7 @@ export const authSlice = createSlice({
 				}
 				state.isLogin = true;
 			})
-			.addCase(confirmEmailOTP.rejected, (state: AuthState, action) => {
+			.addCase(confirmAuthenticateOTP.rejected, (state: AuthState, action) => {
 				state.loadingStatus = 'error';
 				state.error = action.error.message;
 			});
@@ -522,7 +572,7 @@ export const authActions = {
 	authenticateEmail,
 	checkSessionWithToken,
 	authenticateEmailOTPRequest,
-	confirmEmailOTP,
+	confirmAuthenticateOTP,
 	authenticatePhoneSMSOTPRequest
 };
 
@@ -556,3 +606,23 @@ export const selectOthersSession = createSelector(getAuthState, (state: AuthStat
 export const selectAllSession = createSelector(getAuthState, (state: AuthState) => {
 	return state.session;
 });
+
+export const setupSessionSyncListener = (store: any) => {
+	if (typeof window !== 'undefined') {
+		const handleSessionRefresh = async (event: Event) => {
+			const customEvent = event as CustomEvent;
+			const session = customEvent.detail?.session;
+			if (session) {
+				store.dispatch(authActions.updateSession(session));
+			}
+		};
+
+		window.addEventListener('mezon:session-refreshed', handleSessionRefresh);
+		return () => {
+			window.removeEventListener('mezon:session-refreshed', handleSessionRefresh);
+		};
+	}
+	return () => {
+		// noop
+	};
+};

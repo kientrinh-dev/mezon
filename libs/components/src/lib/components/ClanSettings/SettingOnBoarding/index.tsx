@@ -1,10 +1,11 @@
 import { MemberProvider } from '@mezon/core';
-import { onboardingActions, selectCurrentClan, selectFormOnboarding, useAppDispatch } from '@mezon/store';
+import { onboardingActions, selectCurrentClanId, selectCurrentClanIsOnboarding, selectFormOnboarding, useAppDispatch } from '@mezon/store';
 import { handleUploadEmoticon, useMezon } from '@mezon/transport';
 import { Icons } from '@mezon/ui';
+import { generateE2eId } from '@mezon/utils';
 import { Snowflake } from '@theinternetfolks/snowflake';
 import type { ApiOnboardingContent } from 'mezon-js/api.gen';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -13,7 +14,6 @@ import ModalSaveChanges from '../ClanSettingOverview/ModalSaveChanges';
 import GuideItemLayout from './GuideItemLayout';
 import ClanGuideSetting from './Mission/ClanGuideSetting';
 import Questions from './Questions/Questions';
-import { generateE2eId } from '@mezon/utils';
 
 export enum EOnboardingStep {
 	QUESTION,
@@ -23,9 +23,10 @@ export enum EOnboardingStep {
 const SettingOnBoarding = ({ onClose }: { onClose?: () => void }) => {
 	const { t } = useTranslation('onBoardingClan');
 	const dispatch = useAppDispatch();
-	const currentClan = useSelector(selectCurrentClan);
+	const currentClanId = useSelector(selectCurrentClanId);
+	const currentClanIsOnboarding = useSelector(selectCurrentClanIsOnboarding);
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [isCommunityEnabled, setIsCommunityEnabled] = useState(!!currentClan?.is_onboarding);
+	const [isCommunityEnabled, setIsCommunityEnabled] = useState(!!currentClanIsOnboarding);
 	const [currentPage, setCurrentPage] = useState<EOnboardingStep>(EOnboardingStep.MAIN);
 	const [description, setDescription] = useState('');
 	const [about, setAbout] = useState('');
@@ -43,7 +44,7 @@ const SettingOnBoarding = ({ onClose }: { onClose?: () => void }) => {
 		if (!enable) {
 			dispatch(
 				onboardingActions.enableOnboarding({
-					clan_id: currentClan?.clan_id as string,
+					clan_id: currentClanId as string,
 					onboarding: false
 				})
 			);
@@ -63,7 +64,7 @@ const SettingOnBoarding = ({ onClose }: { onClose?: () => void }) => {
 			await handleCreateOnboarding();
 			await dispatch(
 				onboardingActions.enableOnboarding({
-					clan_id: currentClan?.clan_id as string,
+					clan_id: currentClanId as string,
 					onboarding: true
 				})
 			);
@@ -124,7 +125,7 @@ const SettingOnBoarding = ({ onClose }: { onClose?: () => void }) => {
 
 			await dispatch(
 				onboardingActions.createOnboardingTask({
-					clan_id: currentClan?.clan_id as string,
+					clan_id: currentClanId as string,
 					content: formOnboardingData
 				})
 			);
@@ -285,22 +286,18 @@ interface IMainIndexProps {
 
 const MainIndex = ({ handleGoToPage, onCloseSetting, showOnboardingHighlight }: IMainIndexProps) => {
 	const { t } = useTranslation('onBoardingClan');
-	const currentClan = useSelector(selectCurrentClan);
+	const currentClanId = useSelector(selectCurrentClanId);
 	const dispatch = useAppDispatch();
 	const openOnboardingPreviewMode = () => {
 		dispatch(
 			onboardingActions.openOnboardingPreviewMode({
-				clan_id: currentClan?.id || ''
+				clan_id: currentClanId || ''
 			})
 		);
 		if (onCloseSetting) {
 			onCloseSetting();
 		}
 	};
-
-	useEffect(() => {
-		dispatch(onboardingActions.fetchOnboarding({ clan_id: currentClan?.id as string }));
-	}, [currentClan, dispatch]);
 
 	return (
 		<div className="flex flex-col gap-6 flex-1">

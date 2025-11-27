@@ -138,6 +138,7 @@ module.exports = {
 
 			fontFamily: {
 				ggSans: ['gg sans', 'sans-serif'],
+				svnAvo: ['SVN-AVO', 'sans-serif'],
 				code: ['Fira Code', 'monospace']
 			},
 			screens: {
@@ -285,6 +286,19 @@ module.exports = {
 					'40%, 100%': {
 						transform: 'rotateZ(0)'
 					}
+				},
+				expand: {
+					'0%': {
+						width: '0px',
+						opacity: 0
+					},
+					'70%': {
+						opacity: 0.5
+					},
+					'100%': {
+						width: '120px',
+						opacity: 1
+					}
 				}
 			},
 			boxShadow: {
@@ -309,7 +323,8 @@ module.exports = {
 			move_down: 'move_down 0.5s forwards',
 			wiggle: 'wiggle 2s linear forwards',
 			login_otp: 'login_otp 0.5s ease-in-out forwards',
-			login_email: 'login_email 0.5s ease-in-out forwards'
+			login_email: 'login_email 0.5s ease-in-out forwards',
+			expand: 'expand 0.5s ease-in-out forwards'
 		},
 		screens: {
 			ssm: '430px',

@@ -4,7 +4,6 @@ import {
 	useIsClanOwner,
 	useMarkAsRead,
 	useOnClickOutside,
-	usePermissionChecker,
 	UserRestrictionZone,
 	useSettingFooter
 } from '@mezon/core';
@@ -18,7 +17,7 @@ import {
 } from '@mezon/store';
 import { Menu } from '@mezon/ui';
 import type { IClan } from '@mezon/utils';
-import { EPermission, EUserSettings } from '@mezon/utils';
+import { EUserSettings } from '@mezon/utils';
 import type { ApiAccount } from 'mezon-js/dist/api.gen';
 import type { ReactElement } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -47,7 +46,6 @@ const PanelClan: React.FC<IPanelClanProps> = ({ coords, clan, setShowClanListMen
 	const panelRef = useRef<HTMLDivElement | null>(null);
 	const [positionTop, setPositionTop] = useState(false);
 	const isOwnerOfContextClan = useIsClanOwner(clan?.clan_id || clan?.id || '');
-	const [_, canManageClan] = usePermissionChecker([EPermission.clanOwner, EPermission.manageClan], '', clan?.clan_id ?? '');
 	const dispatch = useAppDispatch();
 
 	const defaultNotificationClan = useSelector((state) =>
@@ -115,7 +113,6 @@ const PanelClan: React.FC<IPanelClanProps> = ({ coords, clan, setShowClanListMen
 	const handleRemoveLogo = () => {
 		dispatch(
 			clansActions.updateUser({
-				user_name: userProfile?.user?.username || '',
 				avatar_url: userProfile?.user?.avatar_url || '',
 				display_name: userProfile?.user?.display_name || '',
 				about_me: userProfile?.user?.about_me || '',
@@ -149,10 +146,10 @@ const PanelClan: React.FC<IPanelClanProps> = ({ coords, clan, setShowClanListMen
 					children={notification.label}
 					notificationId={notification.value}
 					type="radio"
-					name="NotificationSetting"
+					name={t('notificationSetting')}
 					key={notification.value}
 					onClick={() => handleChangeSettingType(notification.value)}
-					checked={defaultNotificationClan?.notification_setting_type === notification.value}
+					checked={(defaultNotificationClan?.notification_setting_type || 1) === notification.value}
 				/>
 			)
 		);
@@ -209,7 +206,7 @@ const PanelClan: React.FC<IPanelClanProps> = ({ coords, clan, setShowClanListMen
 						<ItemPanel children={t('editClanProfile')} onClick={handleOpenClanProfileSetting} />
 					</GroupPanels>
 
-					<UserRestrictionZone policy={!(isOwnerOfContextClan || canManageClan)}>
+					<UserRestrictionZone policy={!isOwnerOfContextClan}>
 						<GroupPanels>
 							<ItemPanel children={t('leaveClan')} danger onClick={toggleLeaveClanPopup} />
 						</GroupPanels>
@@ -221,7 +218,7 @@ const PanelClan: React.FC<IPanelClanProps> = ({ coords, clan, setShowClanListMen
 					handleCancel={toggleLeaveClanPopup}
 					handleConfirm={handleLeaveClan}
 					modalName={clan?.clan_name}
-					title="leave"
+					title={t('leave')}
 					buttonName={t('leaveClan')}
 				/>
 			)}

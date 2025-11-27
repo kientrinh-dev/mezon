@@ -12,7 +12,7 @@ import {
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store';
-import { EMuteState, FOR_15_MINUTES, FOR_1_HOUR, FOR_24_HOURS, FOR_3_HOURS, FOR_8_HOURS } from '@mezon/utils';
+import { EMuteState, FOR_15_MINUTES_SEC, FOR_1_HOUR_SEC, FOR_24_HOURS_SEC, FOR_3_HOURS_SEC, FOR_8_HOURS_SEC } from '@mezon/utils';
 import { ChannelType } from 'mezon-js';
 import type { FC } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
@@ -153,7 +153,17 @@ export const DirectMessageContextMenuProvider: FC<DirectMessageContextMenuProps>
 
 	const isDefaultSetting = !notificationSettings?.id || notificationSettings?.id === '0';
 	const isMuted = !isDefaultSetting && notificationSettings?.active === EMuteState.MUTED;
-	const hasMuteTime = !isDefaultSetting && notificationSettings?.time_mute ? new Date(notificationSettings.time_mute) > new Date() : false;
+	const hasMuteTime =
+		!isDefaultSetting && notificationSettings?.time_mute
+			? (() => {
+					try {
+						const muteDate = new Date(notificationSettings.time_mute);
+						return !isNaN(muteDate.getTime()) && muteDate > new Date();
+					} catch {
+						return false;
+					}
+				})()
+			: false;
 	const shouldShowUnmute = isMuted || hasMuteTime;
 
 	const shouldShowMuteSubmenu = !isMuted && !hasMuteTime;
@@ -161,11 +171,7 @@ export const DirectMessageContextMenuProvider: FC<DirectMessageContextMenuProps>
 	const isOwnerClanOrGroup = userProfile?.user?.id && dataMemberCreate?.createId && userProfile?.user?.id === dataMemberCreate.createId;
 	const infoFriend = useAppSelector((state: RootState) => selectFriendById(state, currentUser?.user_ids?.[0] || currentUser?.id || ''));
 	const didIBlockUser = useMemo(() => {
-		return (
-			infoFriend?.state === EStateFriend.BLOCK &&
-			infoFriend?.source_id === userProfile?.user?.id &&
-			infoFriend?.user?.id === currentUser?.user_ids?.[0]
-		);
+		return infoFriend?.state === EStateFriend.BLOCK && infoFriend?.source_id === userProfile?.user?.id;
 	}, [currentUser?.user_ids, infoFriend, userProfile?.user?.id]);
 
 	const contextValue: DirectMessageContextMenuContextType = {
@@ -261,37 +267,34 @@ export const DirectMessageContextMenuProvider: FC<DirectMessageContextMenuProps>
 							) : shouldShowMuteSubmenu ? (
 								<Submenu
 									label={
-										<span
-											className="flex truncate justify-between items-center w-full font-sans text-sm font-medium text-theme-primary text-theme-primary-hover  "
-											style={{ fontFamily: `'gg sans', 'Noto Sans', sans-serif`, padding: 6 }}
-										>
+										<span className="flex truncate justify-between items-center w-full font-sans text-sm font-medium text-theme-primary text-theme-primary-hover p-1.5">
 											{nameChildren}
 										</span>
 									}
 								>
 									<MemberMenuItem
 										label={t('contextMenu.for15Minutes')}
-										onClick={() => currentHandlers.handleMute(FOR_15_MINUTES)}
+										onClick={() => currentHandlers.handleMute(FOR_15_MINUTES_SEC)}
 										setWarningStatus={setWarningStatus}
 									/>
 									<MemberMenuItem
 										label={t('contextMenu.for1Hour')}
-										onClick={() => currentHandlers.handleMute(FOR_1_HOUR)}
+										onClick={() => currentHandlers.handleMute(FOR_1_HOUR_SEC)}
 										setWarningStatus={setWarningStatus}
 									/>
 									<MemberMenuItem
 										label={t('contextMenu.for3Hours')}
-										onClick={() => currentHandlers.handleMute(FOR_3_HOURS)}
+										onClick={() => currentHandlers.handleMute(FOR_3_HOURS_SEC)}
 										setWarningStatus={setWarningStatus}
 									/>
 									<MemberMenuItem
 										label={t('contextMenu.for8Hours')}
-										onClick={() => currentHandlers.handleMute(FOR_8_HOURS)}
+										onClick={() => currentHandlers.handleMute(FOR_8_HOURS_SEC)}
 										setWarningStatus={setWarningStatus}
 									/>
 									<MemberMenuItem
 										label={t('contextMenu.for24Hours')}
-										onClick={() => currentHandlers.handleMute(FOR_24_HOURS)}
+										onClick={() => currentHandlers.handleMute(FOR_24_HOURS_SEC)}
 										setWarningStatus={setWarningStatus}
 									/>
 									<MemberMenuItem

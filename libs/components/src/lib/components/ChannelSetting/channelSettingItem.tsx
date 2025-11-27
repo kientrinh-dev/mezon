@@ -1,9 +1,8 @@
 import { useChannels, usePermissionChecker } from '@mezon/core';
-import type { ChannelsEntity } from '@mezon/store';
 import { selectChannelById, selectWelcomeChannelByClanId, useAppSelector } from '@mezon/store';
 import { Icons } from '@mezon/ui';
 import type { IChannel } from '@mezon/utils';
-import { EPermission, checkIsThread, generateE2eId } from '@mezon/utils';
+import { EPermission, generateE2eId } from '@mezon/utils';
 import { ChannelType } from 'mezon-js';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -32,9 +31,8 @@ const ChannelSettingItem = (props: ChannelSettingItemProps) => {
 	const channelId = (channel?.channel_id || ('id' in channel ? (channel as { id?: string })?.id : '') || '') as string;
 	const channelFromStore = useAppSelector((state) => selectChannelById(state, channelId));
 	const currentChannel = (channelFromStore || channel) as IChannel;
-	const canEditChannelPermissions = hasManageChannelPermission;
 
-	const isThread = checkIsThread(currentChannel as ChannelsEntity);
+	const isThread = channel.type === ChannelType.CHANNEL_TYPE_THREAD;
 
 	const handleButtonClick = (buttonName: string) => {
 		setSelectedButton(buttonName);
@@ -55,7 +53,7 @@ const ChannelSettingItem = (props: ChannelSettingItemProps) => {
 	};
 
 	const renderIcon = () => {
-		if (isThread) {
+		if (channel.type === ChannelType.CHANNEL_TYPE_THREAD) {
 			if (isPrivate) {
 				return <Icons.ThreadIconLocker className="w-5 h-5 -mt-1 min-w-5 block dark:text-[#AEAEAE] text-colorTextLightMode" />;
 			}
@@ -92,7 +90,10 @@ const ChannelSettingItem = (props: ChannelSettingItemProps) => {
 			<div className="w-170px flex flex-col">
 				<div className="flex justify-start max-w-[170px]">
 					{renderIcon()} &nbsp;
-					<p className="text-[#84ADFF] font-bold text-sm tracking-wider max-w-[160px] overflow-x-hidden text-ellipsis uppercase one-line">
+					<p
+						className="text-[#84ADFF] font-bold text-sm tracking-wider max-w-[160px] overflow-x-hidden text-ellipsis uppercase one-line"
+						data-e2e={generateE2eId('channel_setting_page.side_bar.channel_label')}
+					>
 						{displayChannelLabel ?? currentChannel?.channel_label ?? 'Unknown Channel'}
 					</p>
 				</div>
@@ -115,7 +116,7 @@ const ChannelSettingItem = (props: ChannelSettingItemProps) => {
 							channel.type !== ChannelType.CHANNEL_TYPE_STREAMING &&
 							channel.type !== ChannelType.CHANNEL_TYPE_APP &&
 							channel.id !== welcomeChannelId &&
-							canEditChannelPermissions && (
+							hasManageChannelPermission && (
 								<ChannelSettingItemButton
 									tabName={EChannelSettingTab.PREMISSIONS}
 									handleOnClick={handleButtonClick}
@@ -135,7 +136,7 @@ const ChannelSettingItem = (props: ChannelSettingItemProps) => {
 							getTabTranslation={getTabTranslation}
 						/>
 					)}
-				{canEditChannelPermissions &&
+				{hasManageChannelPermission &&
 					channel.type !== ChannelType.CHANNEL_TYPE_MEZON_VOICE &&
 					channel.type !== ChannelType.CHANNEL_TYPE_STREAMING &&
 					channel.type !== ChannelType.CHANNEL_TYPE_APP && (
@@ -146,12 +147,21 @@ const ChannelSettingItem = (props: ChannelSettingItemProps) => {
 							getTabTranslation={getTabTranslation}
 						/>
 					)}
+				{hasManageChannelPermission && channel.type === ChannelType.CHANNEL_TYPE_STREAMING && (
+					<ChannelSettingItemButton
+						tabName={EChannelSettingTab.STREAM_THUMBNAIL}
+						handleOnClick={handleButtonClick}
+						selectedButton={selectedButton}
+						getTabTranslation={getTabTranslation}
+					/>
+				)}
 				<hr className="border-t border-solid dark:border-borderDefault my-4" />
 				<button
 					className={`p-2 dark:text-red-600 text-red-600 text-[16px] font-medium pl-2 ml-[-8px] hover:bg-bgModifierHoverLight dark:hover:bg-bgModalLight ${selectedButton === 'Delete' ? 'dark:bg-[#232E3B] bg-bgLightModeButton  ' : ''} w-[170px] text-left rounded-[5px]`}
 					onClick={() => {
 						setShowModal(true);
 					}}
+					data-e2e={generateE2eId('button.base')}
 				>
 					{isThread ? t('fields.threadDelete.delete') : t('fields.channelDelete.delete')}
 				</button>

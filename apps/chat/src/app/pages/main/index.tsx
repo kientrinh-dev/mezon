@@ -15,6 +15,7 @@ import {
 	NavLinkComponent,
 	SearchModal,
 	SidebarClanItem,
+	SidebarHistory,
 	SidebarLogoItem,
 	Topbar,
 	useWebRTCStream
@@ -30,12 +31,14 @@ import {
 	getIsShowPopupForward,
 	onboardingActions,
 	selectAllAppChannelsListShowOnPopUp,
+	selectChannelById,
 	selectChatStreamWidth,
 	selectClanNumber,
 	selectClanView,
 	selectClansEntities,
 	selectCloseMenu,
-	selectCurrentChannel,
+	selectCurrentChannelId,
+	selectCurrentChannelType,
 	selectCurrentClanId,
 	selectCurrentStreamInfo,
 	selectDirectsUnreadlist,
@@ -155,7 +158,9 @@ function MyApp() {
 		setOpenOptionMessageState(false);
 	}, []);
 
-	const currentChannel = useSelector(selectCurrentChannel);
+	const currentChannelId = useSelector(selectCurrentChannelId);
+	const currentChannel = useSelector((state) => selectChannelById(state, currentChannelId || ''));
+	const currentChannelType = useSelector(selectCurrentChannelType);
 	const currentStreamInfo = useSelector(selectCurrentStreamInfo);
 	const isShowChatStream = useSelector(selectIsShowChatStream);
 	const chatStreamWidth = useSelector(selectChatStreamWidth);
@@ -194,7 +199,6 @@ function MyApp() {
 				<SidebarMenu openCreateClanModal={openCreateClanModal} openDiscoverPage={openDiscoverPage} />
 				<Topbar isHidden={currentClanId !== '0' ? false : !directId} />
 				<MainContent />
-
 				<FooterProfile
 					name={userProfile?.user?.display_name || userProfile?.user?.username || ''}
 					status={userProfile?.user?.online}
@@ -202,12 +206,11 @@ function MyApp() {
 					userId={userProfile?.user?.id || ''}
 					isDM={currentClanId !== '0'}
 				/>
-
 				<div
-					className={`fixed ${isWindowsDesktop || isLinuxDesktop ? 'h-heightTitleBarWithoutTopBar' : 'h-heightWithoutTopBar'} bottom-0 ${closeMenu ? (statusMenu ? 'hidden' : 'w-full') : isShowChatStream ? 'max-sm:hidden' : 'w-full'} ${currentChannel?.type === ChannelType.CHANNEL_TYPE_STREAMING && currentClanId !== '0' && memberPath !== currentURL ? 'flex flex-1 justify-center items-center' : 'hidden pointer-events-none'}`}
+					className={`fixed ${isWindowsDesktop || isLinuxDesktop ? 'h-heightTitleBarWithoutTopBar' : 'h-heightWithoutTopBar'} bottom-0 ${closeMenu ? (statusMenu ? 'hidden' : 'w-full') : isShowChatStream ? 'max-sm:hidden' : 'w-full'} ${currentChannelType === ChannelType.CHANNEL_TYPE_STREAMING && currentClanId !== '0' && memberPath !== currentURL ? 'flex flex-1 justify-center items-center' : 'hidden pointer-events-none'}`}
 					style={streamStyle}
 				>
-					{isStream || currentChannel?.type === ChannelType.CHANNEL_TYPE_STREAMING ? (
+					{isStream || currentChannelType === ChannelType.CHANNEL_TYPE_STREAMING ? (
 						<ChannelStream
 							key={currentStreamInfo?.streamId}
 							currentChannel={currentChannel}
@@ -219,11 +222,8 @@ function MyApp() {
 						/>
 					) : null}
 				</div>
-
 				<DmCallManager userId={userProfile?.user?.id || ''} directId={directId} />
-				<GroupCallManager />
-
-				{openModalE2ee && !hasKeyE2ee && <MultiStepModalE2ee onClose={handleClose} />}
+				<GroupCallManager /> {openModalE2ee && !hasKeyE2ee && <MultiStepModalE2ee onClose={handleClose} />}
 				{openModalAttachment && <MessageModalImageWrapper />}
 				{isShowFirstJoinPopup && <FirstJoinPopup openCreateClanModal={openCreateClanModal} onclose={() => setIsShowFirstJoinPopup(false)} />}
 				{isShowPopupQuickMess && <PopupQuickMess />}
@@ -240,8 +240,8 @@ type ShowModal = () => void;
 
 const DirectUnreadList = memo(() => {
 	const listUnreadDM = useSelector(selectDirectsUnreadlist);
-	const [listDmRender, setListDmRender] = useState(listUnreadDM);
-	const countUnreadRender = useRef(listDmRender.map((channel) => channel.id));
+	const [listDmRender, setListDmRender] = useState(() => [...listUnreadDM]);
+	const previousIdsRef = useRef(listDmRender.map((channel) => channel.id));
 
 	const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -250,25 +250,35 @@ const DirectUnreadList = memo(() => {
 			clearTimeout(timerRef.current);
 			timerRef.current = null;
 		}
-		if (listUnreadDM.length > countUnreadRender.current.length) {
-			setListDmRender(listUnreadDM);
-			countUnreadRender.current = listUnreadDM.map((channel) => channel.id);
+
+		const currentIds = previousIdsRef.current;
+		const newIds = listUnreadDM.map((channel) => channel.id);
+
+		if (listUnreadDM.length > currentIds.length) {
+			setListDmRender([...listUnreadDM]);
+			previousIdsRef.current = newIds;
 		} else {
-			countUnreadRender.current = listUnreadDM.map((channel) => channel.id);
 			timerRef.current = setTimeout(() => {
-				setListDmRender(listUnreadDM);
+				setListDmRender([...listUnreadDM]);
+				previousIdsRef.current = listUnreadDM.map((channel) => channel.id);
 			}, 200);
 		}
 	}, [listUnreadDM]);
 
-	return (
-		<div>
-			{!!listDmRender?.length &&
-				listDmRender.map((dmGroupChatUnread) => (
-					<DirectUnread key={dmGroupChatUnread.id} directMessage={dmGroupChatUnread} checkMoveOut={countUnreadRender.current} />
-				))}
-		</div>
+	const validIdsSet = useMemo(() => new Set(listUnreadDM.map((channel) => channel.id)), [listUnreadDM]);
+
+	const renderItems = useMemo(
+		() =>
+			listDmRender.map((dmGroupChatUnread) => {
+				const shouldAnimateOut = !validIdsSet.has(dmGroupChatUnread.id);
+				return <DirectUnread key={dmGroupChatUnread.id} directMessage={dmGroupChatUnread} shouldAnimateOut={shouldAnimateOut} />;
+			}),
+		[listDmRender, validIdsSet]
 	);
+
+	if (!listDmRender?.length) return null;
+
+	return <div>{renderItems}</div>;
 });
 
 const SidebarMenu = memo(
@@ -337,6 +347,7 @@ const SidebarMenu = memo(
 					onScroll={(e) => setIsAtTop(e.currentTarget.scrollTop === 0)}
 				>
 					<div className={`flex flex-col items-center sticky top-0 z-50 bg-theme-primary w-full ${isAtTop ? 'pt-3' : 'py-3'}`}>
+						<SidebarHistory />
 						<SidebarLogoItem />
 						<DirectUnreadList />
 						{isAtTop && <div className="w-10 border-b border-color-theme mx-auto mt-3" />}

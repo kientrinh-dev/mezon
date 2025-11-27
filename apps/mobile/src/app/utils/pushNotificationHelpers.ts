@@ -6,10 +6,12 @@ import {
 	STORAGE_CLAN_ID,
 	STORAGE_DATA_CLAN_CHANNEL_CACHE,
 	STORAGE_IS_DISABLE_LOAD_BACKGROUND,
+	STORAGE_LATEST_CALL_CACHE,
 	STORAGE_MY_USER_ID,
 	STORAGE_OFFER_HAVE_CALL_CACHE
 } from '@mezon/mobile-components';
 import { appActions, channelsActions, clansActions, directActions, getFirstMessageOfTopic, getStoreAsync, topicsActions } from '@mezon/store-mobile';
+import i18n from '@mezon/translations';
 import { sleep } from '@mezon/utils';
 import notifee, { AndroidLaunchActivityFlag, AuthorizationStatus as NotifeeAuthorizationStatus } from '@notifee/react-native';
 import type { NotificationAndroid } from '@notifee/react-native/src/types/NotificationAndroid';
@@ -26,10 +28,13 @@ import type { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
 import { AuthorizationStatus, getMessaging, getToken, hasPermission, requestPermission } from '@react-native-firebase/messaging';
 import { CommonActions } from '@react-navigation/native';
 import { safeJSONParse } from 'mezon-js';
-import { Alert, DeviceEventEmitter, Linking, NativeModules, PermissionsAndroid, Platform } from 'react-native';
+import React from 'react';
+import { DeviceEventEmitter, Linking, NativeModules, PermissionsAndroid, Platform } from 'react-native';
+import MezonConfirm from '../componentUI/MezonConfirm';
 import { APP_SCREEN } from '../navigation/ScreenTypes';
 import { InboxType } from '../screens/Notifications';
 import { clanAndChannelIdLinkRegex, clanDirectMessageLinkRegex } from './helpers';
+
 const messaging = getMessaging(getApp());
 
 // Type definitions and validation helpers
@@ -139,18 +144,19 @@ const requestNotificationPermission = async () => {
 			badge: true
 		});
 	} catch (error) {
-		Alert.alert('Notification Permission', 'Notification permission denied.', [
-			{
-				text: 'Cancel',
-				style: 'cancel'
-			},
-			{
-				text: 'OK',
-				onPress: () => {
+		const t = i18n.t;
+		const data = {
+			children: React.createElement(MezonConfirm, {
+				title: t('common:permissionNotification.notificationTitle'),
+				content: t('common:permissionNotification.notificationError'),
+				confirmText: t('common:openSettings'),
+				onConfirm: () => {
+					DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
 					openAppSettings();
 				}
-			}
-		]);
+			})
+		};
+		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: false, data });
 	}
 };
 
@@ -175,7 +181,9 @@ const getConfigDisplayNotificationAndroid = async (data: Record<string, string |
 		smallIconLevel: 10,
 		importance: AndroidImportance.HIGH,
 		showTimestamp: true,
+		vibrationPattern: [300, 500, 300, 500],
 		badgeIconType: AndroidBadgeIconType.LARGE,
+		actions: [],
 		pressAction: {
 			id: 'default',
 			launchActivity: 'com.mezon.mobile.MainActivity'
@@ -251,7 +259,9 @@ const createNotificationChannel = async (channelId: string, groupId: string, sou
 			name: channelId,
 			groupId,
 			importance: AndroidImportance.HIGH,
-			sound: sound ? sound : 'default'
+			sound: sound ? sound : 'default',
+			vibration: true,
+			vibrationPattern: [300, 500, 300, 500]
 		});
 	} catch (error) {
 		console.error('Error creating notification channel:', error);
@@ -273,7 +283,7 @@ export const createLocalNotification = async (title: string, body: string, data:
 		}
 
 		const myUserId = load(STORAGE_MY_USER_ID);
-		const excludedMessages = ['video call', 'audio call', 'Untitled message'];
+		const excludedMessages = ['video call', 'audio call', 'voice call', 'Untitled message'];
 
 		// Skip if it's a call message or from the current user
 		if (excludedMessages.some((text) => body.includes(text)) || myUserId === data?.sender) {
@@ -310,7 +320,8 @@ export const createLocalNotification = async (title: string, body: string, data:
 				...(isBuzzSound && {
 					color: '#FF0000',
 					colorized: true
-				})
+				}),
+				actions: []
 			},
 			ios: {}
 		});
@@ -340,6 +351,7 @@ export const createLocalNotification = async (title: string, body: string, data:
 						groupAlertBehavior: AndroidGroupAlertBehavior.SUMMARY,
 						timestamp: Math.max(...groupNotifications.map((n) => n.notification.android?.timestamp || 0)),
 						sortKey: String(Number.MAX_SAFE_INTEGER - Date.now()),
+						actions: [],
 						style: {
 							type: AndroidStyle.MESSAGING,
 							person: {
@@ -392,7 +404,8 @@ export const isShowNotification = (
 	currentDmId: string | undefined,
 	remoteMessage: FirebaseMessagingTypes.RemoteMessage,
 	options?: { isViewingChannel?: boolean; isViewingDirectMessage?: boolean },
-	currentTopicId?: string | undefined
+	currentTopicId?: string | undefined,
+	isVoiceFullScreen?: boolean
 ): boolean => {
 	try {
 		if (!validateNotificationData(remoteMessage?.data)) {
@@ -402,6 +415,10 @@ export const isShowNotification = (
 		const link = remoteMessage.data?.link;
 		if (!isValidString(link)) {
 			return false;
+		}
+
+		if (isVoiceFullScreen) {
+			return true;
 		}
 
 		const directMessageMatch = link.match(clanDirectMessageLinkRegex);
@@ -570,15 +587,14 @@ export const navigateToNotification = async (store: any, notification: any, navi
 };
 
 const handleOpenTopicDiscustion = async (store: any, topicId: string, channelId: string, navigation: any) => {
+	await sleep(1000);
 	const promises = [];
-	await sleep(100);
 	promises.push(store.dispatch(topicsActions.setCurrentTopicInitMessage(null)));
 	promises.push(store.dispatch(topicsActions.setCurrentTopicId(topicId || '')));
 	promises.push(store.dispatch(topicsActions.setIsShowCreateTopic(true)));
 	promises.push(store.dispatch(getFirstMessageOfTopic(topicId || '')));
 
 	await Promise.all(promises);
-
 	if (navigation) {
 		navigation.navigate(APP_SCREEN.MESSAGES.STACK, {
 			screen: APP_SCREEN.MESSAGES.TOPIC_DISCUSSION
@@ -609,12 +625,61 @@ export const getVoIPToken = async () => {
 	}
 };
 
+const displayMissedCallNotification = async (dataObj: any) => {
+	const channelId = await notifee.createChannel({
+		id: `${dataObj?.channelId}_MISS_CALL`,
+		name: `${dataObj?.channelId}_MISS_CALL`,
+		importance: AndroidImportance.HIGH
+	});
+
+	await notifee.displayNotification({
+		id: channelId,
+		title: 'Missed call',
+		body: `${dataObj?.callerName || 'Unknown'} call was missed.`,
+		data: {
+			link: `https://mezon.ai/chat/direct/message/${dataObj?.channelId}/3`
+		},
+		android: {
+			channelId,
+			smallIcon: 'ic_notification',
+			vibrationPattern: [300, 500, 300, 500],
+			lightUpScreen: true,
+			color: '#7029c1',
+			actions: [
+				{
+					title: 'Call back',
+					pressAction: {
+						id: 'open_chat',
+						launchActivity: 'com.mezon.mobile.MainActivity',
+						launchActivityFlags: [
+							AndroidLaunchActivityFlag.SINGLE_TOP,
+							AndroidLaunchActivityFlag.NEW_TASK,
+							AndroidLaunchActivityFlag.CLEAR_TOP
+						]
+					},
+					icon: 'ic_message'
+				}
+			],
+			largeIcon: dataObj?.callerAvatar || dataObj?.groupAvatar || process.env.NX_LOGO_MEZON,
+			pressAction: {
+				id: 'default',
+				launchActivity: 'com.mezon.mobile.MainActivity'
+			}
+		}
+	});
+};
+
 export const displayNativeCalling = async (data: any, appInBackground = false) => {
 	const notificationId = 'incoming-call';
 	try {
 		const dataObj = safeJSONParse(data?.offer || '{}');
 		if (dataObj?.offer === 'CANCEL_CALL') {
+			const latestCallsCacheStr = load(STORAGE_LATEST_CALL_CACHE) || '{}';
+			const latestCallsCache = safeJSONParse(latestCallsCacheStr) || {};
 			await notifee.cancelNotification(notificationId, notificationId);
+			if (latestCallsCache?.channelId) {
+				await displayMissedCallNotification(latestCallsCache);
+			}
 			return;
 		}
 
@@ -629,6 +694,7 @@ export const displayNativeCalling = async (data: any, appInBackground = false) =
 			cancelCallsCache.splice(0, 10);
 		}
 		save(STORAGE_OFFER_HAVE_CALL_CACHE, JSON.stringify(cancelCallsCache));
+		save(STORAGE_LATEST_CALL_CACHE, JSON.stringify(dataObj));
 
 		const channel = await notifee.createChannel({
 			id: 'calls',

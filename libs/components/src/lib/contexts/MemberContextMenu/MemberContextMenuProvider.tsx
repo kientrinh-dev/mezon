@@ -2,23 +2,33 @@ import { useAppNavigation, useDirect, useFriends, usePermissionChecker } from '@
 import type { ChannelMembersEntity } from '@mezon/store';
 import {
 	EStateFriend,
+	channelMembersActions,
 	channelUsersActions,
+	clansActions,
 	selectAllAccount,
-	selectCurrentChannel,
-	selectCurrentClan,
+	selectBanMemberCurrentClanById,
+	selectCurrentChannelCreatorId,
+	selectCurrentChannelId,
+	selectCurrentChannelType,
+	selectCurrentClanCreatorId,
+	selectCurrentClanId,
 	selectFriendStatus,
-	selectTheme,
+	toastActions,
 	useAppDispatch,
-	useAppSelector
+	useAppSelector,
+	usersClanActions
 } from '@mezon/store';
-import { EPermission } from '@mezon/utils';
+import { Menu as MenuDropdown } from '@mezon/ui';
+import { EPermission, FOR_15_MINUTES_SEC, FOR_1_HOUR_SEC, FOR_24_HOURS_SEC, FOR_3_HOURS_SEC, FOR_8_HOURS_SEC } from '@mezon/utils';
 import { ChannelType } from 'mezon-js';
 import type { CSSProperties, FC } from 'react';
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { Menu, useContextMenu } from 'react-contexify';
 import { useTranslation } from 'react-i18next';
+import { useModal } from 'react-modal-hook';
 import { useSelector } from 'react-redux';
 import ModalRemoveMemberClan from '../../components/MemberProfile/ModalRemoveMemberClan';
+import ItemPanel from '../../components/PanelChannel/ItemPanel';
 import { MemberMenuItem } from './MemberMenuItem';
 import type { MemberContextMenuContextType, MemberContextMenuHandlers, MemberContextMenuProps } from './types';
 import { MEMBER_CONTEXT_MENU_ID } from './types';
@@ -30,18 +40,77 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 	const { t } = useTranslation('contextMenu');
 	const [currentUser, setCurrentUser] = useState<ChannelMembersEntity | null>(null);
 	const userProfile = useSelector(selectAllAccount);
-	const currentClan = useAppSelector(selectCurrentClan);
-	const currentChannel = useAppSelector(selectCurrentChannel);
-	const currentChannelId = currentChannel?.id;
+	const currentClanCreatorId = useAppSelector(selectCurrentClanCreatorId);
+	const currentClanId = useAppSelector(selectCurrentClanId);
+
+	const currentChannelId = useAppSelector(selectCurrentChannelId);
+	const currentChannelType = useAppSelector(selectCurrentChannelType);
+	const currentChannelCreatorId = useAppSelector(selectCurrentChannelCreatorId);
+
 	const [hasClanOwnerPermission, hasAdminPermission] = usePermissionChecker([EPermission.clanOwner, EPermission.administrator]);
+	const isBan = useAppSelector((state) => selectBanMemberCurrentClanById(state, currentChannelId || '', currentUser?.id || ''));
 	const dispatch = useAppDispatch();
 	const { addFriend, deleteFriend } = useFriends();
 	const { createDirectMessageWithUser } = useDirect();
 	const { toDmGroupPageFromMainApp, navigate } = useAppNavigation();
 
-	const { openModalRemoveMember, closeRemoveMemberModal, handleRemoveMember, openUserProfile, openProfileItem, openRemoveMemberModal } = useModals({
+	const { openUserProfile, openProfileItem, hideProfileItemModal, hideUserProfileModal } = useModals({
 		currentUser
 	});
+	const handleRemoveMember = useCallback(async () => {
+		if (!currentUser?.user?.id || !currentClanId) return;
+
+		try {
+			await dispatch(
+				clansActions.removeClanUsers({
+					clanId: currentClanId,
+					userIds: [currentUser.user.id]
+				})
+			);
+			dispatch(
+				toastActions.addToast({
+					message: 'Member removed successfully',
+					type: 'success'
+				})
+			);
+		} catch (error) {
+			dispatch(
+				toastActions.addToast({
+					message: 'Failed to remove member',
+					type: 'error'
+				})
+			);
+		}
+	}, [currentUser, currentClanId, dispatch]);
+	const [showRemoveMemberModal, hideRemoveMemberModal] = useModal(() => {
+		if (!currentUser) return null;
+
+		return (
+			<ModalRemoveMemberClan
+				username={currentUser?.user?.username}
+				onClose={hideRemoveMemberModal}
+				onRemoveMember={async () => {
+					await handleRemoveMember();
+					hideRemoveMemberModal();
+				}}
+			/>
+		);
+	}, [currentUser, handleRemoveMember]);
+	const openRemoveMemberModal = useCallback(
+		(user?: ChannelMembersEntity) => {
+			if (user) {
+				setCurrentUser(user);
+			}
+			if (hideProfileItemModal) {
+				hideProfileItemModal();
+			}
+			if (hideUserProfileModal) {
+				hideUserProfileModal();
+			}
+			showRemoveMemberModal();
+		},
+		[hideProfileItemModal, hideUserProfileModal, setCurrentUser, showRemoveMemberModal]
+	);
 
 	const [currentHandlers, setCurrentHandlers] = useState<MemberContextMenuHandlers | null>(null);
 
@@ -56,11 +125,11 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 		[show]
 	);
 
-	const isThread = currentChannel?.type === ChannelType.CHANNEL_TYPE_THREAD;
+	const isThread = currentChannelType === ChannelType.CHANNEL_TYPE_THREAD;
 
-	const isCreator = userProfile?.user?.id === currentChannel?.creator_id;
+	const isCreator = userProfile?.user?.id === currentChannelCreatorId;
 
-	const memberIsClanOwner = currentUser?.user?.id === currentClan?.creator_id;
+	const memberIsClanOwner = currentUser?.user?.id === currentClanCreatorId;
 
 	const isSelf = userProfile?.user?.id === currentUser?.user?.id;
 
@@ -96,6 +165,8 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 				return shouldShowRemoveFriend;
 			case 'markAsRead':
 				return !!currentUser;
+			case 'banChat':
+				return hasAdminPermission && !isSelf;
 			default:
 				return true;
 		}
@@ -129,7 +200,7 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 						channelId: currentChannelId,
 						userId,
 						channelType: ChannelType.CHANNEL_TYPE_THREAD,
-						clanId: currentClan?.clan_id
+						clanId: currentClanId as string
 					})
 				);
 			} catch (error) {
@@ -142,7 +213,58 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 				});
 			}
 		},
-		[dispatch, currentClan?.clan_id, currentChannelId, isThread]
+		[dispatch, currentClanId, currentChannelId, isThread]
+	);
+
+	const handleBanChatUser = useCallback(
+		async (userId: string, banTime: number) => {
+			if (!userId || !currentChannelId || !currentClanId) return;
+
+			try {
+				await dispatch(
+					channelMembersActions.banUserChannel({
+						channelId: currentChannelId,
+						userIds: [userId],
+						clanId: currentClanId,
+						banTime: banTime !== Infinity ? banTime : undefined
+					})
+				);
+			} catch (error) {
+				dispatch({
+					type: 'ERROR_NOTIFICATION',
+					payload: {
+						message: 'Failed to ban chat member',
+						error
+					}
+				});
+			}
+		},
+		[dispatch, currentClanId, currentChannelId, isThread]
+	);
+
+	const handleUnBanChatUser = useCallback(
+		async (userId?: string) => {
+			if (!userId || !currentChannelId || !currentClanId) return;
+
+			try {
+				await dispatch(
+					channelMembersActions.unbanUserChannel({
+						channelId: currentChannelId,
+						userIds: [userId],
+						clanId: currentClanId
+					})
+				);
+			} catch (error) {
+				dispatch({
+					type: 'ERROR_NOTIFICATION',
+					payload: {
+						message: 'Failed to ban chat member',
+						error
+					}
+				});
+			}
+		},
+		[dispatch, currentClanId, currentChannelId, isThread]
 	);
 
 	const createDefaultHandlers = (user?: ChannelMembersEntity): MemberContextMenuHandlers => {
@@ -170,7 +292,7 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 			},
 			handleAddFriend: () => {
 				if (user?.user?.username && user?.user?.id) {
-					addFriend({ usernames: [user.user.username], ids: [] });
+					addFriend({ ids: [user.user.id] });
 				}
 			},
 			handleRemoveFriend: () => {
@@ -187,6 +309,15 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 				if (user?.user?.id) {
 					handleRemoveMemberFromThread(user.user.id);
 				}
+			},
+			handleBanChat: (isBan: boolean, banTime?: number) => {
+				if (user?.user?.id) {
+					if (isBan) {
+						handleUnBanChatUser(user.user.id);
+					} else if (banTime) {
+						handleBanChatUser(user.user.id, banTime);
+					}
+				}
 			}
 		};
 	};
@@ -202,8 +333,11 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 			const handlers = createDefaultHandlers(user);
 			setCurrentHandlers(handlers);
 			showMenu(event);
+			if (hasAdminPermission && currentChannelId && currentClanId) {
+				dispatch(usersClanActions.fetchListBanUser({ clanId: currentClanId, channelId: currentChannelId }));
+			}
 		},
-		[currentChannelId]
+		[currentChannelId, hasAdminPermission]
 	);
 
 	const contextValue: MemberContextMenuContextType = {
@@ -216,9 +350,6 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 		showContextMenu
 	};
 
-	const appearanceTheme = useSelector(selectTheme);
-
-	const isLightMode = appearanceTheme === 'light';
 	const [warningStatus, setWarningStatus] = useState<string>('var(--bg-item-hover)');
 
 	const className: CSSProperties = {
@@ -230,11 +361,27 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 		'--contexify-activeRightSlot-color': 'var(--text-secondary)',
 		'--contexify-arrow-color': 'var(--text-theme-primary)',
 		'--contexify-activeArrow-color': 'var(--text-secondary)',
-		'--contexify-menu-radius': '2px',
+		'--contexify-menu-radius': '8px',
 		'--contexify-activeItem-radius': '2px',
 		'--contexify-menu-minWidth': '188px',
-		'--contexify-separator-color': '#ADB3B9'
+		'--contexify-separator-color': '#ADB3B9',
+		border: '1px solid var(--border-primary)'
 	} as CSSProperties;
+
+	const menuBan = useMemo(() => {
+		if (!currentHandlers) {
+			return <></>;
+		}
+		const menuItems = [
+			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, FOR_15_MINUTES_SEC)}>{t('muteFor15Minutes')}</ItemPanel>,
+			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, FOR_1_HOUR_SEC)}>{t('muteFor1Hour')}</ItemPanel>,
+			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, FOR_3_HOURS_SEC)}>{t('muteFor3Hours')}</ItemPanel>,
+			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, FOR_8_HOURS_SEC)}>{t('muteFor8Hours')}</ItemPanel>,
+			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, FOR_24_HOURS_SEC)}>{t('muteFor24Hours')}</ItemPanel>,
+			<ItemPanel onClick={() => currentHandlers.handleBanChat(false, Infinity)}>{t('muteUntilTurnedBack')}</ItemPanel>
+		];
+		return <>{menuItems}</>;
+	}, [t, currentHandlers]);
 	return (
 		<MemberContextMenuContext.Provider value={contextValue}>
 			{children}
@@ -268,6 +415,29 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 								setWarningStatus={setWarningStatus}
 							/>
 						)}
+						{shouldShow('banChat') && !isBan && (
+							<MenuDropdown
+								trigger="hover"
+								menu={menuBan}
+								align={{
+									points: ['bl', 'br']
+								}}
+								className="bg-theme-contexify text-theme-primary border-theme-primary ml-[3px] py-[6px] px-[8px] w-[200px]"
+							>
+								<div>
+									<MemberMenuItem label={t('member.banChat')} isWarning={true} setWarningStatus={setWarningStatus} />
+								</div>
+							</MenuDropdown>
+						)}
+
+						{shouldShow('banChat') && isBan && (
+							<MemberMenuItem
+								label={t('member.unBanChat')}
+								onClick={() => currentHandlers.handleBanChat(true)}
+								isWarning={true}
+								setWarningStatus={setWarningStatus}
+							/>
+						)}
 
 						{!!shouldShow('kick') && (
 							<MemberMenuItem
@@ -289,10 +459,6 @@ export const MemberContextMenuProvider: FC<MemberContextMenuProps> = ({ children
 					</>
 				)}
 			</Menu>
-
-			{openModalRemoveMember && currentUser && (
-				<ModalRemoveMemberClan username={currentUser?.user?.username} onClose={closeRemoveMemberModal} onRemoveMember={handleRemoveMember} />
-			)}
 		</MemberContextMenuContext.Provider>
 	);
 };

@@ -1,14 +1,15 @@
 import { captureSentryError } from '@mezon/logger';
-import { INotificationUserChannel, LoadingStatus } from '@mezon/utils';
-import { EntityState, PayloadAction, createAsyncThunk, createEntityAdapter, createSelector, createSlice } from '@reduxjs/toolkit';
-import { ApiNotificationUserChannel } from 'mezon-js/api.gen';
-import { CacheMetadata, createApiKey, createCacheMetadata, markApiFirstCalled, shouldForceApiCall } from '../cache-metadata';
+import { EMuteState, type INotificationUserChannel, type LoadingStatus } from '@mezon/utils';
+import type { EntityState, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createEntityAdapter, createSelector, createSlice } from '@reduxjs/toolkit';
+import type { ApiNotificationUserChannel, ApiSetMuteRequest, ApiSetNotificationRequest } from 'mezon-js/api.gen';
+import type { CacheMetadata } from '../cache-metadata';
+import { createApiKey, createCacheMetadata, markApiFirstCalled, shouldForceApiCall } from '../cache-metadata';
 import { channelsActions } from '../channels/channels.slice';
 import { directActions } from '../direct/direct.slice';
-import { directMetaActions } from '../direct/directmeta.slice';
-import { MezonValueContext, ensureSession, fetchDataWithSocketFallback, getMezonCtx } from '../helpers';
-import { RootState } from '../store';
-import { defaultNotificationCategoryActions } from './notificationSettingCategory.slice';
+import type { MezonValueContext } from '../helpers';
+import { ensureSession, fetchDataWithSocketFallback, getMezonCtx } from '../helpers';
+import type { RootState } from '../store';
 
 export const NOTIFICATION_SETTING_FEATURE_KEY = 'notificationsetting';
 
@@ -84,7 +85,7 @@ export const fetchNotificationSettingCached = async (getState: () => RootState, 
 
 export const getNotificationSetting = createAsyncThunk(
 	'notificationsetting/getNotificationSetting',
-	async ({ channelId, isCurrentChannel = true, noCache }: FetchNotificationSettingsArgs, thunkAPI) => {
+	async ({ channelId, isCurrentChannel: _isCurrentChannel = true, noCache }: FetchNotificationSettingsArgs, thunkAPI) => {
 		try {
 			const mezon = await ensureSession(getMezonCtx(thunkAPI));
 			const response = await fetchNotificationSettingCached(thunkAPI.getState as () => RootState, mezon, channelId, Boolean(noCache));
@@ -95,14 +96,14 @@ export const getNotificationSetting = createAsyncThunk(
 
 			if (response.fromCache) {
 				return {
-					channelId: channelId,
+					channelId,
 					notifiSetting: {},
 					fromCache: true
 				};
 			}
 
 			return {
-				channelId: channelId,
+				channelId,
 				notifiSetting: response,
 				fromCache: false
 			};
@@ -116,39 +117,40 @@ export const getNotificationSetting = createAsyncThunk(
 export type SetNotificationPayload = {
 	channel_id?: string;
 	notification_type?: number;
-	time_mute?: string;
+	mute_time?: number;
 	clan_id: string;
 	is_current_channel?: boolean;
 	is_direct?: boolean;
+	label?: string;
+	title?: string;
 };
 
 export const setNotificationSetting = createAsyncThunk(
 	'notificationsetting/setNotificationSetting',
-	async ({ channel_id, notification_type, time_mute, clan_id, is_current_channel = true, is_direct = false }: SetNotificationPayload, thunkAPI) => {
+	async (
+		{ channel_id, notification_type, mute_time, clan_id, is_current_channel = true, is_direct = false, label, title }: SetNotificationPayload,
+		thunkAPI
+	) => {
 		try {
 			const mezon = await ensureSession(getMezonCtx(thunkAPI));
-			const body = {
+			const body: ApiSetNotificationRequest = {
 				channel_category_id: channel_id,
-				notification_type: notification_type,
-				time_mute: time_mute,
-				clan_id: clan_id
+				notification_type,
+				clan_id
 			};
 			const response = await mezon.client.setNotificationChannel(mezon.session, body);
 			if (!response) {
 				return thunkAPI.rejectWithValue([]);
 			}
-			if (time_mute) {
+			if (mute_time) {
 				if (is_direct) {
 					thunkAPI.dispatch(directActions.update({ id: channel_id as string, changes: { is_mute: true } }));
 				} else {
 					thunkAPI.dispatch(channelsActions.update({ clanId: clan_id, update: { changes: { is_mute: true }, id: channel_id as string } }));
 				}
 			}
-			if (!is_direct) {
-				thunkAPI.dispatch(defaultNotificationCategoryActions.fetchChannelCategorySetting({ clanId: clan_id || '', noCache: true }));
-			}
-			thunkAPI.dispatch(getNotificationSetting({ channelId: channel_id || '', noCache: true }));
-			return response;
+
+			return { ...body, clan_id, label, title };
 		} catch (error) {
 			captureSentryError(error, 'notificationsetting/setNotificationSetting');
 			return thunkAPI.rejectWithValue(error);
@@ -156,44 +158,37 @@ export const setNotificationSetting = createAsyncThunk(
 	}
 );
 
-export type SetMuteNotificationPayload = {
+export type MuteChannelPayload = {
 	channel_id?: string;
-	notification_type?: number;
-	active: number;
-	clan_id: string;
-	is_current_channel?: boolean;
+	mute_time: number;
+	active?: number;
+	clan_id?: string;
 };
 
-export const setMuteNotificationSetting = createAsyncThunk(
-	'notificationsetting/setMuteNotificationSetting',
-	async ({ channel_id, notification_type, active, clan_id, is_current_channel = true }: SetMuteNotificationPayload, thunkAPI) => {
+export const setMuteChannel = createAsyncThunk(
+	'notificationsetting/setMuteChannel',
+	async ({ channel_id, mute_time, active, clan_id }: MuteChannelPayload, thunkAPI) => {
 		try {
 			const mezon = await ensureSession(getMezonCtx(thunkAPI));
-			const body = {
+			const body: ApiSetMuteRequest = {
 				id: channel_id,
-				notification_type: notification_type,
-				active: active
+				mute_time,
+				active
 			};
-			const response = await mezon.client.setMuteNotificationChannel(mezon.session, body);
+			const response = await mezon.client.setMuteChannel(mezon.session, body);
 
 			if (!response) {
 				return thunkAPI.rejectWithValue([]);
 			}
-			if (clan_id !== '0' && clan_id !== '') {
-				thunkAPI.dispatch(
-					channelsActions.update({ clanId: clan_id, update: { changes: { is_mute: active === 0 }, id: channel_id as string } })
-				);
 
-				thunkAPI.dispatch(getNotificationSetting({ channelId: channel_id || '', noCache: true }));
-				thunkAPI.dispatch(defaultNotificationCategoryActions.fetchChannelCategorySetting({ clanId: clan_id || '', noCache: true }));
-			} else {
-				thunkAPI.dispatch(notificationSettingActions.updateNotiState({ channelId: channel_id as string, active }));
-				thunkAPI.dispatch(directActions.update({ id: channel_id as string, changes: { is_mute: active === 0 } }));
-				thunkAPI.dispatch(directMetaActions.updateMuteDM({ channelId: channel_id as string, isMute: active === 0 }));
-			}
-			return response;
+			return {
+				channel_id,
+				mute_time,
+				active,
+				clan_id
+			};
 		} catch (error) {
-			captureSentryError(error, 'notificationsetting/setMuteNotificationSetting');
+			captureSentryError(error, 'notificationsetting/setMuteChannel');
 			return thunkAPI.rejectWithValue(error);
 		}
 	}
@@ -207,16 +202,13 @@ type DeleteNotiChannelSettingPayload = {
 
 export const deleteNotiChannelSetting = createAsyncThunk(
 	'notificationsetting/deleteNotiChannelSetting',
-	async ({ channel_id, clan_id, is_current_channel = true }: DeleteNotiChannelSettingPayload, thunkAPI) => {
+	async ({ channel_id, clan_id: _clan_id, is_current_channel: _is_current_channel = true }: DeleteNotiChannelSettingPayload, thunkAPI) => {
 		try {
 			const mezon = await ensureSession(getMezonCtx(thunkAPI));
 			const response = await mezon.client.deleteNotificationChannel(mezon.session, channel_id || '');
 			if (!response) {
 				return thunkAPI.rejectWithValue([]);
 			}
-
-			thunkAPI.dispatch(getNotificationSetting({ channelId: channel_id || '', noCache: true }));
-			thunkAPI.dispatch(defaultNotificationCategoryActions.fetchChannelCategorySetting({ clanId: clan_id || '', noCache: true }));
 			return response;
 		} catch (error) {
 			captureSentryError(error, 'notificationsetting/deleteNotiChannelSetting');
@@ -246,7 +238,7 @@ export const notificationSettingSlice = createSlice({
 			};
 			NotificationSettingsAdapter.upsertOne(state, notificationEntity);
 			if (state?.byChannels?.[channel_id]) {
-				state.byChannels[channel_id].notificationSetting = notificationEntity as any;
+				state.byChannels[channel_id].notificationSetting = notificationEntity as INotificationUserChannel;
 				state.byChannels[channel_id].cache = createCacheMetadata();
 			} else {
 				state.byChannels[channel_id] = getInitialChannelState();
@@ -275,14 +267,14 @@ export const notificationSettingSlice = createSlice({
 				state.byChannels[channelId] = getInitialChannelState();
 			}
 
-			let notificationSetting = state?.byChannels?.[channelId]?.notificationSetting as any;
+			let notificationSetting = state?.byChannels?.[channelId]?.notificationSetting as INotificationUserChannel | undefined;
 			if (!notificationSetting) {
 				notificationSetting = {
 					id: channelId,
 					channel_id: channelId,
-					active: active,
+					active,
 					notification_type: 0
-				} as any;
+				} as INotificationUserChannel;
 				state.byChannels[channelId].notificationSetting = notificationSetting;
 			}
 
@@ -323,7 +315,7 @@ export const notificationSettingSlice = createSlice({
 						};
 						NotificationSettingsAdapter.upsertOne(state, notificationEntity);
 
-						state.byChannels[channelId].notificationSetting = notifiSetting as any;
+						state.byChannels[channelId].notificationSetting = notifiSetting as INotificationUserChannel;
 						state.byChannels[channelId].cache = createCacheMetadata();
 					}
 
@@ -333,6 +325,19 @@ export const notificationSettingSlice = createSlice({
 			.addCase(getNotificationSetting.rejected, (state: NotificationSettingState, action) => {
 				state.loadingStatus = 'error';
 				state.error = action.error.message;
+			})
+			.addCase(setMuteChannel.fulfilled, (state: NotificationSettingState, action: PayloadAction<MuteChannelPayload>) => {
+				const { channel_id, mute_time, active } = action.payload;
+				if (!channel_id) return;
+
+				const channel = state.byChannels[channel_id];
+				if (!channel?.notificationSetting) {
+					return;
+				}
+
+				channel.notificationSetting.active = active ?? EMuteState.UN_MUTE;
+				channel.notificationSetting.time_mute =
+					active === EMuteState.MUTED && mute_time !== 0 ? new Date(Date.now() + (mute_time || 0) * 1000).toISOString() : undefined;
 			});
 	}
 });
@@ -347,7 +352,7 @@ export const notificationSettingActions = {
 	getNotificationSetting,
 	setNotificationSetting,
 	deleteNotiChannelSetting,
-	setMuteNotificationSetting
+	setMuteChannel
 };
 
 const { selectEntities } = NotificationSettingsAdapter.getSelectors();

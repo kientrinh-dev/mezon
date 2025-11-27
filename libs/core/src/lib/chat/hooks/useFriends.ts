@@ -5,7 +5,7 @@ import {
 	selectAllFriends,
 	selectCurrentUserId,
 	selectDmGroupCurrentId,
-	selectGrouplMembers,
+	selectMemberByGroupId,
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store';
@@ -16,8 +16,8 @@ import { useSelector } from 'react-redux';
 export function useFriends() {
 	const friends = useSelector(selectAllFriends);
 	const currentDM = useSelector(selectDmGroupCurrentId);
-	const groupDmMember = useAppSelector((state) => selectGrouplMembers(state, currentDM as string));
-	const numberMemberInDmGroup = useMemo(() => groupDmMember.length, [groupDmMember]);
+	const groupDmMember = useAppSelector((state) => selectMemberByGroupId(state, currentDM as string));
+	const numberMemberInDmGroup = useMemo(() => groupDmMember?.length || 0, [groupDmMember]);
 	const currentUserId = useSelector(selectCurrentUserId);
 	const dispatch = useAppDispatch();
 
@@ -58,7 +58,6 @@ export function useFriends() {
 	const blockFriend = useCallback(
 		async (username: string, id: string) => {
 			const body = {
-				usernames: [username],
 				ids: [id]
 			};
 			const response = await dispatch(friendsActions.sendRequestBlockFriend(body));
@@ -67,13 +66,12 @@ export function useFriends() {
 				dispatch(
 					friendsActions.updateFriendState({
 						userId: id,
-						friendState: EStateFriend.BLOCK,
 						sourceId: currentUserId
 					})
 				);
 				return true;
 			}
-			return false;
+			throw new Error('BLOCK_FRIEND_FAILED');
 		},
 		[dispatch, currentUserId]
 	);
@@ -81,21 +79,18 @@ export function useFriends() {
 	const unBlockFriend = useCallback(
 		async (username: string, id: string) => {
 			const body = {
-				usernames: [username],
 				ids: [id]
 			};
 			const response = await dispatch(friendsActions.sendRequestUnblockFriend(body));
 			if (response?.meta?.requestStatus === 'fulfilled' && currentUserId) {
 				dispatch(
 					friendsActions.updateFriendState({
-						userId: id,
-						friendState: EStateFriend.FRIEND,
-						sourceId: currentUserId
+						userId: id
 					})
 				);
 				return true;
 			}
-			return false;
+			throw new Error('UNBLOCK_FRIEND_FAILED');
 		},
 		[currentUserId, dispatch]
 	);
@@ -107,8 +102,9 @@ export function useFriends() {
 					if (friend.state === EStateFriend.BLOCK) {
 						return false;
 					}
+
 					if (friend.user?.display_name?.toUpperCase().includes(searchTerm) || friend.user?.username?.toUpperCase().includes(searchTerm)) {
-						if (!Object.values(groupDmMember)?.some((user) => user.id === friend.id)) {
+						if (!groupDmMember || !Object.values(groupDmMember)?.some((user) => user.id === friend.id)) {
 							return friend;
 						}
 					}

@@ -17,7 +17,7 @@ import {
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store-mobile';
-import { DEFAULT_ROLE_COLOR, EUserStatus, IMessageWithUser } from '@mezon/utils';
+import { DEFAULT_ROLE_COLOR, EUserStatus } from '@mezon/utils';
 import { useNavigation } from '@react-navigation/native';
 import { ChannelType } from 'mezon-js';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -39,6 +39,7 @@ import EditUserProfileBtn from './component/EditUserProfileBtn';
 import { PendingContent } from './component/PendingContent';
 import UserInfoDm from './component/UserInfoDm';
 import UserSettingProfile from './component/UserSettingProfile';
+import { UserVoiceInfo } from './component/UserVoiceInfo';
 
 export type IManageVoiceUser = {
 	isHavePermission: boolean;
@@ -53,7 +54,7 @@ export enum IActionVoiceUser {
 interface userProfileProps {
 	userId?: string;
 	user?: any;
-	message?: IMessageWithUser;
+	messageAvatar?: string;
 	checkAnonymous?: boolean;
 	onClose?: () => void;
 	onActionVoice?: (action: IActionVoiceUser) => void;
@@ -83,7 +84,7 @@ const UserProfile = React.memo(
 		onClose,
 		onActionVoice,
 		checkAnonymous,
-		message,
+		messageAvatar,
 		showAction = true,
 		showRole = true,
 		currentChannel,
@@ -97,9 +98,6 @@ const UserProfile = React.memo(
 		const { t } = useTranslation(['userProfile', 'friends']);
 		const userById = useAppSelector((state) => selectMemberClanByUserId(state, userId || user?.id));
 		const rolesClan: RolesClanEntity[] = useSelector(selectAllRolesClan);
-		const messageAvatar = useMemo(() => {
-			return message?.clan_avatar || message?.avatar;
-		}, [message?.clan_avatar, message?.avatar]);
 		const { color } = useMixImageColor(
 			messageAvatar || userById?.clan_avatar || userById?.user?.avatar_url || userProfile?.user?.avatar_url || ''
 		);
@@ -112,9 +110,11 @@ const UserProfile = React.memo(
 		const dmChannel = useMemo(() => {
 			return listDM?.find((dm) => dm?.id === directId);
 		}, [directId, listDM]);
+
 		const isDMGroup = useMemo(() => {
-			return dmChannel?.type === ChannelType.CHANNEL_TYPE_GROUP;
-		}, [dmChannel?.type]);
+			const channelType = dmChannel?.type || currentChannel?.type;
+			return channelType === ChannelType.CHANNEL_TYPE_GROUP;
+		}, [currentChannel?.type, dmChannel?.type]);
 
 		const status = useMemo(() => {
 			const userIdInfo = userId || user?.id;
@@ -224,33 +224,44 @@ const UserProfile = React.memo(
 				DeviceEventEmitter.emit(ActionEmitEvent.ON_PANEL_KEYBOARD_BOTTOM_SHEET, {
 					isShow: false
 				});
-				const directMessage = listDM?.find?.((dm) => {
-					const userIds = dm?.user_ids;
-					return Array.isArray(userIds) && userIds.length === 1 && userIds[0] === userId;
-				});
-				if (directMessage?.id) {
-					if (isTabletLandscape) {
-						await dispatch(directActions.setDmGroupCurrentId(directMessage?.id));
-						navigation.navigate(APP_SCREEN.MESSAGES.HOME);
-					} else {
-						navigation.navigate(APP_SCREEN.MESSAGES.MESSAGE_DETAIL, { directMessageId: directMessage?.id });
+				if (!isCheckOwner) {
+					const directMessage = listDM?.find?.((dm) => {
+						const userIds = dm?.user_ids;
+						const isDM = dm.type === ChannelType.CHANNEL_TYPE_DM;
+						return Array.isArray(userIds) && userIds.length === 1 && userIds[0] === userId && isDM;
+					});
+					if (directMessage?.id) {
+						if (isTabletLandscape) {
+							dispatch(directActions.setDmGroupCurrentId(directMessage?.id));
+							navigation.navigate(APP_SCREEN.MESSAGES.HOME);
+						} else {
+							navigation.navigate(APP_SCREEN.MESSAGES.MESSAGE_DETAIL, { directMessageId: directMessage?.id });
+						}
+						return;
 					}
-					return;
 				}
 				const response = await createDirectMessageWithUser(
 					userId,
-					message?.display_name || user?.user?.display_name || user?.display_name || userById?.user?.display_name,
-					message?.user?.username || user?.user?.username || user?.username || userById?.user?.username,
-					message?.avatar || user?.avatar_url || user?.user?.avatar_url || userById?.user?.avatar_url
+					user?.user?.display_name || user?.display_name || userById?.user?.display_name,
+					user?.user?.username || user?.username || userById?.user?.username,
+					user?.avatar_url || user?.user?.avatar_url || userById?.user?.avatar_url
 				);
 
 				if (response?.channel_id) {
 					await checkNotificationPermissionAndNavigate(() => {
 						if (isTabletLandscape) {
-							dispatch(directActions.setDmGroupCurrentId(directMessage?.id || ''));
+							dispatch(directActions.setDmGroupCurrentId(response?.channel_id || ''));
 							navigation.navigate(APP_SCREEN.MESSAGES.HOME);
 						} else {
 							navigation.navigate(APP_SCREEN.MESSAGES.MESSAGE_DETAIL, { directMessageId: response?.channel_id });
+						}
+					});
+				} else {
+					Toast.show({
+						type: 'error',
+						props: {
+							text2: t('friends:toast.somethingWentWrong'),
+							leadingIcon: <MezonIconCDN icon={IconCDN.closeIcon} color={baseColor.redStrong} width={20} height={20} />
 						}
 					});
 				}
@@ -258,12 +269,11 @@ const UserProfile = React.memo(
 			[
 				createDirectMessageWithUser,
 				dispatch,
+				isCheckOwner,
 				isTabletLandscape,
 				listDM,
-				message?.avatar,
-				message?.display_name,
-				message?.user?.username,
 				navigation,
+				t,
 				user?.avatar_url,
 				user?.display_name,
 				user?.user?.avatar_url,
@@ -297,8 +307,8 @@ const UserProfile = React.memo(
 				if (directMessage?.id) {
 					const params = {
 						receiverId: userId,
-						receiverAvatar: message?.avatar || user?.avatar_url || user?.user?.avatar_url || userById?.user?.avatar_url,
-						receiverName: message?.display_name || user?.user?.display_name || user?.display_name || userById?.user?.display_name,
+						receiverAvatar: user?.avatar_url || user?.user?.avatar_url || userById?.user?.avatar_url,
+						receiverName: user?.user?.display_name || user?.display_name || userById?.user?.display_name,
 						directMessageId: directMessage?.id
 					};
 					const data = {
@@ -309,16 +319,16 @@ const UserProfile = React.memo(
 				}
 				const response = await createDirectMessageWithUser(
 					userId,
-					message?.display_name || user?.user?.display_name || user?.display_name || userById?.user?.display_name,
-					message?.user?.username || user?.user?.username || user?.username || userById?.user?.username,
-					message?.avatar || user?.avatar_url || user?.user?.avatar_url || userById?.user?.avatar_url
+					user?.user?.display_name || user?.display_name || userById?.user?.display_name,
+					user?.user?.username || user?.username || userById?.user?.username,
+					user?.avatar_url || user?.user?.avatar_url || userById?.user?.avatar_url
 				);
 				if (response?.channel_id) {
 					dispatch(DMCallActions.removeAll());
 					const params = {
 						receiverId: userId,
-						receiverAvatar: message?.avatar || user?.avatar_url || user?.user?.avatar_url || userById?.user?.avatar_url,
-						receiverName: message?.display_name || user?.user?.display_name || user?.display_name || userById?.user?.display_name,
+						receiverAvatar: user?.avatar_url || user?.user?.avatar_url || userById?.user?.avatar_url,
+						receiverName: user?.user?.display_name || user?.display_name || userById?.user?.display_name,
 						directMessageId: response?.channel_id
 					};
 					const data = {
@@ -329,11 +339,8 @@ const UserProfile = React.memo(
 			},
 			[
 				createDirectMessageWithUser,
+				dispatch,
 				listDM,
-				message?.avatar,
-				message?.display_name,
-				message?.user?.username,
-				navigation,
 				user?.avatar_url,
 				user?.display_name,
 				user?.user?.avatar_url,
@@ -352,14 +359,14 @@ const UserProfile = React.memo(
 				text: t('userAction.sendMessage'),
 				icon: <MezonIconCDN icon={IconCDN.chatIcon} color={themeValue.text} />,
 				action: navigateToMessageDetail,
-				isShow: (!!infoFriend && infoFriend?.state === EFriendState.Friend) || !!userById
+				isShow: !isBlocked
 			},
 			{
 				id: 2,
 				text: t('userAction.voiceCall'),
 				icon: <MezonIconCDN icon={IconCDN.phoneCallIcon} color={themeValue.text} />,
 				action: () => handleCallUser(userId || user?.id),
-				isShow: ((!!infoFriend && infoFriend?.state === EFriendState.Friend) || !!userById) && !isBlocked
+				isShow: !isBlocked
 			},
 			{
 				id: 4,
@@ -367,9 +374,7 @@ const UserProfile = React.memo(
 				icon: <MezonIconCDN icon={IconCDN.userPlusIcon} color={baseColor.green} />,
 				action: handleAddFriend,
 				isShow: !infoFriend && !isBlocked,
-				textStyles: {
-					color: baseColor.green
-				}
+				textStyleName: 'actionTextGreen'
 			},
 			{
 				id: 5,
@@ -382,18 +387,17 @@ const UserProfile = React.memo(
 					!!infoFriend &&
 					infoFriend?.state !== undefined &&
 					[EFriendState.ReceivedRequestFriend, EFriendState.SentRequestFriend].includes(infoFriend?.state),
-				textStyles: {
-					color: baseColor.goldenrodYellow
-				}
+				textStyleName: 'actionTextYellow'
 			}
 		];
 
 		const handleAcceptFriend = () => {
-			const body = {
-				usernames: [infoFriend?.user?.username || ''],
-				ids: [infoFriend?.user?.id || ''],
-				isAcceptingRequest: true
-			};
+			const body = infoFriend?.user?.id
+				? {
+						ids: [infoFriend?.user?.id || ''],
+						isAcceptingRequest: true
+					}
+				: { usernames: [infoFriend?.user?.username || ''], isAcceptingRequest: true };
 			dispatch(friendsActions.sendRequestAddFriend(body));
 		};
 
@@ -438,10 +442,10 @@ const UserProfile = React.memo(
 
 		if (isShowPendingContent) {
 			return (
-				<View style={[styles.wrapper]}>
+				<View style={styles.wrapper}>
 					<PendingContent
 						targetUser={infoFriend}
-						userName={message?.user?.username || user?.user?.username || user?.username || userById?.user?.username}
+						userName={user?.user?.username || user?.username || userById?.user?.username}
 						onClose={() => setIsShowPendingContent(false)}
 					/>
 				</View>
@@ -449,39 +453,19 @@ const UserProfile = React.memo(
 		}
 
 		return (
-			<View style={[styles.wrapper]}>
+			<View style={styles.wrapper}>
 				<View style={[styles.backdrop, { backgroundColor: userById || user?.avatar_url ? color : baseColor.gray }]}>
 					{!isCheckOwner && (
-						<View style={{ flexDirection: 'row' }}>
-							<TouchableOpacity
-								onPress={iconFriend?.action}
-								style={{
-									position: 'absolute',
-									right: size.s_10,
-									top: size.s_10,
-									padding: size.s_6,
-									borderRadius: size.s_20,
-									backgroundColor: themeValue.primary
-								}}
-							>
+						<View style={styles.rowContainer}>
+							<TouchableOpacity onPress={iconFriend?.action} style={styles.topActionButton}>
 								<MezonIconCDN icon={iconFriend?.icon} color={themeValue.text} width={size.s_20} height={size.s_20} />
 							</TouchableOpacity>
-							<TouchableOpacity
-								onPress={() => handleTransferFunds()}
-								style={{
-									position: 'absolute',
-									right: size.s_50,
-									top: size.s_10,
-									padding: size.s_6,
-									borderRadius: size.s_20,
-									backgroundColor: themeValue.primary
-								}}
-							>
+							<TouchableOpacity onPress={() => handleTransferFunds()} style={styles.transferFundsButton}>
 								<MezonIconCDN icon={IconCDN.transactionIcon} color={themeValue.text} width={size.s_20} height={size.s_20} />
 							</TouchableOpacity>
 						</View>
 					)}
-					<View style={[styles.userAvatar]}>
+					<View style={styles.userAvatar}>
 						<MezonAvatar
 							width={size.s_80}
 							height={size.s_80}
@@ -516,13 +500,13 @@ const UserProfile = React.memo(
 
 				<View style={[styles.container]}>
 					{manageVoiceUser?.isHavePermission && (
-						<View style={[styles.userInfo, { gap: size.s_10 }]}>
-							<Text style={[styles.title, { fontSize: size.medium }]}>{t('channelVoiceSettings')}</Text>
+						<View style={[styles.userInfo, styles.userInfoGap]}>
+							<Text style={[styles.title, styles.mediumFontSize]}>{t('channelVoiceSettings')}</Text>
 							<View style={styles.wrapManageVoice}>
 								{manageVoiceUser?.isShowMute && (
 									<TouchableOpacity
 										onPress={() => onActionVoice?.(IActionVoiceUser.MUTE)}
-										style={[styles.actionItem, { flexDirection: 'row', gap: size.s_6 }]}
+										style={[styles.actionItem, styles.actionItemRow]}
 									>
 										<MezonIconCDN
 											icon={IconCDN.microphoneSlashIcon}
@@ -536,7 +520,7 @@ const UserProfile = React.memo(
 
 								<TouchableOpacity
 									onPress={() => onActionVoice?.(IActionVoiceUser.KICK)}
-									style={[styles.actionItem, { flexDirection: 'row', gap: size.s_6 }]}
+									style={[styles.actionItem, styles.actionItemRow]}
 								>
 									<MezonIconCDN icon={IconCDN.removeFriend} color={themeValue.text} width={size.s_18} height={size.s_18} />
 									<Text style={[styles.actionText]}>{t('kickVoice')}</Text>
@@ -559,7 +543,7 @@ const UserProfile = React.memo(
 									user?.user?.display_name ||
 									user?.username ||
 									user?.user?.username ||
-									(checkAnonymous ? 'Anonymous' : message?.username)}
+									(checkAnonymous ? 'Anonymous' : '')}
 						</Text>
 						<Text style={[styles.subUserName]}>
 							{userById
@@ -568,43 +552,47 @@ const UserProfile = React.memo(
 									user?.user?.username ||
 									user?.display_name ||
 									user?.user?.display_name ||
-									(checkAnonymous ? 'Anonymous' : message?.username)}
+									(checkAnonymous ? 'Anonymous' : '')}
 						</Text>
 						{isCheckOwner && <EditUserProfileBtn user={userById || (user as any)} />}
 						{!isCheckOwner && !manageVoiceUser && (
-							<View style={[styles.userAction]}>
+							<View style={styles.userAction}>
 								{actionList.map((actionItem) => {
-									const { action, icon, id, isShow, text, textStyles } = actionItem;
+									const { action, icon, id, isShow, text, textStyleName } = actionItem;
 									if (!isShow) return null;
 									return (
-										<TouchableOpacity key={id} onPress={() => action?.()} style={[styles.actionItem]}>
+										<TouchableOpacity key={id} onPress={() => action?.()} style={styles.actionItem}>
 											{icon}
-											<Text style={[styles.actionText, textStyles && textStyles]}>{text}</Text>
+											<Text style={[styles.actionText, textStyleName && styles[textStyleName]]}>{text}</Text>
 										</TouchableOpacity>
 									);
 								})}
 							</View>
 						)}
+						{isCheckOwner && (
+							<View style={[styles.userAction]}>
+								<TouchableOpacity onPress={navigateToMessageDetail} style={[styles.actionItem]}>
+									<MezonIconCDN icon={IconCDN.chatIcon} color={themeValue.text} />
+									<Text style={[styles.actionText]}>{t('userAction.sendMessage')}</Text>
+								</TouchableOpacity>
+							</View>
+						)}
 						{EFriendState.ReceivedRequestFriend === infoFriend?.state && (
-							<View style={{ marginTop: size.s_16 }}>
+							<View style={styles.friendRequestContainer}>
 								<Text style={styles.receivedFriendRequestTitle}>{t('incomingFriendRequest')}</Text>
-								<View style={{ flexDirection: 'row', gap: size.s_10, marginTop: size.s_10 }}>
-									<TouchableOpacity
-										onPress={() => handleAcceptFriend()}
-										style={[styles.button, { backgroundColor: baseColor.green }]}
-									>
+								<View style={styles.friendRequestActions}>
+									<TouchableOpacity onPress={() => handleAcceptFriend()} style={[styles.button, styles.acceptButton]}>
 										<Text style={styles.defaultText}>{t('accept')}</Text>
 									</TouchableOpacity>
-									<TouchableOpacity
-										onPress={() => handleIgnoreFriend()}
-										style={[styles.button, { backgroundColor: baseColor.bgButtonSecondary }]}
-									>
+									<TouchableOpacity onPress={() => handleIgnoreFriend()} style={[styles.button, styles.ignoreButton]}>
 										<Text style={styles.defaultText}>{t('ignore')}</Text>
 									</TouchableOpacity>
 								</View>
 							</View>
 						)}
 					</View>
+
+					{showAction && <UserVoiceInfo userId={userId || user?.id || ''} />}
 
 					{isShowUserContent && (
 						<View style={[!isDMGroup && styles.roleGroup]}>
@@ -617,7 +605,7 @@ const UserProfile = React.memo(
 								</View>
 							)}
 							{!!userById?.user?.about_me && (
-								<View style={{ paddingVertical: size.s_16 }}>
+								<View style={styles.aboutMeContainer}>
 									<Text style={[styles.aboutMe]}>{t('aboutMe.headerTitle')}</Text>
 									<Text style={[styles.aboutMeText]}>{userById?.user?.about_me}</Text>
 								</View>
@@ -629,22 +617,10 @@ const UserProfile = React.memo(
 										{userRolesClan?.map((role, index) => (
 											<View style={[styles.roleItem]} key={`${role.id}_${index}`}>
 												{role?.role_icon ? (
-													<ImageNative
-														url={role?.role_icon}
-														style={{
-															width: size.s_15,
-															height: size.s_15,
-															borderRadius: size.s_50
-														}}
-													/>
+													<ImageNative url={role?.role_icon} style={styles.roleIcon} />
 												) : (
 													<View
-														style={{
-															width: size.s_15,
-															height: size.s_15,
-															borderRadius: size.s_50,
-															backgroundColor: role?.color || DEFAULT_ROLE_COLOR
-														}}
+														style={[styles.roleColorDot, { backgroundColor: role?.color || DEFAULT_ROLE_COLOR }]}
 													></View>
 												)}
 												<Text style={[styles.textRole]} numberOfLines={1} ellipsizeMode="tail">

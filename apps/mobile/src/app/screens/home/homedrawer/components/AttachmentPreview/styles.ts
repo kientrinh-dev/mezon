@@ -6,6 +6,7 @@ export const style = (colors: Attributes) =>
 		container: {
 			borderTopColor: colors.border,
 			padding: size.s_8,
+			paddingBottom: 0,
 			position: 'relative',
 			width: '100%',
 			height: size.s_100
@@ -61,5 +62,30 @@ export const style = (colors: Attributes) =>
 			fontSize: size.small,
 			color: '#c7c7c7',
 			textTransform: 'uppercase'
+		},
+		gradientBackground: {
+			...StyleSheet.absoluteFillObject
+		},
+		scrollViewContainer: {
+			flex: 1
+		},
+		scrollViewContent: {
+			paddingRight: verticalScale(20),
+			alignItems: 'center'
+		},
+		buttonHd: {
+			paddingHorizontal: size.s_16,
+			paddingRight: 0,
+			paddingVertical: size.s_4,
+			alignSelf: 'flex-end'
+		},
+		iconCheckedHD: {
+			position: 'absolute',
+			bottom: 0,
+			right: -size.s_6,
+			borderRadius: size.s_20,
+			backgroundColor: baseColor.green,
+			padding: size.s_2,
+			zIndex: 2
 		}
 	});

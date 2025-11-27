@@ -1,4 +1,5 @@
-import { useTheme } from '@mezon/mobile-ui';
+import { ActionEmitEvent } from '@mezon/mobile-components';
+import { size, useTheme } from '@mezon/mobile-ui';
 import { appActions, referencesActions, selectAttachmentByChannelId, useAppDispatch, useAppSelector } from '@mezon/store-mobile';
 import { IMAGE_MAX_FILE_SIZE, MAX_FILE_ATTACHMENTS, MAX_FILE_SIZE, fileTypeImage } from '@mezon/utils';
 import type { PhotoIdentifier } from '@react-native-camera-roll/camera-roll';
@@ -12,25 +13,29 @@ import { iosReadGalleryPermission } from '@react-native-camera-roll/camera-roll/
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { EmitterSubscription } from 'react-native';
-import { ActivityIndicator, Alert, Dimensions, Linking, PermissionsAndroid, Platform, View } from 'react-native';
+import { ActivityIndicator, DeviceEventEmitter, Dimensions, Linking, PermissionsAndroid, Platform, Text, TouchableOpacity, View } from 'react-native';
 import RNFS from 'react-native-fs';
 import { FlatList } from 'react-native-gesture-handler';
 import type { CameraOptions } from 'react-native-image-picker';
 import * as ImagePicker from 'react-native-image-picker';
 import Toast from 'react-native-toast-message';
+import MezonConfirm from '../../../../../../componentUI/MezonConfirm';
 import type { IFile } from '../../../../../../componentUI/MezonImagePicker';
+import useTabletLandscape from '../../../../../../hooks/useTabletLandscape';
 import GalleryItem from './components/GalleryItem';
-
+import { style } from './styles';
 export const { height } = Dimensions.get('window');
 interface IProps {
-	onPickGallery: (files: IFile | any) => void;
 	currentChannelId: string;
 }
 
-const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
+const Gallery = ({ currentChannelId }: IProps) => {
 	const { themeValue } = useTheme();
+	const isTabletLandscape = useTabletLandscape();
+
 	const { t } = useTranslation(['qrScanner', 'sharing', 'common']);
 	const [hasPermission, setHasPermission] = useState(false);
+	const styles = useMemo(() => style(themeValue), [themeValue]);
 	const [photos, setPhotos] = useState<PhotoIdentifier[]>([]);
 	const [pageInfo, setPageInfo] = useState(null);
 	const [isPermissionLimitIOS, setIsPermissionLimitIOS] = useState(false);
@@ -38,6 +43,20 @@ const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
 	const timerRef = useRef<any>(null);
 	const isLoadingMoreRef = useRef<boolean>(false);
 	const attachmentFilteredByChannelId = useAppSelector((state) => selectAttachmentByChannelId(state, currentChannelId ?? ''));
+	const [widthItem, setWidthItem] = useState(Dimensions.get('screen')?.width);
+
+	useEffect(() => {
+		const subscription = Dimensions.addEventListener('change', (handler) => {
+			const screen = handler?.screen;
+			if (screen?.width) {
+				setWidthItem(screen?.width);
+			}
+		});
+
+		return () => {
+			subscription && subscription.remove();
+		};
+	}, [isTabletLandscape]);
 
 	const isDisableSelectAttachment = useMemo(() => {
 		if (!attachmentFilteredByChannelId) return false;
@@ -55,7 +74,7 @@ const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
 		isLoadingMoreRef.current = true;
 		try {
 			const res = await CameraRoll.getPhotos({
-				first: 32,
+				first: 20,
 				assetType: 'All',
 				...(!!after && { after }),
 				include: ['filename', 'fileSize', 'fileExtension', 'imageSize', 'orientation', 'playableDuration'],
@@ -74,6 +93,7 @@ const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
 	useEffect(() => {
 		const subscription: EmitterSubscription = cameraRollEventEmitter.addListener('onLibrarySelectionChange', (_event) => {
 			if (isPermissionLimitIOS) {
+				setPhotos([]);
 				loadPhotos();
 			}
 		});
@@ -87,6 +107,28 @@ const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
 		};
 	}, [isPermissionLimitIOS]);
 
+	const onPickGallery = useCallback(
+		(file: IFile) => {
+			dispatch(
+				referencesActions.setAtachmentAfterUpload({
+					channelId: currentChannelId,
+					files: [
+						{
+							filename: file.name,
+							url: file.uri,
+							filetype: file.type,
+							size: file.size as number,
+							width: file?.width,
+							height: file?.height,
+							thumbnail: file?.thumbnailPreview
+						}
+					]
+				})
+			);
+		},
+		[currentChannelId, dispatch]
+	);
+
 	const checkAndRequestPermissions = async () => {
 		const hasPermission = await requestPermission(true);
 		if (hasPermission) {
@@ -97,18 +139,20 @@ const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
 	};
 
 	const alertOpenSettings = (title?: string, desc?: string) => {
-		Alert.alert(title || 'Photo Permission', desc || 'App needs access to your photo library', [
-			{
-				text: 'Cancel',
-				style: 'cancel'
-			},
-			{
-				text: 'OK',
-				onPress: () => {
-					openAppSettings();
-				}
-			}
-		]);
+		const data = {
+			children: (
+				<MezonConfirm
+					title={title || t('common:permissionNotification.photoTitle')}
+					content={desc || t('common:permissionNotification.photoDesc')}
+					confirmText={t('common:openSettings')}
+					onConfirm={() => {
+						openAppSettings();
+						DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
+					}}
+				/>
+			)
+		};
+		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: false, data });
 	};
 
 	const getCheckPermissionPromise = async () => {
@@ -197,7 +241,6 @@ const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
 				return requestResult === 'granted' || requestResult === 'limited';
 			} else if (result === 'limited') {
 				setIsPermissionLimitIOS(true);
-				await iosRefreshGallerySelection();
 			}
 
 			return result === 'granted' || result === 'limited';
@@ -214,6 +257,12 @@ const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
 		}
 	};
 
+	const handleSelectMorePhotos = useCallback(async () => {
+		if (Platform.OS === 'ios' && isPermissionLimitIOS) {
+			await iosRefreshGallerySelection();
+		}
+	}, [isPermissionLimitIOS]);
+
 	const renderItem = ({ item, index }) => {
 		const baseFilename = item?.node?.image?.filename || '';
 		const fileName = index + baseFilename;
@@ -223,6 +272,7 @@ const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
 		return (
 			<GalleryItem
 				item={item}
+				width={Math.round(widthItem / 3 - size.s_20)}
 				index={index}
 				themeValue={themeValue}
 				isSelected={isSelected}
@@ -260,51 +310,44 @@ const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
 				}
 
 				let filePath = image?.uri;
-
-				if (Platform.OS === 'ios' && filePath.startsWith('ph://')) {
+				const ext = image.extension;
+				const isGif = type?.toLowerCase().includes('gif') || ext?.toLowerCase() === 'gif';
+				const isWebP = type?.toLowerCase().includes('webp') || ext?.toLowerCase() === 'webp';
+				const isAnimated = isGif || isWebP;
+				if (Platform.OS === 'ios' && filePath.startsWith('ph://') && isAnimated) {
 					const ms = new Date().getTime();
-					const ext = image.extension;
 					const destPath = `${RNFS.CachesDirectoryPath}/${ms}.${ext}`;
+					try {
+						const assetInfo = await CameraRoll.iosGetImageDataById(image.uri);
+						if (assetInfo?.node?.image?.filepath) {
+							const cleanFilePath = assetInfo.node.image.filepath.split('#')[0];
+							if (cleanFilePath.startsWith('file://')) {
+								const sourcePathWithoutProtocol = cleanFilePath.replace('file://', '');
+								const fileExists = await RNFS.exists(sourcePathWithoutProtocol);
 
-					const isGif = type?.toLowerCase().includes('gif') || ext?.toLowerCase() === 'gif';
-					const isWebP = type?.toLowerCase().includes('webp') || ext?.toLowerCase() === 'webp';
-					const isAnimated = isGif || isWebP;
+								if (fileExists) {
+									await RNFS.copyFile(sourcePathWithoutProtocol, destPath);
+									filePath = `file://${destPath}`;
+								} else {
+									filePath = await RNFS.copyAssetsVideoIOS(image.uri, destPath);
+								}
+							} else if (cleanFilePath.startsWith('/')) {
+								const fileExists = await RNFS.exists(cleanFilePath);
 
-					if ((isAnimated || type.startsWith('video')) && Platform.OS === 'ios') {
-						try {
-							const assetInfo = await CameraRoll.iosGetImageDataById(image.uri);
-							if (assetInfo?.node?.image?.filepath) {
-								const cleanFilePath = assetInfo.node.image.filepath.split('#')[0];
-								if (cleanFilePath.startsWith('file://')) {
-									const sourcePathWithoutProtocol = cleanFilePath.replace('file://', '');
-									const fileExists = await RNFS.exists(sourcePathWithoutProtocol);
-
-									if (fileExists) {
-										await RNFS.copyFile(sourcePathWithoutProtocol, destPath);
-										filePath = `file://${destPath}`;
-									} else {
-										filePath = await RNFS.copyAssetsVideoIOS(image.uri, destPath);
-									}
-								} else if (cleanFilePath.startsWith('/')) {
-									const fileExists = await RNFS.exists(cleanFilePath);
-
-									if (fileExists) {
-										await RNFS.copyFile(cleanFilePath, destPath);
-										filePath = `file://${destPath}`;
-									} else {
-										filePath = await RNFS.copyAssetsVideoIOS(image.uri, destPath);
-									}
+								if (fileExists) {
+									await RNFS.copyFile(cleanFilePath, destPath);
+									filePath = `file://${destPath}`;
 								} else {
 									filePath = await RNFS.copyAssetsVideoIOS(image.uri, destPath);
 								}
 							} else {
 								filePath = await RNFS.copyAssetsVideoIOS(image.uri, destPath);
 							}
-						} catch (animatedError) {
-							filePath = await RNFS.copyAssetsFileIOS(image.uri, destPath, image.width, image.height);
+						} else {
+							filePath = await RNFS.copyAssetsVideoIOS(image.uri, destPath);
 						}
-					} else {
-						filePath = await RNFS.copyAssetsFileIOS(filePath, destPath, image.width, image.height);
+					} catch (animatedError) {
+						filePath = await RNFS.copyAssetsFileIOS(image.uri, destPath, image.width, image.height);
 					}
 				}
 
@@ -335,15 +378,20 @@ const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
 					setHasPermission(true);
 					return true;
 				} else {
-					Alert.alert(
-						t('cameraPermissionDenied'),
-						t('pleaseAllowCamera'),
-						[
-							{ text: t('cancel'), style: 'cancel' },
-							{ text: t('openSettings'), onPress: () => Linking.openSettings() }
-						],
-						{ cancelable: false }
-					);
+					const data = {
+						children: (
+							<MezonConfirm
+								title={t('cameraPermissionDenied')}
+								content={t('pleaseAllowCamera')}
+								confirmText={t('common:openSettings')}
+								onConfirm={() => {
+									Linking.openSettings();
+									DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
+								}}
+							/>
+						)
+					};
+					DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: false, data });
 					return false;
 				}
 			} else if (Platform.OS === 'ios') {
@@ -405,26 +453,29 @@ const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
 	);
 
 	return (
-		<View style={{ flex: 1 }}>
+		<View style={styles.galleryContainer}>
+			{isPermissionLimitIOS && (
+				<TouchableOpacity style={[styles.limitedPermissionBanner, { backgroundColor: themeValue.primary }]} onPress={handleSelectMorePhotos}>
+					<Text style={[styles.limitedPermissionText, { color: themeValue.text }]}>{`📷 ${t('common:limitedPhotosAccess')}`}</Text>
+				</TouchableOpacity>
+			)}
+
 			<FlatList
 				data={[{ isUseCamera: true }, ...photos]}
 				numColumns={3}
 				renderItem={renderItem}
 				keyExtractor={(item, index) => `${index.toString()}_gallery_${item?.node?.id}`}
-				initialNumToRender={18}
-				maxToRenderPerBatch={18}
-				windowSize={7}
-				updateCellsBatchingPeriod={16}
-				scrollEventThrottle={0}
+				initialNumToRender={5}
+				maxToRenderPerBatch={5}
+				windowSize={10}
 				removeClippedSubviews={true}
-				viewabilityConfig={{
-					itemVisiblePercentThreshold: 50,
-					minimumViewTime: 300
-				}}
-				contentOffset={{ x: 0, y: 0 }}
-				disableVirtualization
 				style={{
-					maxHeight: height * 0.8
+					height: height * 0.8,
+					paddingLeft: size.s_14
+				}}
+				contentContainerStyle={{
+					paddingBottom: widthItem / 3,
+					gap: size.s_14
 				}}
 				onEndReached={handleLoadMore}
 				onEndReachedThreshold={0.8}
@@ -434,4 +485,4 @@ const Gallery = ({ onPickGallery, currentChannelId }: IProps) => {
 	);
 };
 
-export default Gallery;
+export default React.memo(Gallery);

@@ -67,7 +67,7 @@ const HeaderMezon = memo((props: HeaderProps) => {
 	);
 	return (
 		<div
-			className={`layout fixed flex flex-col items-center w-full z-50 bg-gradient-to-r from-[#7E00FF] via-[#9C3FE9] to-[#4B0082] h-[80px] max-md:h-[72px]`}
+			className={`layout fixed flex flex-col items-center w-full z-50 bg-gradient-to-r from-[#8960e0] via-[#8960e0] to-[#8960e0] h-[80px] max-md:h-[72px]`}
 		>
 			<div
 				ref={refHeader}
@@ -76,13 +76,12 @@ const HeaderMezon = memo((props: HeaderProps) => {
 			>
 				<div className="flex items-center justify-between md:px-[32px] max-md:px-[16px] max-md:py-[14px] h-[80px] max-md:h-[72px]">
 					<div className="flex items-center gap-[40px]">
-						<Link to={'/mezon'} className="flex items-center gap-[4.92px] min-w-[120px]">
+						<Link to={'/'} className="flex items-center gap-[4.92px] min-w-[120px]">
 							<Image src={`assets/logo.png`} width={120} height={35} className="object-cover" />
 						</Link>
 						<div className="hidden lg:flex items-center gap-3 lg:max-xl:gap-[0.05rem]">
-							<NavLink href="#home" section="home" label={t('header.home')}/>
-							<NavLink href="#overview" section="overview" label={t('header.overview')}/>
-							<NavLink href="#feature" section="feature" label={t('header.features')}/>
+							<NavLink href="#home" section="home" label={t('header.home')} />
+
 							<a
 								href={'developers/applications'}
 								target="_blank"
@@ -128,7 +127,7 @@ const HeaderMezon = memo((props: HeaderProps) => {
 					</div>
 					<div className={`w-fit lg:pl-5 min-[1505px]:pl-0`}>
 						<Link
-							className="hidden lg:block px-[16px] py-[10px] bg-[url(assets/button_openmezon.png)] bg-no-repeat rounded-xl text-[#6E4A9E] text-[16px] leading-[24px] font-bold whitespace-nowrap hover:opacity-90 transition-opacity"
+							className=" hidden lg:block px-[16px] py-[10px] bg-[url(assets/button_openmezon.png)] bg-no-repeat rounded-xl text-[#6E4A9E] text-[16px] leading-[24px] font-bold whitespace-nowrap hover:opacity-90 transition-opacity"
 							to={'/mezon'}
 							onClick={() => trackHeaderLoginClick(isLogin ? 'Open Mezon' : 'Login')}
 							data-e2e={generateE2eId('homepage.header.button.login')}

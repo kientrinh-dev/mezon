@@ -1,5 +1,5 @@
 import { autoUpdate, flip, offset, shift, useFloating } from '@floating-ui/react';
-import { ID_MENTION_HERE, generateE2eId } from '@mezon/utils';
+import { ID_MENTION_HERE, IS_SAFARI, generateE2eId } from '@mezon/utils';
 import React, {
 	Children,
 	cloneElement,
@@ -78,6 +78,7 @@ export interface MentionsInputProps {
 	hasFilesToSend?: boolean;
 	setCaretToEnd?: boolean;
 	currentChannelId?: string;
+	allowEmptySend?: boolean;
 }
 
 export interface MentionsInputHandle {
@@ -226,6 +227,54 @@ const positionCaretAfterEmoji = (inputEl: HTMLElement, config: any, markup: stri
 	return false;
 };
 
+const positionCaretAfterMention = (inputEl: HTMLElement, config: any) => {
+	const entityTypeMap: Record<string, string> = {
+		':': '[data-entity-type="MessageEntityCustomEmoji"]',
+		'#': '[data-entity-type="MessageEntityHashtag"]',
+		'@': '[data-entity-type="MessageEntityMentionName"], [data-entity-type="MessageEntityMentionRole"]'
+	};
+
+	const trigger = config.trigger;
+	const selector = entityTypeMap[trigger];
+
+	if (!selector) {
+		return false;
+	}
+
+	const mentionElements = inputEl.querySelectorAll(selector);
+	const lastMentionElement = mentionElements[mentionElements.length - 1] as HTMLElement;
+
+	if (lastMentionElement) {
+		const selection = window.getSelection();
+		if (selection) {
+			const range = document.createRange();
+
+			const shouldAddSpace = config.appendSpaceOnAdd !== false;
+
+			const nextNode = lastMentionElement.nextSibling;
+			const hasSpaceAfter = nextNode?.nodeType === Node.TEXT_NODE && nextNode.textContent?.startsWith('\u00A0');
+
+			if (shouldAddSpace && !hasSpaceAfter) {
+				const spaceNode = document.createTextNode('\u00A0');
+				if (lastMentionElement.nextSibling) {
+					lastMentionElement.parentNode?.insertBefore(spaceNode, lastMentionElement.nextSibling);
+				} else {
+					lastMentionElement.parentNode?.appendChild(spaceNode);
+				}
+				range.setStartAfter(spaceNode);
+			} else {
+				range.setStartAfter(lastMentionElement);
+			}
+
+			range.collapse(true);
+			selection.removeAllRanges();
+			selection.addRange(range);
+			return true;
+		}
+	}
+	return false;
+};
+
 const MentionsInputComponent = forwardRef<MentionsInputHandle, MentionsInputProps>(
 	(
 		{
@@ -248,12 +297,15 @@ const MentionsInputComponent = forwardRef<MentionsInputHandle, MentionsInputProp
 			maxHistorySize = 50,
 			hasFilesToSend = false,
 			setCaretToEnd = false,
-			currentChannelId
+			currentChannelId,
+			allowEmptySend = false
 		},
 		ref
 	) => {
 		const inputRef = useRef<HTMLDivElement>(null);
 		const popoverRef = useRef<HTMLDivElement>(null);
+		const anchorRef = useRef<HTMLDivElement>(null);
+		const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
 
 		const [html, setHtml] = useState(value);
 		const [activeMentionContext, setActiveMentionContext] = useState<ActiveMentionContext | null>(null);
@@ -617,7 +669,8 @@ const MentionsInputComponent = forwardRef<MentionsInputHandle, MentionsInputProp
 					requestNextMutation(() => {
 						inputEl.focus();
 
-						if (!positionCaretAfterEmoji(inputEl, config, markup)) {
+						const positioned = IS_SAFARI ? positionCaretAfterMention(inputEl, config) : positionCaretAfterEmoji(inputEl, config, markup);
+						if (!positioned) {
 							const spaceOffset = shouldAddSpace ? 1 : 0;
 							const newCaretPosition = caretPosition + shiftCaretPosition + spaceOffset;
 							if (newCaretPosition >= 0) {
@@ -700,6 +753,13 @@ const MentionsInputComponent = forwardRef<MentionsInputHandle, MentionsInputProp
 				const newHtml = inputEl.innerHTML;
 				setHtml(newHtml);
 				onChange?.(newHtml);
+
+				IS_SAFARI &&
+					requestNextMutation(() => {
+						inputEl.focus();
+						const emojiConfig = { trigger: ':' };
+						positionCaretAfterMention(inputEl, emojiConfig);
+					});
 
 				savedCaretPositionRef.current = null;
 			},
@@ -887,6 +947,66 @@ const MentionsInputComponent = forwardRef<MentionsInputHandle, MentionsInputProp
 			[disabled, onChange, debouncedDetectMention, onHandlePaste]
 		);
 
+		const handlePasteFromContextMenu = useCallback(async () => {
+			if (!inputRef.current || disabled) return;
+
+			try {
+				const clipboardText = await navigator.clipboard.readText();
+				if (!clipboardText) return;
+
+				inputRef.current.focus();
+
+				const contentToInsert = (renderText(clipboardText, ['escape_html', 'br_html']) as string[]).join('').replace(/\u200b+/g, '\u200b');
+
+				insertHtmlInSelection(contentToInsert);
+				inputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
+
+				const newHtml = inputRef.current.innerHTML;
+				setHtml(newHtml);
+				onChange?.(newHtml);
+				debouncedDetectMention();
+
+				setContextMenuPosition(null);
+			} catch (error) {
+				console.error('Failed to paste from clipboard:', error);
+			}
+		}, [disabled, onChange, debouncedDetectMention]);
+
+		const handleContextMenu = useCallback(
+			(e: React.MouseEvent<HTMLDivElement>) => {
+				if (disabled) return;
+				e.preventDefault();
+				setContextMenuPosition({ x: e.clientX, y: e.clientY });
+			},
+			[disabled]
+		);
+
+		useEffect(() => {
+			const handleClickOutside = () => {
+				if (contextMenuPosition) {
+					setContextMenuPosition(null);
+				}
+			};
+
+			const handleKeyDown = (e: KeyboardEvent) => {
+				if (e.key === 'Escape' && contextMenuPosition) {
+					setContextMenuPosition(null);
+				}
+			};
+
+			if (contextMenuPosition) {
+				document.addEventListener('click', handleClickOutside);
+				document.addEventListener('contextmenu', handleClickOutside);
+				document.addEventListener('keydown', handleKeyDown);
+			}
+
+			return () => {
+				document.removeEventListener('click', handleClickOutside);
+				document.removeEventListener('contextmenu', handleClickOutside);
+				document.removeEventListener('keydown', handleKeyDown);
+			};
+		}, [contextMenuPosition]);
+
 		const handleInput = useCallback(
 			(e: React.FormEvent<HTMLDivElement>) => {
 				let newHtml = e.currentTarget.innerHTML;
@@ -997,10 +1117,10 @@ const MentionsInputComponent = forwardRef<MentionsInputHandle, MentionsInputProp
 						((messageSendKeyCombo === 'enter' && !e.shiftKey) || (messageSendKeyCombo === 'ctrl-enter' && (e.ctrlKey || e.metaKey)))
 					) {
 						e.preventDefault();
-						if (onSend && (html.trim() || hasFilesToSend)) {
+						if (onSend && (html.trim() || hasFilesToSend || allowEmptySend)) {
 							const formattedText = parseHtmlAsFormattedText(html, true, false) as FormattedText;
 							const hasActualContent = formattedText.text.trim().length > 0;
-							if (hasActualContent || hasFilesToSend) {
+							if (hasActualContent || hasFilesToSend || allowEmptySend) {
 								onSend(formattedText);
 								setHtml('');
 								if (inputRef.current) {
@@ -1018,8 +1138,37 @@ const MentionsInputComponent = forwardRef<MentionsInputHandle, MentionsInputProp
 					switch (e.key.toLowerCase()) {
 						case 'b': {
 							e.preventDefault();
-							document.execCommand('bold', false);
-							handled = true;
+
+							if (!inputRef.current) break;
+
+							const selection = window.getSelection();
+							const selectedText = selection?.toString() || '';
+
+							if (selectedText.length === 0) {
+								document.execCommand('bold', false);
+								handled = true;
+								break;
+							}
+
+							const isMarkdownSyntax = /^\*\*[^*]+\*\*$/.test(selectedText) || /^\*[^*\n]+\*$/.test(selectedText);
+							if (isMarkdownSyntax) break;
+
+							const textContent = inputRef.current.textContent || '';
+							const caretPosition = getCaretPosition(inputRef.current);
+							const isInsideMarkdown = [/\*\*([^*]+)\*\*/g, /\*([^*\n]+)\*/g].some((regex) => {
+								let match: RegExpExecArray | null;
+								while ((match = regex.exec(textContent)) !== null) {
+									const start = match.index;
+									const end = start + match[0].length;
+									if (caretPosition > start && caretPosition < end) return true;
+								}
+								return false;
+							});
+
+							if (!isInsideMarkdown) {
+								document.execCommand('bold', false);
+								handled = true;
+							}
 							break;
 						}
 						case 'i':
@@ -1056,7 +1205,8 @@ const MentionsInputComponent = forwardRef<MentionsInputHandle, MentionsInputProp
 				undo,
 				redo,
 				hasFilesToSend,
-				suggestionsCount
+				suggestionsCount,
+				allowEmptySend
 			]
 		);
 
@@ -1099,9 +1249,20 @@ const MentionsInputComponent = forwardRef<MentionsInputHandle, MentionsInputProp
 		const { refs, floatingStyles } = useFloating({
 			open: !!activeMentionContext,
 			placement: 'top-start',
+			strategy: 'fixed',
 			middleware: [offset({ mainAxis: 8, crossAxis: -55 }), flip(), shift({ padding: 8 })],
 			whileElementsMounted: autoUpdate
 		});
+
+		const handleReferenceRef = useCallback(
+			(node: HTMLDivElement | null) => {
+				if (anchorRef) {
+					(anchorRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+				}
+				refs.setReference(node);
+			},
+			[refs]
+		);
 
 		useEffect(() => {
 			if (activeMentionContext && inputRef.current) {
@@ -1111,17 +1272,25 @@ const MentionsInputComponent = forwardRef<MentionsInputHandle, MentionsInputProp
 			}
 		}, [activeMentionContext]);
 
+		const handleFloatingRef = useCallback(
+			(node: HTMLDivElement | null) => {
+				refs.setFloating(node);
+				if (popoverRef) {
+					(popoverRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+				}
+			},
+			[refs]
+		);
+
 		const tooltipOverlay = useMemo(() => {
 			if (!activeMentionContext) return null;
 			return (
 				<div
-					ref={(node) => {
-						refs.setFloating(node);
-						(popoverRef as any).current = node;
-					}}
-					className="mention-popover-container bg-ping-member mt-[-5px] z-[999]"
+					ref={handleFloatingRef}
+					className="mention-popover-container bg-ping-member"
 					style={{
 						...floatingStyles,
+						zIndex: 10000,
 						borderRadius: '8px',
 						border: '1px solid var(--border-color)',
 						boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
@@ -1135,18 +1304,17 @@ const MentionsInputComponent = forwardRef<MentionsInputHandle, MentionsInputProp
 		}, [mentionContent, refs, floatingStyles, activeMentionContext, inputWidth]);
 
 		return (
-			<div className={`mention-input ${className}`} style={{ position: 'relative', ...style }}>
+			<div className={`mention-input relative ${className} `} style={style} onContextMenu={handleContextMenu}>
+				<div ref={handleReferenceRef} className="sticky top-0 left-0 w-full h-0 pointer-events-none" />
 				<div
-					ref={(node) => {
-						(inputRef as any).current = node;
-						refs.setReference(node);
-					}}
+					ref={inputRef}
 					id={id}
 					contentEditable={!disabled}
 					className="mention-input-editor"
 					onInput={handleInput}
 					onKeyDown={handleKeyDown}
 					onPaste={handlePaste}
+					onContextMenu={handleContextMenu}
 					onBlur={saveCaretPosition}
 					onMouseUp={saveCaretPosition}
 					onKeyUp={saveCaretPosition}
@@ -1162,6 +1330,26 @@ const MentionsInputComponent = forwardRef<MentionsInputHandle, MentionsInputProp
 					data-e2e={generateE2eId('mention.input')}
 				/>
 				{tooltipOverlay && (createPortal(tooltipOverlay, document.body) as React.ReactElement)}
+				{contextMenuPosition &&
+					(createPortal(
+						<div
+							className="fixed bg-theme-surface border border-theme-primary rounded-md shadow-lg py-1 z-[10000]"
+							style={{
+								left: `${contextMenuPosition.x}px`,
+								top: `${contextMenuPosition.y}px`
+							}}
+							onClick={(e) => e.stopPropagation()}
+						>
+							<button
+								className="w-full px-4 text-left text-theme-primary hover:bg-theme-surface-hover flex items-center justify-between gap-8 cursor-pointer transition-colors"
+								onClick={handlePasteFromContextMenu}
+							>
+								<span>Paste</span>
+								<span className="text-xs text-theme-secondary">Ctrl+V</span>
+							</button>
+						</div>,
+						document.body
+					) as React.ReactElement)}
 			</div>
 		);
 	}

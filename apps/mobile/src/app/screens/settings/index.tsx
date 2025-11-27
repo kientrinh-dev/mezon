@@ -1,4 +1,5 @@
 import {
+	ActionEmitEvent,
 	debounce,
 	remove,
 	STORAGE_CHANNEL_CURRENT_CACHE,
@@ -12,6 +13,7 @@ import {
 	authActions,
 	channelsActions,
 	clansActions,
+	directActions,
 	getAuthState,
 	getStoreAsync,
 	listChannelsByUserActions,
@@ -19,11 +21,12 @@ import {
 	selectAllAccount
 } from '@mezon/store-mobile';
 import { sleep } from '@mezon/utils';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Platform, ScrollView, View } from 'react-native';
+import { DeviceEventEmitter, Platform, ScrollView, View } from 'react-native';
 import WebView from 'react-native-webview';
 import { useSelector } from 'react-redux';
+import MezonConfirm from '../../componentUI/MezonConfirm';
 import MezonIconCDN from '../../componentUI/MezonIconCDN';
 import type { IMezonMenuItemProps, IMezonMenuSectionProps } from '../../componentUI/MezonMenu';
 import MezonMenu from '../../componentUI/MezonMenu';
@@ -39,13 +42,13 @@ export const Settings = ({ navigation }: { navigation: any }) => {
 
 	const [filteredMenu, setFilteredMenu] = useState<IMezonMenuSectionProps[]>([]);
 	const [searchText, setSearchText] = useState<string>('');
-	const [isShowCancel, setIsShowCancel] = useState<boolean>(false);
 	const [linkRedirectLogout, setLinkRedirectLogout] = useState<string>('');
 	const authState = useSelector(getAuthState);
 	const session = JSON.stringify(authState.session);
 	const userProfile = useSelector(selectAllAccount);
 	const logout = async () => {
 		const store = await getStoreAsync();
+		store.dispatch(directActions.removeAll());
 		store.dispatch(channelsActions.removeAll());
 		store.dispatch(messagesActions.removeAll());
 		store.dispatch(listChannelsByUserActions.removeAll());
@@ -72,19 +75,21 @@ export const Settings = ({ navigation }: { navigation: any }) => {
 	};
 
 	const confirmLogout = () => {
-		Alert.alert(
-			t('logOut'),
-			t('logOutPopup.description'),
-			[
-				{
-					text: t('logOutPopup.noConfirm'),
-					onPress: () => {},
-					style: 'cancel'
-				},
-				{ text: t('logOutPopup.yesConfirm'), onPress: () => logoutRedirect() }
-			],
-			{ cancelable: false }
-		);
+		const data = {
+			children: (
+				<MezonConfirm
+					title={t('logOut')}
+					content={t('logOutPopup.description')}
+					confirmText={t('logOutPopup.yesConfirm')}
+					isDanger
+					onConfirm={() => {
+						DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
+						logoutRedirect();
+					}}
+				/>
+			)
+		};
+		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: false, data });
 	};
 
 	const AccountMenu = useMemo(
@@ -118,7 +123,7 @@ export const Settings = ({ navigation }: { navigation: any }) => {
 					},
 					expandable: true,
 					title: t('accountSettings.MyQRCode'),
-					icon: <MezonIconCDN icon={IconCDN.myQRcodeIcon} color={themeValue.textStrong} width={size.s_24} height={size.s_24} />
+					icon: <MezonIconCDN icon={IconCDN.scanQR} color={themeValue.textStrong} width={size.s_24} height={size.s_20} />
 				},
 				{
 					onPress: () => {
@@ -128,10 +133,10 @@ export const Settings = ({ navigation }: { navigation: any }) => {
 					},
 					expandable: true,
 					title: t('accountSettings.QRScan'),
-					icon: <MezonIconCDN icon={IconCDN.scanQR} color={themeValue.textStrong} width={size.s_24} height={size.s_20} />
+					icon: <MezonIconCDN icon={IconCDN.myQRcodeIcon} color={themeValue.textStrong} width={size.s_24} height={size.s_24} />
 				}
 			] satisfies IMezonMenuItemProps[],
-		[navigation, t, themeValue.textStrong, i18n.language]
+		[navigation, t, themeValue.textStrong]
 	);
 
 	const AppMenu = useMemo(
@@ -172,38 +177,43 @@ export const Settings = ({ navigation }: { navigation: any }) => {
 					icon: <MezonIconCDN icon={IconCDN.doorExitIcon} color={baseColor.redStrong} width={size.s_24} height={size.s_24} />
 				}
 			] satisfies IMezonMenuItemProps[],
-		[i18n.language]
+		[t]
 	);
 
-	const menu: IMezonMenuSectionProps[] = [
-		{
-			title: t('accountSettings.title'),
-			items: AccountMenu
-		},
-		{
-			title: t('appSettings.title'),
-			items: AppMenu
-		},
-		{
-			items: LogOut
-		}
-	];
+	const menu: IMezonMenuSectionProps[] = useMemo(
+		() => [
+			{
+				title: t('accountSettings.title'),
+				items: AccountMenu
+			},
+			{
+				title: t('appSettings.title'),
+				items: AppMenu
+			},
+			{
+				items: LogOut
+			}
+		],
+		[AccountMenu, AppMenu, LogOut, t]
+	);
 
 	const renderedMenu = useMemo(() => {
 		if (searchText.trim() === '') {
 			return menu;
 		}
 		return filteredMenu;
-	}, [filteredMenu, themeValue.textStrong, i18n.language]);
+	}, [filteredMenu, menu]);
 
 	const debouncedHandleSearchChange = useCallback(
 		debounce((text) => {
 			const results: IMezonMenuItemProps[] = [];
 			menu.forEach((section) => {
-				if (section.title) {
-					const matchedItems = section.items.filter((item) => item.title.toLowerCase().includes(text.toLowerCase()));
-					results.push(...matchedItems);
-				}
+				const matchedItems = section.items.filter((item) => {
+					const lowerTitle = item.title.toLowerCase();
+					const lowerText = text.toLowerCase();
+					return lowerTitle.startsWith(lowerText) || lowerTitle.includes(` ${lowerText}`)
+				});
+				results.push(...matchedItems);
 			});
 
 			setFilteredMenu([
@@ -213,7 +223,7 @@ export const Settings = ({ navigation }: { navigation: any }) => {
 				}
 			]);
 		}, 300),
-		[]
+		[menu]
 	);
 
 	const handleSearchChange = (text: string) => {
@@ -221,13 +231,9 @@ export const Settings = ({ navigation }: { navigation: any }) => {
 		debouncedHandleSearchChange(text);
 	};
 
-	const handleSearchFocus = useCallback(() => {
-		setIsShowCancel(true);
-	}, []);
-
-	const handleCancelButton = useCallback(() => {
-		setIsShowCancel(false);
-	}, []);
+	useEffect(() => {
+		handleSearchChange('');
+	}, [t, themeValue]);
 
 	const injectedJS = `
     (function() {
@@ -246,13 +252,7 @@ export const Settings = ({ navigation }: { navigation: any }) => {
 	return (
 		<View style={styles.settingContainer}>
 			<ScrollView contentContainerStyle={styles.settingScroll} keyboardShouldPersistTaps={'handled'}>
-				<MezonSearch
-					value={searchText}
-					isShowCancel={isShowCancel}
-					onChangeText={handleSearchChange}
-					onFocusText={handleSearchFocus}
-					onCancelButton={handleCancelButton}
-				/>
+				<MezonSearch value={searchText} onChangeText={handleSearchChange} />
 
 				<MezonMenu menu={renderedMenu} />
 			</ScrollView>
@@ -261,7 +261,7 @@ export const Settings = ({ navigation }: { navigation: any }) => {
 					source={{
 						uri: linkRedirectLogout
 					}}
-					style={{ height: 0, position: 'absolute', zIndex: -1 }}
+					style={styles.webViewHidden}
 					originWhitelist={['*']}
 					injectedJavaScriptBeforeContentLoaded={injectedJS}
 					javaScriptEnabled={true}

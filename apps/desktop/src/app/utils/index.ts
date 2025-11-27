@@ -28,11 +28,7 @@ export function reloadWindows(isAutoUpdateEnabled = true): void {
 	BrowserWindow.getAllWindows().forEach((window: BrowserWindow) => {
 		const { hash } = new URL(window.webContents.getURL());
 
-		if (isAutoUpdateEnabled) {
-			window.loadURL(`${process.env.BASE_URL}${hash}`);
-		} else {
-			window.loadURL(`file://${__dirname}/index.html${hash}`);
-		}
+		window.loadURL(`${process.env.BASE_URL}${hash}`);
 	});
 }
 
@@ -84,7 +80,8 @@ export function sanitizeUrl(url: string): string {
 		if (parsed.protocol === 'data:' && !encodedUrl.startsWith('data:image/')) {
 			return '';
 		}
-		return encodedUrl;
+
+		return encodedUrl.replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 	} catch (e) {
 		return '';
 	}

@@ -15,7 +15,8 @@ import 'moment/locale/en-au';
 import 'moment/locale/vi';
 import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { ViewToken } from 'react-native';
-import { ActivityIndicator, DeviceEventEmitter, Dimensions, FlatList, Text, View } from 'react-native';
+import { ActivityIndicator, DeviceEventEmitter, Dimensions, FlatList, StyleSheet, Text, View } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { EmptySearchPage } from '../EmptySearchPage';
 import { ImageListModal } from '../ImageListModal';
 import { style } from './MediaChannel.styles';
@@ -30,10 +31,15 @@ interface FlatDataItem {
 	rowIndex?: number;
 }
 
+interface IMediaChannelProps {
+	channelId: string;
+	isDM: boolean;
+}
+
 const MAX_COLUMNS = 3;
 const ITEMS_PER_ROW = 3;
 
-const MediaChannel = memo(({ channelId }: { channelId: string }) => {
+const MediaChannel = memo(({ channelId, isDM }: IMediaChannelProps) => {
 	const widthScreen = Dimensions.get('screen').width;
 	const widthImage = useMemo(() => {
 		return (widthScreen - size.s_42) / MAX_COLUMNS;
@@ -140,6 +146,12 @@ const MediaChannel = memo(({ channelId }: { channelId: string }) => {
 			if (item.type === 'header') {
 				return (
 					<View style={styles.sectionHeader}>
+						<LinearGradient
+							start={{ x: 1, y: 0 }}
+							end={{ x: 0, y: 0 }}
+							colors={[themeValue.primary, themeValue?.primaryGradiant || themeValue.primary]}
+							style={[StyleSheet.absoluteFillObject]}
+						/>
 						<Text style={styles.sectionDayHeaderTitle}>{formatDateHeader(item.date)}</Text>
 					</View>
 				);
@@ -148,23 +160,23 @@ const MediaChannel = memo(({ channelId }: { channelId: string }) => {
 				<View style={styles.rowContainer}>
 					{item.items?.map((media, idx) => (
 						<View key={`${media?.id ?? idx}_${media?.filename}`} style={styles.rowItem}>
-							<MediaItem data={media} onPress={openImage} />
+							<MediaItem data={media} onPress={openImage} isDM={isDM} />
 						</View>
 					))}
 				</View>
 			);
 		},
-		[openImage, styles]
+		[openImage, styles, isDM]
 	);
 
 	const renderListFooter = useCallback(() => {
 		if (!paginationState?.isLoading) return null;
 		return (
-			<View style={{ paddingVertical: size.s_16, alignItems: 'center', justifyContent: 'center' }}>
+			<View style={styles.listFooter}>
 				<ActivityIndicator size="small" />
 			</View>
 		);
-	}, [paginationState?.isLoading]);
+	}, [paginationState?.isLoading, styles]);
 
 	const getItemLayout = useCallback(
 		(data: any, index: number) => {

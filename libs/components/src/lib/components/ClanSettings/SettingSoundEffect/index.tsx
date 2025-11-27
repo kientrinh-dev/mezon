@@ -2,7 +2,7 @@ import type { MediaType } from '@mezon/store';
 import {
 	selectAllAccount,
 	selectAudioByClanId,
-	selectCurrentClan,
+	selectCurrentClanCreatorId,
 	selectCurrentClanId,
 	selectCurrentUserId,
 	selectMemberClanByUserId,
@@ -39,12 +39,12 @@ const SettingSoundEffect = () => {
 	const dispatch = useAppDispatch();
 	const currentClanId = useAppSelector(selectCurrentClanId) || '';
 	const currentUserId = useAppSelector(selectCurrentUserId) || '';
-	const currentClan = useAppSelector(selectCurrentClan);
+	const currentClanCreatorId = useAppSelector(selectCurrentClanCreatorId);
 	const userProfile = useAppSelector(selectAllAccount);
 
 	const sounds = useAppSelector((state: any) => selectAudioByClanId(state, currentClanId));
 
-	const isClanOwner = currentClan?.creator_id === userProfile?.user?.id;
+	const isClanOwner = currentClanCreatorId === userProfile?.user?.id;
 
 	const soundList: SoundType[] = sounds.map((sound) => ({
 		id: sound.id || '',
@@ -172,13 +172,25 @@ const SettingSoundEffect = () => {
 
 const CreatorInfo = ({ creatorId }: { creatorId: string }) => {
 	const creator = useAppSelector((state) => selectMemberClanByUserId(state, creatorId));
-
+	const avatarDefault = creator?.clan_nick || creator?.user?.display_name || creator?.user?.username || '';
+	const avatarLetter = avatarDefault?.trim().charAt(0).toUpperCase();
+	const avatarUrl = creator?.clan_avatar || creator?.user?.avatar_url;
 	if (!creator) return null;
-
 	return (
 		<div className="flex items-center justify-center gap-1 mt-1">
-			<img className="w-4 h-4 rounded-full select-none object-cover" src={creator?.user?.avatar_url ?? process.env.NX_LOGO_MEZON} alt="" />
-			<p className="text-xs text-theme-primary max-w-20 truncate">{creator?.user?.username}</p>
+			{avatarUrl ? (
+				<img
+					className="w-4 h-4 rounded-full select-none object-cover"
+					src={(creator?.clan_avatar || creator?.user?.avatar_url || '') ?? process.env.NX_LOGO_MEZON}
+					alt="User avatar"
+				/>
+			) : (
+				<div className="size-4 bg-bgAvatarDark rounded-full flex justify-center items-center text-bgAvatarLight text-[12px]">
+					{avatarLetter}
+				</div>
+			)}
+
+			<p className="text-xs text-theme-primary max-w-20 truncate">{creator?.clan_nick || creator?.user?.username}</p>
 		</div>
 	);
 };

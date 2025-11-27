@@ -2,10 +2,11 @@ import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 import { useFriends } from '@mezon/core';
-import { baseColor, size, useTheme } from '@mezon/mobile-ui';
+import { size, useTheme } from '@mezon/mobile-ui';
 import {
 	EStateFriend,
 	friendsActions,
+	getStore,
 	getStoreAsync,
 	selectAllAccount,
 	selectChannelById,
@@ -49,6 +50,9 @@ const WelcomeMessage = React.memo(({ channelId }: IWelcomeMessage) => {
 	const infoFriend = useAppSelector((state) => selectFriendById(state, targetUserId || ''));
 
 	const { blockFriend, unBlockFriend } = useFriends();
+	const isMySelf = useMemo(() => {
+		return targetUserId === currentUserId;
+	}, [targetUserId, currentUserId]);
 	const isBlockedByUser = useMemo(() => {
 		return infoFriend?.state === EStateFriend.BLOCK && infoFriend?.source_id === targetUserId && infoFriend?.user?.id === currentUserId;
 	}, [infoFriend, targetUserId, currentUserId]);
@@ -86,7 +90,11 @@ const WelcomeMessage = React.memo(({ channelId }: IWelcomeMessage) => {
 		return Number(currenChannel?.type) === ChannelType.CHANNEL_TYPE_GROUP;
 	}, [currenChannel?.type]);
 
-	const creatorUser = useAppSelector((state) => selectMemberClanByUserId(state, currenChannel?.creator_id));
+	const creatorPriorityName = useMemo(() => {
+		const store = getStore();
+		const creatorUser = selectMemberClanByUserId(store.getState(), currenChannel?.creator_id || '');
+		return creatorUser?.clan_nick || creatorUser?.user?.display_name || creatorUser?.user?.username || '';
+	}, [currenChannel?.creator_id]);
 
 	const groupDMAvatar = useMemo(() => {
 		const isAvatar = currenChannel?.channel_avatar && !currenChannel?.channel_avatar?.includes('avatar-group.png');
@@ -109,7 +117,7 @@ const WelcomeMessage = React.memo(({ channelId }: IWelcomeMessage) => {
 	const handleAcceptFriend = async () => {
 		const store = await getStoreAsync();
 		const body = {
-			usernames: [userName],
+			usernames: [],
 			ids: [targetUserId],
 			isAcceptingRequest: true
 		};
@@ -131,18 +139,13 @@ const WelcomeMessage = React.memo(({ channelId }: IWelcomeMessage) => {
 			if (isBlocked) {
 				Toast.show({
 					type: 'success',
-					props: {
-						text2: t('notification.blockUser.success', { ns: 'dmMessage' }),
-						leadingIcon: <MezonIconCDN icon={IconCDN.checkmarkSmallIcon} color={baseColor.green} width={20} height={20} />
-					}
+					text1: t('notification.blockUser.success', { ns: 'dmMessage' }),
 				});
 			}
 		} catch (error) {
 			Toast.show({
 				type: 'error',
-				props: {
-					text2: t('notification.blockUser.error', { ns: 'dmMessage' })
-				}
+				text1: t('notification.blockUser.error', { ns: 'dmMessage' })
 			});
 		}
 	};
@@ -153,18 +156,13 @@ const WelcomeMessage = React.memo(({ channelId }: IWelcomeMessage) => {
 			if (isUnblocked) {
 				Toast.show({
 					type: 'success',
-					props: {
-						text2: t('notification.unblockUser.success', { ns: 'dmMessage' }),
-						leadingIcon: <MezonIconCDN icon={IconCDN.checkmarkSmallIcon} color={baseColor.green} width={20} height={20} />
-					}
+					text1: t('notification.unblockUser.success', { ns: 'dmMessage' }),
 				});
 			}
 		} catch (error) {
 			Toast.show({
 				type: 'error',
-				props: {
-					text2: t('notification.unblockUser.error', { ns: 'dmMessage' })
-				}
+				text1: t('notification.unblockUser.error', { ns: 'dmMessage' })
 			});
 		}
 	};
@@ -178,13 +176,15 @@ const WelcomeMessage = React.memo(({ channelId }: IWelcomeMessage) => {
 					</View>
 				) : isDMGroup && groupDMAvatar ? (
 					<View style={styles.groupAvatar}>
-						<ImageNative url={createImgproxyUrl(groupDMAvatar ?? '')} style={{ width: '100%', height: '100%' }} resizeMode={'cover'} />
+						<ImageNative url={createImgproxyUrl(groupDMAvatar ?? '')} style={styles.imageFull} resizeMode={'cover'} />
 					</View>
 				) : currenChannel?.avatars?.[0] ? (
 					<MezonAvatar height={size.s_100} width={size.s_100} avatarUrl={currenChannel.avatars[0]} username={userName} />
 				) : (
 					<View style={styles.wrapperTextAvatar}>
-						<Text style={[styles.textAvatar]}>{currenChannel?.channel_label?.charAt?.(0)?.toUpperCase()}</Text>
+						<Text style={[styles.textAvatar]}>
+							{(currenChannel?.channel_label || displayName || userName)?.charAt?.(0)?.toUpperCase()}
+						</Text>
 					</View>
 				)
 			) : (
@@ -195,7 +195,7 @@ const WelcomeMessage = React.memo(({ channelId }: IWelcomeMessage) => {
 
 			{isDM ? (
 				<View>
-					<Text style={[styles.titleWelcomeMessage, isDMGroup && { textAlign: 'center' }]}>{currenChannel?.channel_label}</Text>
+					<Text style={[styles.titleWelcomeMessage, isDMGroup && styles.textAlignCenter]}>{currenChannel?.channel_label}</Text>
 					{!isDMGroup && <Text style={styles.subTitleUsername}>{userName}</Text>}
 					{isDMGroup ? (
 						<Text style={styles.subTitleWelcomeMessageCenter}>
@@ -205,7 +205,7 @@ const WelcomeMessage = React.memo(({ channelId }: IWelcomeMessage) => {
 						<Text style={styles.subTitleWelcomeMessage}>{t('chatWelcome:welcome.beginningOfDM', { userName: priorityName })}</Text>
 					)}
 
-					{!isDMGroup && !isBlockedByUser && (
+					{!isDMGroup && !isBlockedByUser && !isMySelf && (
 						<View style={styles.friendActions}>
 							{infoFriend?.state !== EStateFriend.BLOCK &&
 								(infoFriend?.state === EStateFriend.FRIEND ? (
@@ -213,7 +213,7 @@ const WelcomeMessage = React.memo(({ channelId }: IWelcomeMessage) => {
 										<Text style={styles.buttonText}>{t('userAction.removeFriend')}</Text>
 									</TouchableOpacity>
 								) : infoFriend?.state === EStateFriend.OTHER_PENDING ? (
-									<View style={[styles.addFriendButton, { opacity: 0.6 }]}>
+									<View style={[styles.addFriendButton, styles.addFriendButtonOpacity]}>
 										<Text style={styles.buttonText}>{t('sendAddFriendSuccess')}</Text>
 									</View>
 								) : infoFriend?.state === EStateFriend.MY_PENDING ? (
@@ -247,16 +247,16 @@ const WelcomeMessage = React.memo(({ channelId }: IWelcomeMessage) => {
 					<Text style={styles.subTitleWelcomeMessage}>
 						{t('chatWelcome:welcome.startOfChannel', {
 							channelName: currenChannel?.channel_label || '',
-							channelType: Boolean(currenChannel?.channel_private) ? t('chatWelcome:welcome.private') : ''
+							channelType: currenChannel?.channel_private ? t('chatWelcome:welcome.private') : ''
 						})}
 					</Text>
 				</View>
 			) : (
 				<View>
 					<Text style={styles.titleWelcomeMessage}>{currenChannel?.channel_label || ''}</Text>
-					<View style={{ flexDirection: 'row' }}>
+					<View style={styles.flexRow}>
 						<Text style={styles.subTitleWelcomeMessage}>{t('chatWelcome:welcome.startOfThread', { username: '' })}</Text>
-						<Text style={styles.subTitleWelcomeMessageWithHighlight}>{creatorUser?.user?.username || ''}</Text>
+						<Text style={styles.subTitleWelcomeMessageWithHighlight}>{creatorPriorityName}</Text>
 					</View>
 				</View>
 			)}

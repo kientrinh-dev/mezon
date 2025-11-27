@@ -23,7 +23,8 @@ const SettingItem = ({ onItemClick, initSetting }: { onItemClick?: (settingName:
 			return;
 		} else {
 			await dispatch(authActions.logOut({ device_id: userProfile?.user?.username || '', platform: 'desktop' }));
-			await dispatch(appActions.setIsShowSettingFooterStatus(false));
+			dispatch(appActions.setIsShowSettingFooterStatus(false));
+			dispatch(appActions.clearHistory());
 		}
 	};
 	const handleCloseModal = () => {
@@ -40,7 +41,7 @@ const SettingItem = ({ onItemClick, initSetting }: { onItemClick?: (settingName:
 			<div className="w-170px ">
 				<p className="font-bold text-sm tracking-wider text-theme-primary-active">{t('setting:accountSettings.title')}</p>
 				<button
-					className={` w-[170px] text-[16px] text-theme-primary-hover bg-item-hover font-medium rounded-[5px] text-left ml-[-8px] p-2 mt-4  ${selectedButton === 'Account' ? 'bg-button-secondary text-theme-primary-active' : 'text-theme-primary'}`}
+					className={` w-[170px] text-[16px] text-theme-primary-hover bg-item-hover font-medium rounded-[5px] text-left ml-[-8px] p-2 mt-4  ${selectedButton === 'Account' ? 'bg-button-secondary text-theme-primary-active bg-item-theme' : 'text-theme-primary'}`}
 					onClick={() => {
 						handleButtonClick('Account');
 						onItemClick && onItemClick('Account');
@@ -51,7 +52,7 @@ const SettingItem = ({ onItemClick, initSetting }: { onItemClick?: (settingName:
 				</button>
 				<br />
 				<button
-					className={`p-2 pl-2 ml-[-8px] font-medium ${selectedButton === 'Profiles' ? 'bg-button-secondary text-theme-primary-active' : 'text-theme-primary'} mt-1 w-[170px] text-left rounded-[5px]`}
+					className={`p-2 pl-2 ml-[-8px] font-medium ${selectedButton === 'Profiles' ? 'bg-button-secondary text-theme-primary-active bg-item-theme' : 'text-theme-primary'} mt-1 w-[170px] text-left rounded-[5px]`}
 					onClick={() => {
 						handleButtonClick('Profiles');
 						onItemClick && onItemClick('Profiles');
@@ -75,10 +76,10 @@ const SettingItem = ({ onItemClick, initSetting }: { onItemClick?: (settingName:
 					</button>
 				</div>
 				<hr className="border-t-theme-primary mt-4" />
-				<button className="pt-2  mt-4 font-bold text-sm tracking-wider">{t('setting:appSettings.title')}</button>
+				<button className="pt-2  mt-4 font-bold text-sm tracking-wider text-theme-primary-active">{t('setting:appSettings.title')}</button>
 				<br />
 				<button
-					className={`p-2  pl-2 ml-[-8px] font-medium ${selectedButton === 'Appearance' ? 'bg-button-secondary text-theme-primary-active' : 'text-theme-primary'} mt-1 w-[170px] text-left rounded-[5px]`}
+					className={`p-2  pl-2 ml-[-8px] font-medium ${selectedButton === 'Appearance' ? 'bg-button-secondary text-theme-primary-active bg-item-theme' : 'text-theme-primary'} mt-1 w-[170px] text-left rounded-[5px]`}
 					onClick={() => {
 						handleButtonClick('Appearance');
 						onItemClick && onItemClick('Appearance');
@@ -88,7 +89,17 @@ const SettingItem = ({ onItemClick, initSetting }: { onItemClick?: (settingName:
 				</button>
 				<br />
 				<button
-					className={`p-2 pl-2 ml-[-8px] font-medium ${selectedButton === 'Notifications' ? 'bg-button-secondary text-theme-primary-active' : 'text-theme-primary'} mt-1 w-[170px] text-left rounded-[5px]`}
+					className={`p-2 pl-2 ml-[-8px] font-medium ${selectedButton === 'Activity' ? 'bg-button-secondary text-theme-primary-active bg-item-theme' : 'text-theme-primary'} mt-1 w-[170px] text-left rounded-[5px]`}
+					onClick={() => {
+						handleButtonClick('Activity');
+						onItemClick && onItemClick('Activity');
+					}}
+				>
+					{t('setting:appSettings.activity')}
+				</button>
+				<br />
+				<button
+					className={`p-2 pl-2 ml-[-8px] font-medium ${selectedButton === 'Notifications' ? 'bg-button-secondary text-theme-primary-active bg-item-theme' : 'text-theme-primary'} mt-1 w-[170px] text-left rounded-[5px]`}
 					onClick={() => {
 						handleButtonClick('Notifications');
 						onItemClick && onItemClick('Notifications');
@@ -98,7 +109,7 @@ const SettingItem = ({ onItemClick, initSetting }: { onItemClick?: (settingName:
 				</button>
 				<br />
 				<button
-					className={`p-2 pl-2 ml-[-8px] font-medium ${selectedButton === 'Language' ? 'bg-button-secondary text-theme-primary-active' : 'text-theme-primary'} mt-1 w-[170px] text-left rounded-[5px]`}
+					className={`p-2 pl-2 ml-[-8px] font-medium ${selectedButton === 'Language' ? 'bg-button-secondary text-theme-primary-active bg-item-theme' : 'text-theme-primary'} mt-1 w-[170px] text-left rounded-[5px]`}
 					onClick={() => {
 						handleButtonClick('Language');
 						onItemClick && onItemClick('Language');
@@ -127,7 +138,7 @@ const SettingItem = ({ onItemClick, initSetting }: { onItemClick?: (settingName:
 				<hr className="border-t-theme-primary mt-4" />
 				<br />
 				<button
-					className={`p-2 text-[16px] font-medium ${selectedButton === 'Log Out' ? 'bg-button-secondary text-theme-primary-active' : 'text-theme-primary'} mt-1 w-[170px] text-left rounded-[5px] ml-[-8px] `}
+					className={`p-2 text-[16px] font-medium ${selectedButton === 'Log Out' ? 'bg-button-secondary text-theme-primary-active bg-item-theme' : 'text-theme-primary'} mt-1 w-[170px] text-left rounded-[5px] ml-[-8px] `}
 					onClick={() => {
 						handleButtonClick('Log Out');
 						handleOpenModal();

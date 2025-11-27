@@ -32,7 +32,7 @@ export const clanAndChannelIdLinkRegex = /clans\/(\d+)\/channels\/(\d+)/;
 export const clanDirectMessageLinkRegex = /chat\/direct\/message\/(\d+)\/(\d+)$/;
 
 export const validTextInputRegex = /^(?![_\-\s])[a-zA-Z0-9\p{L}\p{N}_\-\s]{1,64}$/u;
-export const validTextInputRegexEmoji = /^(?![_\-\s])(?:(?!')[a-zA-Z0-9\p{L}\p{N}\p{Emoji_Presentation}_\-\s]){1,64}$/u;
+export const validTextInputRegexEmoji = /^(?![_\-\s])(?:(?!')[a-zA-Z0-9\p{L}\p{N}\p{So}_\-\s]){1,64}$/u;
 export const linkGoogleMeet = 'https://meet.google.com/';
 
 export const resetCachedMessageActionNeedToResolve = (channelId: string) => {
@@ -139,4 +139,26 @@ export const removeDiacritics = (str) => {
 		.replace(/[\u0300-\u036f]/g, '')
 		.replace(/đ/g, 'd')
 		.replace(/Đ/g, 'D');
+};
+
+export const maskEmail = (email: string) => {
+	if (!email) return '';
+	const atIndex = email.indexOf('@');
+	return `${'*'.repeat(atIndex)}${email.slice(atIndex)}`;
+};
+
+export const maskPhoneNumber = (phone: string) => {
+	if (!phone) return '';
+	return `${'*'.repeat(phone.length - 4)}${phone.slice(-4)}`;
+};
+
+export const getEmojiAndStickerId = (url?: string): string => {
+	try {
+		if (!url) return '';
+		const fileName = url.split('/').pop() || '';
+		return fileName.replace(/\.[^/.]+$/, '');
+	} catch (error) {
+		console.error('Failed to get emoji/sticker id:', error);
+		return '';
+	}
 };

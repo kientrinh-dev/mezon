@@ -1,4 +1,4 @@
-import { useAuth, useSendForwardMessage } from '@mezon/core';
+import { useAuth, useDirect, useSendForwardMessage } from '@mezon/core';
 import type { DirectEntity, MessagesEntity } from '@mezon/store';
 import {
 	EStateFriend,
@@ -22,10 +22,11 @@ import {
 } from '@mezon/store';
 import type { ChannelThreads, UsersClanEntity } from '@mezon/utils';
 import {
-	FOR_1_HOUR,
+	FOR_1_HOUR_SEC,
 	ModeResponsive,
 	TypeSearch,
 	addAttributesSearchList,
+	generateE2eId,
 	getAvatarForPrioritize,
 	normalizeString,
 	removeDuplicatesById
@@ -44,6 +45,7 @@ type ObjectSend = {
 	clanId?: string;
 	channelLabel?: string;
 	isPublic: boolean;
+	isFriend?: boolean; // Flag to identify friends without existing DM
 };
 const ForwardMessageModal = () => {
 	const { t } = useTranslation('forwardMessage');
@@ -54,6 +56,7 @@ const ForwardMessageModal = () => {
 	const listGroup = dmGroupChatList.filter((groupChat) => groupChat.type === ChannelType.CHANNEL_TYPE_GROUP);
 	const listDM = dmGroupChatList.filter((groupChat) => groupChat.type === ChannelType.CHANNEL_TYPE_DM);
 	const { sendForwardMessage } = useSendForwardMessage();
+	const { createDirectMessageWithUser } = useDirect();
 	const { userProfile } = useAuth();
 	const selectedMessage = useSelector(getSelectedMessage);
 	const accountId = userProfile?.user?.id ?? '';
@@ -64,28 +67,113 @@ const ForwardMessageModal = () => {
 	const isForwardAll = useSelector(getIsFowardAll);
 	const [selectedObjectIdSends, setSelectedObjectIdSends] = useState<ObjectSend[]>([]);
 	const [searchText, setSearchText] = useState('');
+
+	const allFriends = useSelector(selectAllFriends);
 	const currentChannel = useSelector(selectCurrentChannel);
 
 	useEffect(() => {
 		if (isLoading === 'loaded') {
 			dispatch(channelsActions.openCreateNewModalChannel({ isOpen: false, clanId: currentChannel?.clan_id as string }));
 		}
-	}, [dispatch, isLoading]);
+	}, [dispatch, isLoading, currentChannel?.clan_id]);
 
 	const handleCloseModal = () => {
 		dispatch(toggleIsShowPopupForwardFalse());
 	};
-	const handleToggle = (id: string, type: number, isPublic: boolean, clanId?: string, channelLabel?: string) => {
+	const handleToggle = (id: string, type: number, isPublic: boolean, clanId?: string, channelLabel?: string, isFriend?: boolean) => {
 		const existingIndex = selectedObjectIdSends.findIndex((item) => item.id === id && item.type === type);
 		if (existingIndex !== -1) {
 			setSelectedObjectIdSends((prevItems) => [...prevItems.slice(0, existingIndex), ...prevItems.slice(existingIndex + 1)]);
 		} else {
-			setSelectedObjectIdSends((prevItems) => [...prevItems, { id, type, clanId, channelLabel, isPublic }]);
+			setSelectedObjectIdSends((prevItems) => [...prevItems, { id, type, clanId, channelLabel, isPublic, isFriend }]);
 		}
 	};
 
 	const handleForward = () => {
 		return isForwardAll ? handleForwardAllMessage() : sentToMessage();
+	};
+
+	const handleDirectMessageForwardAll = async (selectedObjectIdSend: ObjectSend, combineMessages: MessagesEntity[]) => {
+		if (selectedObjectIdSend.isFriend) {
+			const friend = allFriends.find((f) => f?.user?.id === selectedObjectIdSend.id);
+			if (!friend?.user?.id) return;
+
+			const response = await createDirectMessageWithUser(
+				friend.user.id,
+				friend.user.display_name || friend.user.username,
+				friend.user.username,
+				friend.user.avatar_url
+			);
+
+			if (!response?.channel_id) return;
+
+			for (const message of combineMessages) {
+				await sendForwardMessage('', response.channel_id, ChannelStreamMode.STREAM_MODE_DM, false, {
+					...message,
+					references: []
+				});
+			}
+			return;
+		}
+
+		for (const message of combineMessages) {
+			await sendForwardMessage('', selectedObjectIdSend.id, ChannelStreamMode.STREAM_MODE_DM, false, {
+				...message,
+				references: []
+			});
+		}
+	};
+
+	const handleGroupForwardAll = async (selectedObjectIdSend: ObjectSend, combineMessages: MessagesEntity[]) => {
+		for (const message of combineMessages) {
+			await sendForwardMessage('', selectedObjectIdSend.id, ChannelStreamMode.STREAM_MODE_GROUP, false, {
+				...message,
+				references: []
+			});
+		}
+	};
+
+	const handleChannelForwardAll = async (selectedObjectIdSend: ObjectSend, combineMessages: MessagesEntity[]) => {
+		for (const message of combineMessages) {
+			await sendForwardMessage(
+				selectedObjectIdSend.clanId || '',
+				selectedObjectIdSend.id,
+				ChannelStreamMode.STREAM_MODE_CHANNEL,
+				currentChannel ? !currentChannel.channel_private : false,
+				{ ...message, references: [] }
+			);
+		}
+	};
+
+	const handleThreadForwardAll = async (selectedObjectIdSend: ObjectSend, combineMessages: MessagesEntity[]) => {
+		for (const message of combineMessages) {
+			await sendForwardMessage(
+				selectedObjectIdSend.clanId || '',
+				selectedObjectIdSend.id,
+				ChannelStreamMode.STREAM_MODE_THREAD,
+				currentChannel ? !currentChannel.channel_private : false,
+				{ ...message, references: [] }
+			);
+		}
+	};
+
+	const forwardAllToSingleDestination = async (selectedObjectIdSend: ObjectSend, combineMessages: MessagesEntity[]) => {
+		switch (selectedObjectIdSend.type) {
+			case ChannelType.CHANNEL_TYPE_DM:
+				await handleDirectMessageForwardAll(selectedObjectIdSend, combineMessages);
+				break;
+			case ChannelType.CHANNEL_TYPE_GROUP:
+				await handleGroupForwardAll(selectedObjectIdSend, combineMessages);
+				break;
+			case ChannelType.CHANNEL_TYPE_CHANNEL:
+				await handleChannelForwardAll(selectedObjectIdSend, combineMessages);
+				break;
+			case ChannelType.CHANNEL_TYPE_THREAD:
+				await handleThreadForwardAll(selectedObjectIdSend, combineMessages);
+				break;
+			default:
+				break;
+		}
 	};
 
 	const handleForwardAllMessage = async () => {
@@ -107,7 +195,7 @@ const ForwardMessageModal = () => {
 			index < allMessageIds.length &&
 			Date.parse(allMessagesEntities?.[allMessageIds[index]]?.create_time) -
 				Date.parse(allMessagesEntities?.[allMessageIds[index]]?.create_time) <
-				FOR_1_HOUR &&
+				FOR_1_HOUR_SEC &&
 			allMessagesEntities?.[allMessageIds[index]]?.sender_id === selectedMessage?.user?.id
 		) {
 			combineMessages.push(allMessagesEntities?.[allMessageIds[index]]);
@@ -115,75 +203,88 @@ const ForwardMessageModal = () => {
 		}
 
 		for (const selectedObjectIdSend of selectedObjectIdSends) {
-			if (selectedObjectIdSend.type === ChannelType.CHANNEL_TYPE_DM) {
-				for (const message of combineMessages) {
-					await sendForwardMessage('', selectedObjectIdSend.id, ChannelStreamMode.STREAM_MODE_DM, false, {
-						...message,
-						references: []
-					});
-				}
-			} else if (selectedObjectIdSend.type === ChannelType.CHANNEL_TYPE_GROUP) {
-				for (const message of combineMessages) {
-					await sendForwardMessage('', selectedObjectIdSend.id, ChannelStreamMode.STREAM_MODE_GROUP, false, {
-						...message,
-						references: []
-					});
-				}
-			} else if (selectedObjectIdSend.type === ChannelType.CHANNEL_TYPE_CHANNEL) {
-				for (const message of combineMessages) {
-					await sendForwardMessage(
-						selectedObjectIdSend.clanId || '',
-						selectedObjectIdSend.id,
-						ChannelStreamMode.STREAM_MODE_CHANNEL,
-						currentChannel ? !currentChannel.channel_private : false,
-						{ ...message, references: [] }
-					);
-				}
-			} else if (selectedObjectIdSend.type === ChannelType.CHANNEL_TYPE_THREAD) {
-				for (const message of combineMessages) {
-					await sendForwardMessage(
-						selectedObjectIdSend.clanId || '',
-						selectedObjectIdSend.id,
-						ChannelStreamMode.STREAM_MODE_THREAD,
-						currentChannel ? !currentChannel.channel_private : false,
-						{ ...message, references: [] }
-					);
-				}
-			}
+			await forwardAllToSingleDestination(selectedObjectIdSend, combineMessages);
 		}
 
 		dispatch(toggleIsShowPopupForwardFalse());
 	};
 
+	const handleDirectMessageForward = async (selectedObjectIdSend: ObjectSend) => {
+		if (selectedObjectIdSend.isFriend) {
+			const friend = allFriends.find((f) => f?.user?.id === selectedObjectIdSend.id);
+			if (!friend?.user?.id) return;
+
+			const response = await createDirectMessageWithUser(
+				friend.user.id,
+				friend.user.display_name || friend.user.username,
+				friend.user.username,
+				friend.user.avatar_url
+			);
+
+			if (!response?.channel_id) return;
+
+			await sendForwardMessage('', response.channel_id, ChannelStreamMode.STREAM_MODE_DM, false, {
+				...selectedMessage,
+				references: []
+			});
+			return;
+		}
+
+		await sendForwardMessage('', selectedObjectIdSend.id, ChannelStreamMode.STREAM_MODE_DM, false, {
+			...selectedMessage,
+			references: []
+		});
+	};
+
+	const handleGroupForward = async (selectedObjectIdSend: ObjectSend) => {
+		await sendForwardMessage('', selectedObjectIdSend.id, ChannelStreamMode.STREAM_MODE_GROUP, false, {
+			...selectedMessage,
+			references: []
+		});
+	};
+
+	const handleChannelForward = async (selectedObjectIdSend: ObjectSend) => {
+		await sendForwardMessage(
+			selectedObjectIdSend.clanId || '',
+			selectedObjectIdSend.id,
+			ChannelStreamMode.STREAM_MODE_CHANNEL,
+			selectedObjectIdSend.isPublic,
+			{ ...selectedMessage, references: [] }
+		);
+	};
+
+	const handleThreadForward = async (selectedObjectIdSend: ObjectSend) => {
+		await sendForwardMessage(
+			selectedObjectIdSend.clanId || '',
+			selectedObjectIdSend.id,
+			ChannelStreamMode.STREAM_MODE_THREAD,
+			selectedObjectIdSend.isPublic,
+			{ ...selectedMessage, references: [] }
+		);
+	};
+
+	const forwardToSingleDestination = async (selectedObjectIdSend: ObjectSend) => {
+		switch (selectedObjectIdSend.type) {
+			case ChannelType.CHANNEL_TYPE_DM:
+				await handleDirectMessageForward(selectedObjectIdSend);
+				break;
+			case ChannelType.CHANNEL_TYPE_GROUP:
+				await handleGroupForward(selectedObjectIdSend);
+				break;
+			case ChannelType.CHANNEL_TYPE_CHANNEL:
+				await handleChannelForward(selectedObjectIdSend);
+				break;
+			case ChannelType.CHANNEL_TYPE_THREAD:
+				await handleThreadForward(selectedObjectIdSend);
+				break;
+			default:
+				break;
+		}
+	};
+
 	const sentToMessage = async () => {
 		for (const selectedObjectIdSend of selectedObjectIdSends) {
-			if (selectedObjectIdSend.type === ChannelType.CHANNEL_TYPE_DM) {
-				await sendForwardMessage('', selectedObjectIdSend.id, ChannelStreamMode.STREAM_MODE_DM, false, {
-					...selectedMessage,
-					references: []
-				});
-			} else if (selectedObjectIdSend.type === ChannelType.CHANNEL_TYPE_GROUP) {
-				await sendForwardMessage('', selectedObjectIdSend.id, ChannelStreamMode.STREAM_MODE_GROUP, false, {
-					...selectedMessage,
-					references: []
-				});
-			} else if (selectedObjectIdSend.type === ChannelType.CHANNEL_TYPE_CHANNEL) {
-				await sendForwardMessage(
-					selectedObjectIdSend.clanId || '',
-					selectedObjectIdSend.id,
-					ChannelStreamMode.STREAM_MODE_CHANNEL,
-					selectedObjectIdSend.isPublic,
-					{ ...selectedMessage, references: [] }
-				);
-			} else if (selectedObjectIdSend.type === ChannelType.CHANNEL_TYPE_THREAD) {
-				await sendForwardMessage(
-					selectedObjectIdSend.clanId || '',
-					selectedObjectIdSend.id,
-					ChannelStreamMode.STREAM_MODE_THREAD,
-					selectedObjectIdSend.isPublic,
-					{ ...selectedMessage, references: [] }
-				);
-			}
+			await forwardToSingleDestination(selectedObjectIdSend);
 		}
 		dispatch(toggleIsShowPopupForwardFalse());
 	};
@@ -242,6 +343,25 @@ const ForwardMessageModal = () => {
 				})
 			: [];
 
+		const listFriendsSearch = allFriends.length
+			? allFriends
+					.filter((friend) => friend.state === EStateFriend.FRIEND && !blockedUserIds.has(friend?.user?.id ?? ''))
+					.map((friend) => {
+						return {
+							id: friend?.user?.id ?? '',
+							name: friend?.user?.username ?? '',
+							avatarUser: friend?.user?.avatar_url ?? '',
+							idDM: friend?.user?.id ?? '',
+							typeChat: ChannelType.CHANNEL_TYPE_DM,
+							displayName: friend?.user?.display_name ?? friend?.user?.username ?? '',
+							lastSentTimeStamp: '0',
+							typeSearch: TypeSearch.Dm_Type,
+							isFriend: true,
+							prioritizeName: friend?.user?.display_name ?? friend?.user?.username ?? ''
+						};
+					})
+			: [];
+
 		const usersClanMap = new Map(listUserClanSearch.filter((user) => !blockedUserIds.has(user.id)).map((user) => [user.id, user]));
 
 		const listSearch = [
@@ -256,10 +376,11 @@ const ForwardMessageModal = () => {
 						}
 					: itemDM;
 			}),
-			...listGroupSearch
+			...listGroupSearch,
+			...listFriendsSearch.filter((friend) => !listDMSearch.some((dm) => dm.id === friend.id))
 		];
 		return removeDuplicatesById(listSearch.filter((item) => item.id !== accountId).filter((item) => !blockedUserIds.has(item.id)));
-	}, [accountId, listDM, listGroup, usersClan, blockedUserIds]);
+	}, [accountId, listDM, listGroup, usersClan, blockedUserIds, allFriends]);
 
 	const listChannelSearch = useMemo(() => {
 		const listChannelForward = listChannels.filter(
@@ -309,7 +430,7 @@ const ForwardMessageModal = () => {
 
 	return (
 		<ModalLayout onClose={handleCloseModal}>
-			<div className="bg-theme-setting-primary w-[550px] text-theme-primary pt-4 rounded">
+			<div className="bg-theme-setting-primary w-[550px] text-theme-primary pt-4 rounded" data-e2e={generateE2eId('modal.forward_message')}>
 				<div>
 					<h1 className=" text-xl font-semibold text-center">{t('modal.title')}</h1>
 				</div>
@@ -320,6 +441,7 @@ const ForwardMessageModal = () => {
 						placeholder={t('modal.searchPlaceholder')}
 						onChange={(e) => setSearchText(e.target.value)}
 						onKeyDown={(e) => handleInputKeyDown(e)}
+						data-e2e={generateE2eId('modal.forward_message.input.search')}
 					/>
 					<div className={`mt-4 mb-2 overflow-y-auto h-[300px] thread-scroll `}>
 						{!normalizedSearchText.startsWith('@') && !normalizedSearchText.startsWith('#') ? (
@@ -385,20 +507,35 @@ type FooterButtonsModalProps = {
 
 const FooterButtonsModal = (props: FooterButtonsModalProps) => {
 	const { onClose, sentToMessage, t } = props;
+	const [loading, setLoading] = useState(false);
+
+	const handleSend = async () => {
+		setLoading(true);
+		try {
+			await sentToMessage();
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	return (
 		<div className="flex justify-end p-4 rounded-b gap-4">
 			<button
 				className="py-2 h-10 px-4 rounded-lg border-theme-primary hover:!underline focus:ring-transparent"
 				type="button"
 				onClick={onClose}
+				disabled={loading}
+				data-e2e={generateE2eId('modal.forward_message.button.cancel')}
 			>
 				{t('modal.cancel')}
 			</button>
 			<button
-				onClick={sentToMessage}
+				onClick={handleSend}
 				className="py-2 h-10 px-4 rounded text-white bg-bgSelectItem hover:!bg-bgSelectItemHover focus:ring-transparent"
+				disabled={loading}
+				data-e2e={generateE2eId('modal.forward_message.button.send')}
 			>
-				{t('modal.send')}
+				{loading ? t('modal.sending') : t('modal.send')}
 			</button>
 		</div>
 	);

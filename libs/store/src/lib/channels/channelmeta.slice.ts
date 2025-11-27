@@ -13,6 +13,7 @@ export interface ChannelMetaEntity {
 	clanId: string;
 	isMute: boolean;
 	senderId: string;
+	lastSeenMessageId?: string;
 }
 
 export interface ChannelMetaState extends EntityState<ChannelMetaEntity, string> {
@@ -33,42 +34,40 @@ export const channelMetaSlice = createSlice({
 	initialState: initialChannelMetaState,
 	reducers: {
 		add: channelMetaAdapter.addOne,
-		removeAll: channelMetaAdapter.removeAll,
-		remove: channelMetaAdapter.removeOne,
-		update: channelMetaAdapter.updateOne,
 		setChannelLastSentTimestamp: (state, action: PayloadAction<{ channelId: string; timestamp: number; senderId: string }>) => {
 			const channel = state?.entities[action.payload.channelId];
 			if (channel) {
-				channel.lastSentTimestamp = action.payload.timestamp;
+				channel.lastSentTimestamp = Math.floor(action.payload.timestamp);
 				state.lastSentChannelId = channel.id;
 				channel.senderId = action.payload.senderId;
 			}
 		},
-		setChannelLastSeenTimestamp: (state, action: PayloadAction<{ channelId: string; timestamp: number }>) => {
-			const channel = state?.entities[action.payload.channelId];
-			const { channelId, timestamp } = action.payload;
+		setChannelLastSeenTimestamp: (state, action: PayloadAction<{ channelId: string; timestamp: number; messageId?: string }>) => {
+			const { channelId, timestamp, messageId } = action.payload;
+			const channel = state?.entities[channelId];
 			if (channel) {
-				channel.lastSeenTimestamp = action.payload.timestamp;
 				channelMetaAdapter.updateOne(state, {
 					id: channelId,
 					changes: {
-						lastSeenTimestamp: timestamp
+						lastSeenTimestamp: Math.floor(timestamp),
+						...(messageId && { lastSeenMessageId: messageId })
 					}
 				});
 			}
 		},
-		setChannelsLastSeenTimestamp: (state, action: PayloadAction<string[]>) => {
+		setChannelsLastSeenTimestamp: (state, action: PayloadAction<Array<{ channelId: string; messageId?: string }>>) => {
 			const timestamp = Date.now() / 1000;
-			const updates = action.payload.map((channelId) => ({
+			const updates = action.payload.map(({ channelId, messageId }) => ({
 				id: channelId,
 				changes: {
-					lastSeenTimestamp: timestamp
+					lastSeenTimestamp: Math.floor(timestamp),
+					...(messageId && { lastSeenMessageId: messageId })
 				}
 			}));
 			channelMetaAdapter.updateMany(state, updates);
 		},
 		updateBulkChannelMetadata: (state, action: PayloadAction<ChannelMetaEntity[]>) => {
-			state = channelMetaAdapter.upsertMany(state, action.payload);
+			channelMetaAdapter.upsertMany(state, action.payload);
 		}
 	}
 });
@@ -136,13 +135,10 @@ export const selectIsUnreadChannelById = createSelector(
 	}
 );
 
-export const selectLastSeenChannel = createSelector(
-	[getChannelMetaState, selectChannelMetaEntities, (state, channelId) => channelId],
-	(state, settings, channelId) => {
-		const channel = settings?.[channelId];
-		return channel?.lastSeenTimestamp;
-	}
-);
+export const selectLastSeenMessageId = createSelector([selectChannelMetaEntities, (state, channelId) => channelId], (settings, channelId) => {
+	const channel = settings?.[channelId];
+	return channel?.lastSeenMessageId;
+});
 
 export const selectAnyUnreadChannel = createSelector([getChannelMetaState, selectChannelMetaEntities, selectAllAccount], (state, settings, user) => {
 	if (state.lastSentChannelId && settings?.[state.lastSentChannelId]?.isMute !== true) {

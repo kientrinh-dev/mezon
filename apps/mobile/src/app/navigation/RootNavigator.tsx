@@ -22,6 +22,7 @@ import RefreshSessionWrapper, { useSessionReady } from './RefreshSessionWrapper'
 import RootListener from './RootListener';
 import RootStack from './RootStack';
 import { APP_SCREEN } from './ScreenTypes';
+import { style } from './styles';
 const { NavigationBarModule } = NativeModules;
 
 const saveMezonConfigToStorage = (host: string, port: string, useSSL: boolean) => {
@@ -41,11 +42,12 @@ const saveMezonConfigToStorage = (host: string, port: string, useSSL: boolean) =
 
 const MainApiCallingBackground = () => {
 	const isSessionReady = useSessionReady();
+	const { themeValue } = useTheme();
+	const styles = style(themeValue);
 
-	if (!isSessionReady) return null;
 	return (
-		<View style={{ position: 'absolute', top: 0, left: 0, width: '100%' }}>
-			<RootListener />
+		<View style={styles.absoluteContainer}>
+			{isSessionReady && <RootListener />}
 			<NetInfoComp />
 		</View>
 	);
@@ -54,6 +56,7 @@ const MainApiCallingBackground = () => {
 const NavigationMain = memo(
 	(props) => {
 		const { themeValue, themeBasic } = useTheme();
+		const styles = style(themeValue);
 		const dispatch = useAppDispatch();
 		const isHiddenTab = useAppSelector(selectHiddenBottomTabMobile);
 
@@ -131,6 +134,12 @@ const NavigationMain = memo(
 						parse: {
 							code: (code) => `${code}`
 						}
+					},
+					[`${APP_SCREEN.INSTALL_CLAN}`]: {
+						path: 'bot/install/:code',
+						parse: {
+							code: (code) => `${code}`
+						}
 					}
 				}
 			},
@@ -153,10 +162,7 @@ const NavigationMain = memo(
 					barStyle={themeBasic === ThemeModeBase.LIGHT || themeBasic === ThemeModeBase.SUNRISE ? 'dark-content' : 'light-content'}
 				/>
 				<SafeAreaProvider>
-					<SafeAreaView
-						edges={Platform.OS === 'android' ? (isHiddenTab ? ['top', 'bottom'] : ['top']) : []}
-						style={{ flex: 1, backgroundColor: themeValue.primary }}
-					>
+					<SafeAreaView edges={Platform.OS === 'android' ? (isHiddenTab ? ['top', 'bottom'] : ['top']) : []} style={styles.safeAreaView}>
 						<RootStack {...props} />
 					</SafeAreaView>
 				</SafeAreaProvider>
@@ -182,7 +188,7 @@ const RootNavigation = (props) => {
 	return (
 		<MezonStoreProvider store={store} loading={null} persistor={persistor}>
 			<ThemeProvider>
-				<ChatContextProvider>
+				<ChatContextProvider isMobile={true}>
 					<RefreshSessionWrapper>
 						<WebRTCStreamProvider>
 							<DeviceProvider>

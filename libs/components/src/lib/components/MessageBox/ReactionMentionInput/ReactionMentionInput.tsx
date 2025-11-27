@@ -250,7 +250,7 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 	);
 
 	const handleSendInternal = useCallback(
-		(checkedRequest: RequestInput, anonymousMessage?: boolean) => {
+		async (checkedRequest: RequestInput, anonymousMessage?: boolean) => {
 			//TODO: break logic send width thread box, channel, topic box, dm
 			if (props.isThread && !nameValueThread?.trim() && !props.isTopic && !threadCurrentChannel) {
 				dispatch(threadsActions.setNameThreadError(threadError.name));
@@ -276,7 +276,7 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 							const existsInChild = props.membersOfChild?.some((member) => member.user?.id === mention.user_id);
 							const existsInParent = props.membersOfParent?.some((member) => member.user?.id === mention.user_id);
 
-							if (!existsInChild && existsInParent && mention.user_id) {
+							if ((!existsInChild || props.isThreadbox) && existsInParent && mention?.user_id) {
 								usersNotExistingInThreadSet.add(mention.user_id);
 							}
 						} else if (mention?.role_id) {
@@ -341,7 +341,7 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 				const attachmentData = attachmentFiltered?.files || [];
 
 				if (checkIsThread(currentChannel as ChannelsEntity) && usersNotExistingInThread.length > 0 && addMemberToThread) {
-					addMemberToThread(currentChannel!, usersNotExistingInThread);
+					await addMemberToThread(currentChannel!, usersNotExistingInThread);
 				}
 
 				if (checkIsThread(currentChannel as ChannelsEntity) && currentChannel?.active === ThreadStatus.activePublic && joinningToThread) {
@@ -360,7 +360,8 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 						mentionEveryone,
 						undefined,
 						undefined,
-						ephemeralTargetUserId || undefined
+						ephemeralTargetUserId || undefined,
+						usersNotExistingInThread
 					);
 					setMentionEveryone(false);
 					dispatch(referencesActions.resetAfterReply(props.currentChannelId ?? ''));
@@ -375,7 +376,8 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 						mentionEveryone,
 						undefined,
 						undefined,
-						ephemeralTargetUserId || undefined
+						ephemeralTargetUserId || undefined,
+						usersNotExistingInThread
 					);
 				} else if (isReplyOnTopic) {
 					props.onSend(
@@ -388,7 +390,8 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 						mentionEveryone,
 						undefined,
 						undefined,
-						ephemeralTargetUserId || undefined
+						ephemeralTargetUserId || undefined,
+						usersNotExistingInThread
 					);
 					setMentionEveryone(false);
 					dispatch(
@@ -408,7 +411,8 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 						mentionEveryone,
 						undefined,
 						undefined,
-						ephemeralTargetUserId || undefined
+						ephemeralTargetUserId || undefined,
+						usersNotExistingInThread
 					);
 					setMentionEveryone(false);
 				}
@@ -1002,16 +1006,9 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 		<div className={`contain-layout relative bg-theme-surface rounded-lg ${props?.isThread && 'border-theme-primary'}`} ref={containerRef}>
 			<div className="relative">
 				<span
-					className={`absolute left-2 top-1/2 transform -translate-y-1/2 text-theme-primary   pointer-events-none z-10 truncate transition-opacity duration-300 ${
+					className={`absolute left-2 top-1/2 transform -translate-y-1/2 text-theme-primary pointer-events-none z-10 truncate transition-opacity duration-300 ${
 						draftRequest?.valueTextInput ? 'hidden' : 'opacity-100'
-					} sm:opacity-100 max-sm:opacity-100`}
-					style={{
-						whiteSpace: 'nowrap',
-						overflow: 'hidden',
-						textOverflow: 'ellipsis',
-						maxWidth: 'calc(100% - 120px)',
-						paddingRight: '8px'
-					}}
+					} sm:opacity-100 max-sm:opacity-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[calc(100%-120px)] pr-2`}
 				>
 					{ephemeralTargetUserId ? t('ephemeralMessage', { username: ephemeralTargetUserDisplay }) : t('placeholder')}
 				</span>
@@ -1022,14 +1019,9 @@ export const MentionReactBase = memo((props: MentionReactBaseProps): ReactElemen
 					onChange={onChangeMentionInput}
 					onKeyDown={onKeyDown}
 					placeholder={ephemeralTargetUserId ? t('ephemeralMessage', { username: ephemeralTargetUserDisplay }) : t('placeholder')}
-					className={`mentions min-h-11 text-theme-message rounded-lg`}
-					style={{
-						padding: props.isThread && !threadCurrentChannel ? '10px' : '9px 120px 9px 9px',
-						border: 'none',
-						maxHeight: '350px',
-						overflow: 'auto',
-						borderRadius: '8px'
-					}}
+					className={`mentions min-h-11 text-theme-message rounded-lg border-none max-h-[350px] overflow-auto thread-scroll ${
+						props.isThread && !threadCurrentChannel ? 'p-2.5' : 'py-[9px] pr-[120px] pl-[9px]'
+					}`}
 					onSend={(formattedText: FormattedText) => {
 						handleSendWithFormattedText(formattedText, anonymousMode);
 					}}

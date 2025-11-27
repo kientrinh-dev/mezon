@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { setTimeout } from '@testing-library/react-native/build/helpers/timers';
 import { ChannelStreamMode, ChannelType } from 'mezon-js';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { DeviceEventEmitter, Keyboard, Platform, StatusBar, StyleSheet, View } from 'react-native';
+import { DeviceEventEmitter, Keyboard, Platform, StatusBar, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import LinearGradient from 'react-native-linear-gradient';
 import AgeRestrictedModal from '../../../components/AgeRestricted/AgeRestrictedModal';
@@ -29,6 +29,8 @@ const HomeDefault = React.memo(
 		const isThread = props?.isThread;
 		const channelType = props?.channelType;
 		const lastSeenMessageId = props?.lastSeenMessageId;
+		const lastSentMessageId = props?.lastSentMessageId;
+		const isBanned = props?.isBanned;
 		const timeoutRef = useRef<any>(null);
 		const navigation = useNavigation<any>();
 
@@ -78,18 +80,20 @@ const HomeDefault = React.memo(
 					start={{ x: 1, y: 0 }}
 					end={{ x: 0, y: 0 }}
 					colors={[themeValue.primary, themeValue?.primaryGradiant || themeValue.primary]}
-					style={[StyleSheet.absoluteFillObject]}
+					style={styles.absoluteFill}
 				/>
 				{Platform.OS === 'ios' && <LicenseAgreement />}
 				<DrawerListener channelId={channelId} />
-				<HomeDefaultHeader openBottomSheet={openBottomSheet} navigation={props.navigation} onOpenDrawer={onOpenDrawer} />
-				<View style={{ flex: 1 }}>
+				<HomeDefaultHeader openBottomSheet={openBottomSheet} navigation={props.navigation} onOpenDrawer={onOpenDrawer} isBanned={isBanned} />
+				<View style={styles.flexOne}>
 					<ChannelMessages
 						channelId={channelId}
 						lastSeenMessageId={lastSeenMessageId}
+						lastSentMessageId={lastSentMessageId}
 						clanId={clanId}
 						isPublic={isPublicChannel}
 						mode={isThread ? ChannelStreamMode.STREAM_MODE_THREAD : ChannelStreamMode.STREAM_MODE_CHANNEL}
+						isBanned={isBanned}
 					/>
 				</View>
 				{isChannelApp && <ChannelAppHotbar channelId={channelId} clanId={clanId} />}
@@ -101,6 +105,7 @@ const HomeDefault = React.memo(
 					}}
 					isPublic={isPublicChannel}
 					topicChannelId={''}
+					isBanned={isBanned}
 				/>
 				<PanelKeyboard currentChannelId={channelId} currentClanId={clanId} />
 
@@ -109,7 +114,7 @@ const HomeDefault = React.memo(
 		);
 	},
 	(prevProps, nextProps) => {
-		return prevProps?.channelId === nextProps?.channelId;
+		return prevProps?.channelId === nextProps?.channelId && prevProps?.isBanned === nextProps?.isBanned;
 	}
 );
 

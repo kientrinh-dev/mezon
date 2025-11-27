@@ -72,10 +72,10 @@ export const style = (colors: Attributes) =>
 			position: 'relative',
 			width: size.s_50,
 			height: size.s_50,
-			backgroundColor: colors.secondaryWeight,
+			backgroundColor: colors.tertiary,
+			borderRadius: size.s_30,
 			borderWidth: 0.5,
-			borderColor: colors.textDisabled,
-			borderRadius: size.s_50
+			borderColor: colors.textDisabled
 		},
 		addPeopleBtn: {
 			padding: size.s_20,
@@ -194,5 +194,149 @@ export const style = (colors: Attributes) =>
 			fontSize: size.s_10,
 			color: colors.text,
 			textAlign: 'center'
+		},
+		focusedContainer: {
+			width: '100%',
+			flex: 1,
+			alignItems: 'center',
+			justifyContent: 'center'
+		},
+		focusedVideoWrapper: {
+			height: size.s_150,
+			width: '100%',
+			alignSelf: 'center'
+		},
+		focusedVideoStyle: {
+			height: size.s_150,
+			width: '100%',
+			alignSelf: 'center'
+		},
+		focusedVideoStyleSmall: {
+			height: 100,
+			width: '100%',
+			alignSelf: 'center'
+		},
+		focusedVideoWrapperSmall: {
+			height: 100,
+			width: '100%',
+			alignSelf: 'center'
+		},
+		focusedAvatarWrapper: {
+			display: 'flex',
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'center',
+			marginBottom: 10
+		},
+		focusedUsernameWrapper: {
+			display: 'flex',
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'center'
+		},
+		avatarContainer: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'center',
+			marginBottom: size.s_10
+		},
+		participantContainer: {
+			flexDirection: 'row',
+			flexWrap: 'wrap',
+			justifyContent: 'center',
+			gap: size.s_10,
+			alignItems: 'center'
+		},
+		participantContainerPiP: {
+			flexDirection: 'row',
+			flexWrap: 'wrap',
+			justifyContent: 'space-between',
+			gap: size.s_2,
+			alignItems: 'flex-start'
+		},
+		spacer: {
+			height: size.s_300
+		},
+		controlBarContainer: {
+			gap: size.s_10,
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'space-between',
+			padding: size.s_6
+		},
+		userNameCentered: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'center'
+		},
+		scrollViewMargin: {
+			marginHorizontal: size.s_10
+		},
+		scrollViewMarginZero: {
+			marginHorizontal: 0
+		},
+		userViewTabletHeight: {
+			height: size.s_150 + size.s_100
+		},
+		userViewPiPScreenShare: {
+			width: '100%',
+			height: size.s_100 * 1.2,
+			marginBottom: size.s_100
+		},
+		userViewPiPVideo: {
+			height: size.s_60 * 2,
+			width: '45%',
+			marginHorizontal: size.s_4
+		},
+		userViewSpeaking: {
+			borderWidth: 1
+		},
+		userNameFullWidth: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'center',
+			width: '90%'
+		},
+		subTitleFullWidth: {
+			width: '100%'
+		},
+		bottomSheetZIndex: {
+			zIndex: 1001
+		},
+		// CallReactionHandler styles
+		animatedEmojiContainer: {
+			position: 'absolute',
+			bottom: 0,
+			left: '50%',
+			width: size.s_36,
+			height: size.s_36,
+			alignItems: 'center',
+			justifyContent: 'center',
+			zIndex: 1000
+		},
+		emojiImage: {
+			width: size.s_36,
+			height: size.s_36
+		},
+		// ButtonEndCall styles
+		endCallButton: {
+			backgroundColor: baseColor.redStrong
+		},
+		// HeaderRoomView styles
+		headerRowLeft: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: size.s_20,
+			flexGrow: 1,
+			flexShrink: 1
+		},
+		headerTextTitle: {
+			flexGrow: 1,
+			flexShrink: 1
+		},
+		headerRowRight: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: size.s_10
 		}
 	});

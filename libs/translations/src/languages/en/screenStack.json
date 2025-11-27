@@ -23,7 +23,8 @@
 		"sound": "Sound Effect",
 		"createSound": "Create Sound Effect",
 		"transferOwnership": "Transfer Ownership",
-		"manageUser": "Manage User"
+		"manageUser": "Manage User",
+		"enableCommunity": "Enable Community"
 	},
 	"menuChannelStack": {
 		"channelSetting": "Channel Settings",
@@ -47,6 +48,8 @@
 		"setPassword": "Set Password",
 		"myQRCode": "My QR Code",
 		"updatePhoneNumber": "Update Your Phone Number",
-		"verifyPhoneNumber": "Verify Your Phone Number"
+		"verifyPhoneNumber": "Verify Your Phone Number",
+		"updateEmail": "Update Your Email",
+		"verifyEmail": "Verify Your Email"
 	}
 }

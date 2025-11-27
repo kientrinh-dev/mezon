@@ -1,8 +1,8 @@
-import localStorageMobile from '@react-native-async-storage/async-storage';
+import EventEmitter from 'events';
 import type { Client, Socket } from 'mezon-js';
-import { Session, safeJSONParse } from 'mezon-js';
+import { Session } from 'mezon-js';
 import { WebSocketAdapterPb } from 'mezon-js-protobuf';
-import type { ApiConfirmLoginRequest, ApiLinkAccountConfirmRequest, ApiLoginIDResponse } from 'mezon-js/dist/api.gen';
+import type { ApiConfirmLoginRequest, ApiLinkAccountConfirmRequest, ApiLoginIDResponse, ApiSession } from 'mezon-js/dist/api.gen';
 import type { IndexerClient, MmnClient, ZkClient } from 'mmn-client-js';
 import React, { useCallback } from 'react';
 import type { CreateMezonClientOptions } from '../mezon';
@@ -19,7 +19,7 @@ const MAX_WEBSOCKET_RETRY_TIME = 30000;
 const JITTER_RANGE = 1000;
 const FAST_RETRY_ATTEMPTS = 5;
 export const SESSION_STORAGE_KEY = 'mezon_session';
-export const SESSION_REFRESH_KEY = 'mezon_refresh_session';
+export const MobileEventSessionEmitter = new EventEmitter();
 
 const waitForNetworkAndDelay = async (delayMs: number): Promise<void> => {
 	if (!navigator.onLine) {
@@ -56,11 +56,7 @@ type Sessionlike = {
 	created_at?: number;
 	username?: string;
 	user_id?: string;
-};
-
-type LocalRefreshSession = {
-	token: string;
-	refresh_token: string;
+	id_token?: string;
 };
 
 const saveMezonConfigToStorage = (host: string, port: string, useSSL: boolean) => {
@@ -91,7 +87,6 @@ export const clearSessionRefreshFromStorage = () => {
 		localStorage.removeItem(SESSION_STORAGE_KEY);
 	} catch (error) {
 		console.error('Failed to clear session from local storage:', error);
-		localStorageMobile.removeItem(SESSION_REFRESH_KEY);
 	}
 };
 
@@ -156,11 +151,11 @@ export type MezonContextValue = {
 	confirmLoginRequest: (ConfirmRequest: ApiConfirmLoginRequest) => Promise<Session | null>;
 	authenticateEmail: (email: string, password: string) => Promise<Session>;
 	authenticateEmailOTPRequest: (email: string) => Promise<ApiLinkAccountConfirmRequest>;
-	confirmEmailOTP: (data: ApiLinkAccountConfirmRequest) => Promise<Session>;
+	confirmAuthenticateOTP: (data: ApiLinkAccountConfirmRequest) => Promise<Session>;
 	authenticateSMSOTPRequest: (phone: string) => Promise<ApiLinkAccountConfirmRequest>;
 
 	logOutMezon: (device_id?: string, platform?: string, clearSession?: boolean) => Promise<void>;
-	refreshSession: (session: Sessionlike) => Promise<Session | undefined>;
+	refreshSession: (session: Sessionlike, isSetNewUsername?: boolean) => Promise<Session | undefined>;
 	connectWithSession: (session: Sessionlike) => Promise<Session>;
 	createSocket: () => Promise<Socket>;
 	reconnectWithTimeout: (clanId: string) => Promise<unknown>;
@@ -228,13 +223,51 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 		const client = await createMezonClient(mezon);
 		clientRef.current = client;
 
+		client.onRefreshSession = (session: ApiSession) => {
+			if (session) {
+				const sessionData = session;
+				const newSession = new Session(
+					session.token || '',
+					session.refresh_token || '',
+					session.created || false,
+					session.api_url || '',
+					session.id_token || '',
+					sessionData.is_remember || false
+				);
+
+				sessionRef.current = newSession;
+				if (isFromMobile) {
+					MobileEventSessionEmitter.emit('mezon:session-refreshed', {
+						session: newSession
+					});
+				} else {
+					if (typeof window !== 'undefined') {
+						window.dispatchEvent(
+							new CustomEvent('mezon:session-refreshed', {
+								detail: { session: newSession }
+							})
+						);
+					}
+					// push to react native webview
+					if (typeof window !== 'undefined' && (window as any)?.ReactNativeWebView) {
+						(window as any)?.ReactNativeWebView?.postMessage?.(
+							JSON.stringify({
+								type: 'mezon:session-refreshed',
+								data: { session: newSession }
+							})
+						);
+					}
+				}
+			}
+		};
+
 		// Initialize additional clients
 		createZkClient();
 		createMmnClient();
 		createIndexerClient();
 
 		return client;
-	}, [mezon, createZkClient, createMmnClient, createIndexerClient]);
+	}, [mezon, createZkClient, createMmnClient, createIndexerClient, isFromMobile]);
 
 	const createQRLogin = useCallback(async () => {
 		if (!clientRef.current) {
@@ -256,6 +289,8 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 
 		const socket = await createSocket();
 		socketRef.current = socket;
+		sessionRef.current = session;
+
 		return session;
 	}, []);
 
@@ -305,7 +340,7 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 			if (!clientRef.current) {
 				throw new Error('Mezon client not initialized');
 			}
-			const session = await clientRef.current.authenticateEmail(email, password);
+			const session = await clientRef.current.authenticateEmail(email, password, undefined, isFromMobile ? { m: 'true' } : undefined);
 			sessionRef.current = session;
 
 			const config = extractAndSaveConfig(session);
@@ -326,21 +361,24 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 		[createSocket, isFromMobile]
 	);
 
-	const authenticateEmailOTPRequest = useCallback(async (email: string) => {
-		if (!clientRef.current) {
-			throw new Error('Mezon client not initialized');
-		}
+	const authenticateEmailOTPRequest = useCallback(
+		async (email: string) => {
+			if (!clientRef.current) {
+				throw new Error('Mezon client not initialized');
+			}
 
-		return await clientRef.current.authenticateEmailOTPRequest(email);
-	}, []);
+			return await clientRef.current.authenticateEmailOTPRequest(email, undefined, isFromMobile ? { m: 'true' } : undefined);
+		},
+		[isFromMobile]
+	);
 
-	const confirmEmailOTP = useCallback(
+	const confirmAuthenticateOTP = useCallback(
 		async (data: ApiLinkAccountConfirmRequest) => {
 			if (!clientRef.current) {
 				throw new Error('Mezon client not initialized');
 			}
 
-			const session = await clientRef.current.confirmEmailOTP(data);
+			const session = await clientRef.current.confirmAuthenticateOTP(data);
 			sessionRef.current = session;
 
 			const config = extractAndSaveConfig(session);
@@ -361,13 +399,16 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 		[createSocket, isFromMobile]
 	);
 
-	const authenticateSMSOTPRequest = useCallback(async (phone: string) => {
-		if (!clientRef.current) {
-			throw new Error('Mezon client not initialized');
-		}
+	const authenticateSMSOTPRequest = useCallback(
+		async (phone: string) => {
+			if (!clientRef.current) {
+				throw new Error('Mezon client not initialized');
+			}
 
-		return await clientRef.current.authenticateSMSOTPRequest(phone);
-	}, []);
+			return await clientRef.current.authenticateSMSOTPRequest(phone, undefined, isFromMobile ? { m: 'true' } : undefined);
+		},
+		[isFromMobile]
+	);
 
 	const logOutMezon = useCallback(
 		async (device_id?: string, platform?: string, clearSession?: boolean) => {
@@ -403,37 +444,18 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 		[socketRef]
 	);
 
-	const getLocalRefreshToken = async (): Promise<LocalRefreshSession> => {
-		let mezonRefresh = {
-			token: '',
-			refresh_token: ''
-		};
-		try {
-			if (!isFromMobile) {
-				const storageStr = localStorage.getItem(SESSION_REFRESH_KEY) || '';
-				mezonRefresh = safeJSONParse(storageStr);
-			} else {
-				const storageStr = (await localStorageMobile.getItem(SESSION_REFRESH_KEY)) || '';
-				mezonRefresh = safeJSONParse(storageStr);
-			}
-			return mezonRefresh;
-		} catch (e) {
-			return mezonRefresh;
-		}
-	};
-
 	const refreshSession = useCallback(
-		async (session: Sessionlike) => {
+		async (session: Sessionlike, isSetNewUsername?: boolean) => {
 			if (!clientRef.current) {
 				throw new Error('Mezon client not initialized');
 			}
 
-			const localRefresh = await getLocalRefreshToken();
 			const sessionObj = new Session(
-				localRefresh?.token || session?.token,
-				localRefresh?.refresh_token || session?.refresh_token,
+				session?.token,
+				session?.refresh_token,
 				session.created,
 				session.api_url,
+				session.id_token || '',
 				session.is_remember
 			);
 
@@ -455,19 +477,13 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 			}
 
 			const newSession = await clientRef.current.sessionRefresh(
-				new Session(
-					localRefresh?.token || session?.token,
-					localRefresh?.refresh_token || session?.refresh_token,
-					session.created,
-					session.api_url,
-					session.is_remember
-				)
+				new Session(session?.token, session?.refresh_token, session.created, session.api_url, session.id_token || '', session.is_remember)
 			);
 
 			sessionRef.current = newSession;
 			extractAndSaveConfig(newSession, isFromMobile);
 
-			if (!socketRef.current) {
+			if (!socketRef.current || isSetNewUsername) {
 				const socket = await createSocket();
 				socketRef.current = socket;
 			}
@@ -487,8 +503,7 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 			if (!socketRef.current) {
 				return session;
 			}
-			const session2 = await socketRef.current.connect(session, true, isFromMobile ? '1' : '0');
-			sessionRef.current = session2;
+			await socketRef.current.connect(session, true, isFromMobile ? '1' : '0');
 			return session;
 		},
 		[clientRef, socketRef, isFromMobile]
@@ -531,17 +546,14 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 									sessionRef.current.refresh_token,
 									sessionRef.current.created,
 									sessionRef.current.api_url,
+									sessionRef.current.id_token,
 									sessionRef.current.is_remember ?? false
 								)
 							);
 						}
 
-						const connectedSession = await socket.connect(newSession || sessionRef.current, true, isFromMobile ? '1' : '0');
+						await socket.connect(newSession || sessionRef.current, true, isFromMobile ? '1' : '0');
 						await socket.joinClanChat(clanId);
-
-						socketRef.current = socket;
-						sessionRef.current = connectedSession;
-						extractAndSaveConfig(connectedSession, isFromMobile);
 
 						return socket;
 					} catch (error) {
@@ -597,7 +609,7 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 			authenticateEmail,
 			connectWithSession,
 			authenticateEmailOTPRequest,
-			confirmEmailOTP,
+			confirmAuthenticateOTP,
 			authenticateSMSOTPRequest
 		}),
 		[
@@ -622,7 +634,7 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 			authenticateEmail,
 			connectWithSession,
 			authenticateEmailOTPRequest,
-			confirmEmailOTP,
+			confirmAuthenticateOTP,
 			authenticateSMSOTPRequest
 		]
 	);
@@ -634,6 +646,40 @@ const MezonContextProvider: React.FC<MezonContextProviderProps> = ({ children, m
 			});
 		}
 	}, [connect, createClient, createSocket]);
+
+	React.useEffect(() => {
+		if (typeof window === 'undefined' || isFromMobile) return;
+
+		const handleSessionRefresh = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			const sessionData = customEvent.detail?.session;
+
+			if (sessionData && sessionRef.current?.token !== sessionData.token) {
+				const newSession = new Session(
+					sessionData.token,
+					sessionData.refresh_token,
+					sessionData.created || false,
+					sessionData.api_url,
+					sessionData.id_token || '',
+					sessionData.is_remember || false
+				);
+
+				if (sessionData.username) newSession.username = sessionData.username;
+				if (sessionData.user_id) newSession.user_id = sessionData.user_id;
+				if (sessionData.vars) newSession.vars = sessionData.vars;
+				if (sessionData.expires_at) newSession.expires_at = sessionData.expires_at;
+				if (sessionData.refresh_expires_at) newSession.refresh_expires_at = sessionData.refresh_expires_at;
+
+				sessionRef.current = newSession;
+			}
+		};
+
+		window.addEventListener('mezon:session-refreshed', handleSessionRefresh);
+
+		return () => {
+			window.removeEventListener('mezon:session-refreshed', handleSessionRefresh);
+		};
+	}, [isFromMobile]);
 
 	return <MezonContext.Provider value={value}>{children}</MezonContext.Provider>;
 };

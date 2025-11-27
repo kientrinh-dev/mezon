@@ -1,5 +1,5 @@
 import { useTheme } from '@mezon/mobile-ui';
-import { directActions, selectDmGroupCurrent, topicsActions, useAppDispatch } from '@mezon/store-mobile';
+import { directActions, EStateFriend, selectDirectById, selectFriendById, topicsActions, useAppDispatch, useAppSelector } from '@mezon/store-mobile';
 import { ChannelType } from 'mezon-js';
 import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -18,7 +18,13 @@ export const DirectMessageDetailScreen = ({ route }: { route: any }) => {
 	const dispatch = useAppDispatch();
 
 	const from = route.params?.from;
-	const currentDmGroup = useSelector(selectDmGroupCurrent(directMessageId ?? ''));
+	const currentDmGroup = useAppSelector((state) => selectDirectById(state, directMessageId));
+	const infoFriend = useSelector((state) => selectFriendById(state, currentDmGroup?.user_ids?.[0] || ''));
+
+	const isBlocked = useMemo(() => {
+		if (currentDmGroup?.type !== ChannelType.CHANNEL_TYPE_DM) return false;
+		return infoFriend?.state === EStateFriend.BLOCK;
+	}, [currentDmGroup?.type, infoFriend?.state]);
 
 	useEffect(() => {
 		dispatch(topicsActions.setCurrentTopicId(''));
@@ -42,13 +48,14 @@ export const DirectMessageDetailScreen = ({ route }: { route: any }) => {
 				style={[StyleSheet.absoluteFillObject]}
 			/>
 			<DirectMessageDetailListener dmType={dmType} directMessageId={directMessageId} />
-			<HeaderDirectMessage from={from} styles={styles} themeValue={themeValue} directMessageId={directMessageId} />
+			<HeaderDirectMessage from={from} styles={styles} themeValue={themeValue} directMessageId={directMessageId} isBlocked={isBlocked} />
 			{directMessageId && (
 				<ChatMessageWrapper
 					directMessageId={directMessageId}
 					lastSeenMessageId={currentDmGroup?.last_seen_message?.id}
+					lastSentMessageId={currentDmGroup?.last_sent_message?.id}
 					isModeDM={Number(dmType) === ChannelType.CHANNEL_TYPE_DM}
-					currentClanId={'0'}
+					isBlocked={isBlocked}
 				/>
 			)}
 		</View>

@@ -1,4 +1,5 @@
 import { useAuth } from '@mezon/core';
+import { STORAGE_IS_LAST_ACTIVE_TAB_DM, save } from '@mezon/mobile-components';
 import { baseColor, size } from '@mezon/mobile-ui';
 import { authActions } from '@mezon/store';
 import { useAppDispatch } from '@mezon/store-mobile';
@@ -156,6 +157,7 @@ const LoginScreen = ({ navigation }) => {
 	}, [lastOTPSentTime, email, phone, loginMode]);
 
 	const onLoadInit = async () => {
+		save(STORAGE_IS_LAST_ACTIVE_TAB_DM, 'false');
 		if (
 			clientRef?.current &&
 			(clientRef?.current?.host !== process.env.NX_CHAT_APP_API_GW_HOST || clientRef?.current?.port !== process.env.NX_CHAT_APP_API_GW_PORT)
@@ -350,7 +352,7 @@ const LoginScreen = ({ navigation }) => {
 			<LinearGradient colors={['#f0edfd', '#beb5f8', '#9774fa']} style={[StyleSheet.absoluteFillObject]} />
 
 			<KeyboardAvoidingView
-				style={{ flex: 1 }}
+				style={styles.main}
 				behavior={'padding'}
 				keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight}
 			>
@@ -366,7 +368,7 @@ const LoginScreen = ({ navigation }) => {
 									<Text style={styles.inputCountry}>{selectedCountry.prefix}</Text>
 								</TouchableOpacity>
 
-								<View style={{ flex: 1 }}>
+								<View style={styles.main}>
 									<TextInput
 										style={styles.emailInput}
 										placeholder={t('login.phone')}
@@ -463,7 +465,7 @@ const LoginScreen = ({ navigation }) => {
 						{...testProperties('login.primary.button')}
 					>
 						{isLoading ? (
-							<ActivityIndicator size="small" color="#FFFFFF" style={{ zIndex: 10 }} />
+							<ActivityIndicator size="small" color="#FFFFFF" style={styles.loading} />
 						) : (
 							<Text style={[styles.otpButtonText]}>
 								{loginMode === 'otp' || loginMode === 'sms' ? t('login.send') : t('login.login')}

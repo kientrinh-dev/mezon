@@ -1,14 +1,13 @@
 import { useAccount } from '@mezon/core';
-import { baseColor, size } from '@mezon/mobile-ui';
-import { appActions, selectAllAccount } from '@mezon/store';
-import { useAppDispatch } from '@mezon/store-mobile';
+import { size } from '@mezon/mobile-ui';
+import { accountActions, appActions } from '@mezon/store';
+import { selectCurrentLanguage, useAppDispatch, useAppSelector } from '@mezon/store-mobile';
 import React, { memo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Dimensions, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-toast-message';
-import { useSelector } from 'react-redux';
 import MezonIconCDN from '../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../constants/icon_cdn';
 import useTabletLandscape from '../../hooks/useTabletLandscape';
@@ -21,18 +20,24 @@ const UpdateUserName = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [isLandscape, setIsLandscape] = useState(false);
 	const [isError, setIsError] = useState(false);
-	const userProfile = useSelector(selectAllAccount);
-	const { updateUser } = useAccount();
+	const { updateUserName } = useAccount();
 	const dispatch = useAppDispatch();
 	const isTabletLandscape = useTabletLandscape();
+	const currentLanguage = useAppSelector(selectCurrentLanguage);
 
-	const { t } = useTranslation(['common']);
+	const { t, i18n } = useTranslation(['common']);
 	const isFormValid = userName?.length >= 1;
 
 	const checkOrientation = () => {
 		const { width, height } = Dimensions.get('screen');
 		setIsLandscape(width > height);
 	};
+
+	useEffect(() => {
+		if (i18n.language !== currentLanguage) {
+			i18n.changeLanguage(currentLanguage);
+		}
+	}, [currentLanguage, i18n]);
 
 	useEffect(() => {
 		checkOrientation();
@@ -47,20 +52,10 @@ const UpdateUserName = () => {
 	const handlePrimaryAction = async () => {
 		try {
 			setIsError(false);
-			const { display_name, avatar_url, about_me } = userProfile?.user || {};
-
 			setIsLoading(true);
-
-			const response = await updateUser(
-				userName,
-				avatar_url || '',
-				display_name?.trim() || '',
-				about_me || '',
-				userProfile?.user?.dob || '',
-				userProfile?.logo || '',
-				true
-			);
-			if (response && response?.status !== 400) {
+			const responseSession: any = await updateUserName(userName);
+			if (responseSession?.token) {
+				dispatch(accountActions.getUserProfile({ noCache: true }));
 				dispatch(appActions.setIsShowUpdateUsername(false));
 			} else {
 				setIsError(true);
@@ -82,7 +77,7 @@ const UpdateUserName = () => {
 			<LinearGradient colors={['#f0edfd', '#beb5f8', '#9774fa']} style={[StyleSheet.absoluteFillObject]} />
 
 			<KeyboardAvoidingView
-				style={{ flex: 1 }}
+				style={styles.keyboardAvoidingView}
 				behavior={'padding'}
 				keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight}
 			>
@@ -93,7 +88,7 @@ const UpdateUserName = () => {
 					<View style={styles.inputSection}>
 						<View style={styles.inputWrapper}>
 							<MezonIconCDN icon={IconCDN.userIcon} width={size.s_20} height={size.s_20} color={'#454545'} />
-							<View style={{ flex: 1 }}>
+							<View style={styles.inputContainer}>
 								<TextInput
 									style={styles.emailInput}
 									placeholder={t('updateUsername.yourName')}
@@ -117,7 +112,7 @@ const UpdateUserName = () => {
 						disabled={!isFormValid || isLoading}
 					>
 						{isLoading ? (
-							<ActivityIndicator size="small" color="#FFFFFF" style={{ zIndex: 10 }} />
+							<ActivityIndicator size="small" color="#FFFFFF" style={styles.activityIndicator} />
 						) : (
 							<Text style={[styles.otpButtonText]}>{t('updateUsername.update')}</Text>
 						)}

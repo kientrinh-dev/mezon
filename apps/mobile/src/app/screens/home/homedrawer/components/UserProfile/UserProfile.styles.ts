@@ -1,5 +1,5 @@
 import type { Attributes } from '@mezon/mobile-ui';
-import { size } from '@mezon/mobile-ui';
+import { baseColor, size } from '@mezon/mobile-ui';
 import { StyleSheet } from 'react-native';
 
 export const style = (colors: Attributes, isTabletLandscape: boolean) =>
@@ -179,5 +179,76 @@ export const style = (colors: Attributes, isTabletLandscape: boolean) =>
 			flexDirection: 'row',
 			alignItems: 'center',
 			gap: size.s_12
+		},
+		voiceJoinButton: {
+			flexDirection: 'row',
+			gap: size.s_6,
+			backgroundColor: baseColor.bgSuccess,
+			borderRadius: size.s_50,
+			justifyContent: 'center',
+			paddingVertical: size.s_8,
+			alignItems: 'center'
+		},
+		rowContainer: {
+			flexDirection: 'row'
+		},
+		topActionButton: {
+			position: 'absolute',
+			right: size.s_10,
+			top: size.s_10,
+			padding: size.s_6,
+			borderRadius: size.s_20,
+			backgroundColor: colors.primary
+		},
+		transferFundsButton: {
+			position: 'absolute',
+			right: size.s_50,
+			top: size.s_10,
+			padding: size.s_6,
+			borderRadius: size.s_20,
+			backgroundColor: colors.primary
+		},
+		userInfoGap: {
+			gap: size.s_10
+		},
+		mediumFontSize: {
+			fontSize: size.medium
+		},
+		actionItemRow: {
+			flexDirection: 'row',
+			gap: size.s_6
+		},
+		friendRequestContainer: {
+			marginTop: size.s_16
+		},
+		friendRequestActions: {
+			flexDirection: 'row',
+			gap: size.s_10,
+			marginTop: size.s_10
+		},
+		acceptButton: {
+			backgroundColor: baseColor.green
+		},
+		ignoreButton: {
+			backgroundColor: baseColor.bgButtonSecondary
+		},
+		aboutMeContainer: {
+			paddingVertical: size.s_16
+		},
+		roleIcon: {
+			width: size.s_15,
+			height: size.s_15,
+			borderRadius: size.s_50
+		},
+		roleColorDot: {
+			width: size.s_15,
+			height: size.s_15,
+			borderRadius: size.s_50
+		},
+		actionTextGreen: {
+			color: baseColor.green
+		},
+		actionTextYellow: {
+			color: baseColor.goldenrodYellow
 		}
 	});

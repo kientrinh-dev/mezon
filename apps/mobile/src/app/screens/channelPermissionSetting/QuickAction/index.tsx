@@ -1,5 +1,5 @@
 import { ActionEmitEvent } from '@mezon/mobile-components';
-import { size, useTheme, verticalScale } from '@mezon/mobile-ui';
+import { size, useTheme } from '@mezon/mobile-ui';
 import {
 	deleteQuickMenuAccess,
 	listQuickMenuAccess,
@@ -10,8 +10,9 @@ import {
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store-mobile';
-import { QUICK_MENU_TYPE, QuickMenuType } from '@mezon/utils';
-import { ApiQuickMenuAccess } from 'mezon-js/api.gen';
+import type { QuickMenuType } from '@mezon/utils';
+import { QUICK_MENU_TYPE } from '@mezon/utils';
+import type { ApiQuickMenuAccess } from 'mezon-js/api.gen';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Platform, Pressable, Text, TouchableOpacity, View } from 'react-native';
@@ -45,11 +46,14 @@ const TabButton = React.memo(
 	}
 );
 
-const HeaderTitle = React.memo(({ title, themeValue }: { title: string; themeValue: any }) => (
-	<View>
-		<Text style={{ fontSize: verticalScale(18), marginLeft: 0, marginRight: 0, color: themeValue.white }}>{title}</Text>
-	</View>
-));
+const HeaderTitle = React.memo(({ title, themeValue }: { title: string; themeValue: any }) => {
+	const styles = style(themeValue);
+	return (
+		<View>
+			<Text style={[styles.headerTitleText, { color: themeValue.white }]}>{title}</Text>
+		</View>
+	);
+});
 
 const AddButton = React.memo(({ onPress, themeValue }: { onPress: () => void; themeValue: any }) => (
 	<TouchableOpacity style={style(themeValue).addButton} onPress={onPress}>
@@ -89,7 +93,7 @@ export function QuickAction({ navigation, route }) {
 	const headerTitle = useMemo(() => t('quickAction.title'), [t]);
 
 	useEffect(() => {
-		dispatch(listQuickMenuAccess({ channelId: channelId, menuType: selectedTab }));
+		dispatch(listQuickMenuAccess({ channelId, menuType: selectedTab }));
 	}, [channelId, dispatch, selectedTab]);
 
 	const openModal = useCallback(
@@ -114,14 +118,14 @@ export function QuickAction({ navigation, route }) {
 	const deleteItem = useCallback(
 		async (id: string) => {
 			try {
-				await dispatch(deleteQuickMenuAccess({ id, channelId }));
+				await dispatch(deleteQuickMenuAccess({ id, channelId, clanId }));
 				await dispatch(listQuickMenuAccess({ channelId, menuType: selectedTab }));
 				DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
 			} catch (error) {
 				console.error(error.message);
 			}
 		},
-		[dispatch, channelId, selectedTab]
+		[dispatch, channelId, selectedTab, clanId]
 	);
 
 	const handlePressDeleteCategory = useCallback(
@@ -133,7 +137,7 @@ export function QuickAction({ navigation, route }) {
 						title={t('quickAction.deleteModal')}
 						confirmText={t('confirm.delete.confirmText')}
 						content={t('quickAction.deleteTitle', {
-							key: item.menu_name
+							command: item.menu_name
 						})}
 					/>
 				)
@@ -159,14 +163,14 @@ export function QuickAction({ navigation, route }) {
 	}, [navigation, headerTitle, themeValue]);
 
 	return (
-		<View style={{ flex: 1, backgroundColor: themeValue.primary, paddingHorizontal: size.s_12 }}>
+		<View style={[styles.containerView, { backgroundColor: themeValue.primary }]}>
 			<View style={styles.toggleWrapper}>
 				{quickActionTabs.map((tab) => (
 					<TabButton key={tab.type} tab={tab} selectedTab={selectedTab} onPress={handleTabPress} styles={styles} />
 				))}
 			</View>
 			{isLoading === 'loading' ? (
-				<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+				<View style={styles.loadingView}>
 					<LoadingModal isVisible={true} />
 				</View>
 			) : (

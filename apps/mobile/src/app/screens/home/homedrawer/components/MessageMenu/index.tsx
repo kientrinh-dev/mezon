@@ -1,31 +1,33 @@
 import { useFriends } from '@mezon/core';
 import { ActionEmitEvent, ENotificationActive, ENotificationChannelId } from '@mezon/mobile-components';
 import { baseColor, size, useTheme } from '@mezon/mobile-ui';
+import type { DirectEntity } from '@mezon/store-mobile';
 import {
-	DirectEntity,
 	EStateFriend,
 	deleteChannel,
 	directActions,
 	directMetaActions,
 	fetchDirectMessage,
 	fetchUserChannels,
+	getStore,
 	markAsReadProcessing,
 	notificationSettingActions,
 	removeMemberChannel,
 	selectAllAccount,
-	selectCurrentClan,
+	selectCurrentClanId,
 	selectCurrentUserId,
 	selectFriendById,
+	selectLatestMessageId,
 	selectNotifiSettingsEntitiesById,
 	selectRawDataUserGroup,
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store-mobile';
-import { createImgproxyUrl, sleep } from '@mezon/utils';
+import { EMuteState, createImgproxyUrl, sleep } from '@mezon/utils';
 import { useNavigation } from '@react-navigation/native';
 import { ChannelType } from 'mezon-js';
 import type { ApiMarkAsReadRequest } from 'mezon-js/api.gen';
-import React, { memo, useEffect, useMemo } from 'react';
+import React, { memo, useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Text, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
@@ -51,7 +53,7 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 	const styles = style(themeValue);
 	const dispatch = useAppDispatch();
 	const navigation = useNavigation<any>();
-	const currentClan = useSelector(selectCurrentClan);
+	const currentClanId = useSelector(selectCurrentClanId);
 	const userProfile = useSelector(selectAllAccount);
 	const currentUserId = useAppSelector(selectCurrentUserId);
 	const infoFriend = useAppSelector((state) => selectFriendById(state, messageInfo?.user_ids?.[0] || ''));
@@ -102,27 +104,34 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 		return userIds?.length === 1;
 	}, [allUserGroupDM?.user_ids]);
 
+	const isChatWithMyself = useMemo(() => {
+		if (Number(messageInfo?.type) !== ChannelType.CHANNEL_TYPE_DM) return false;
+		return messageInfo?.user_ids?.[0] === currentUserId;
+	}, [messageInfo?.type, messageInfo?.user_ids, currentUserId]);
+
+	const handleShowModalLeaveGroup = useCallback(async () => {
+		dismiss();
+		await sleep(500);
+		const data = {
+			children: (
+				<MezonConfirm
+					onConfirm={handleLeaveGroupConfirm}
+					title={t('confirm.title', {
+						groupName: messageInfo?.channel_label
+					})}
+					content={t('confirm.content', {
+						groupName: messageInfo?.channel_label
+					})}
+					confirmText={t('confirm.confirmText')}
+				/>
+			)
+		};
+		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: false, data });
+	}, [messageInfo?.channel_label, t]);
+
 	const leaveGroupMenu: IMezonMenuItemProps[] = [
 		{
-			onPress: async () => {
-				dismiss();
-				await sleep(500);
-				const data = {
-					children: (
-						<MezonConfirm
-							onConfirm={handleLeaveGroupConfirm}
-							title={t('confirm.title', {
-								groupName: messageInfo?.channel_label
-							})}
-							content={t('confirm.content', {
-								groupName: messageInfo?.channel_label
-							})}
-							confirmText={t('confirm.confirmText')}
-						/>
-					)
-				};
-				DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: false, data });
-			},
+			onPress: handleShowModalLeaveGroup,
 			isShow: isGroup,
 			title: lastOne ? t('menu.deleteGroup') : t('menu.leaveGroup'),
 			textStyle: { color: baseColor.redStrong }
@@ -130,10 +139,8 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 	];
 
 	const handleAddFriend = () => {
-		addFriend({
-			ids: [messageInfo?.user_ids?.[0]],
-			usernames: [messageInfo?.usernames?.[0]]
-		});
+		const body = messageInfo?.user_ids?.[0] ? { ids: [messageInfo?.user_ids?.[0]] } : { usernames: [messageInfo?.usernames?.[0]] };
+		addFriend(body);
 		dismiss();
 	};
 
@@ -195,12 +202,13 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 		{
 			onPress: async () => {
 				await dispatch(directActions.closeDirectMessage({ channel_id: messageInfo?.channel_id }));
+				await dispatch(directActions.setDmGroupCurrentId(''));
 				dismiss();
 			},
 			title: t('menu.closeDm'),
 			isShow: !isGroup,
 			icon: <MezonIconCDN icon={IconCDN.closeDMIcon} color={themeValue.textStrong} customStyle={{ marginBottom: size.s_4 }} />,
-			textStyle: { marginLeft: -size.s_2 }
+			textStyle: styles.menuTextMarginLeft
 		},
 		{
 			onPress: infoFriend?.state === EStateFriend.FRIEND ? handleDeleteFriend : handleAddFriend,
@@ -209,7 +217,8 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 				!isGroup &&
 				infoFriend?.state !== EStateFriend.BLOCK &&
 				infoFriend?.state !== EStateFriend.MY_PENDING &&
-				infoFriend?.state !== EStateFriend.OTHER_PENDING,
+				infoFriend?.state !== EStateFriend.OTHER_PENDING &&
+				!isChatWithMyself,
 			icon:
 				infoFriend?.state === EStateFriend.FRIEND ? (
 					<MezonIconCDN icon={IconCDN.removeFriend} color={themeValue.textStrong} customStyle={{ marginBottom: size.s_2 }} />
@@ -220,7 +229,7 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 		{
 			onPress: didIBlockUser ? handleUnblockFriend : handleBlockFriend,
 			title: didIBlockUser ? t('menu.unblockUser') : t('menu.blockUser'),
-			isShow: !isGroup && (infoFriend?.state === EStateFriend.FRIEND || didIBlockUser),
+			isShow: !isGroup && (infoFriend?.state === EStateFriend.FRIEND || didIBlockUser) && !isChatWithMyself,
 			icon: didIBlockUser ? (
 				<MezonIconCDN icon={IconCDN.unblockUser} color={themeValue.textStrong} />
 			) : (
@@ -232,7 +241,9 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 	const handleMarkAsRead = async (channel_id: string) => {
 		if (!channel_id) return;
 		const timestamp = Date.now() / 1000;
-		dispatch(directMetaActions.setDirectLastSeenTimestamp({ channelId: channel_id, timestamp }));
+		const store = getStore();
+		const messageId = store ? selectLatestMessageId(store.getState(), channel_id) : undefined;
+		dispatch(directMetaActions.setDirectLastSeenTimestamp({ channelId: channel_id, timestamp, messageId }));
 
 		const body: ApiMarkAsReadRequest = {
 			clan_id: '',
@@ -252,20 +263,29 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 		{
 			onPress: async () => await handleMarkAsRead(messageInfo?.channel_id ?? ''),
 			title: t('menu.markAsRead'),
-			icon: <MezonIconCDN icon={IconCDN.eyeIcon} color={themeValue.textStrong} />
+			icon: <MezonIconCDN icon={IconCDN.eyeIcon} color={themeValue.textStrong} />,
+			isShow: !isChatWithMyself
 		}
 	];
 
-	const muteOrUnMuteChannel = async (active: ENotificationActive) => {
-		const body = {
-			channel_id: messageInfo?.channel_id || '',
-			notification_type: getNotificationChannelSelected?.notification_setting_type || 0,
-			clan_id: currentClan?.clan_id || '',
-			active
-		};
-		const response = await dispatch(notificationSettingActions.setMuteNotificationSetting(body));
-		if (response?.meta?.requestStatus === 'fulfilled') {
-			dispatch(notificationSettingActions.updateNotiState({ channelId: messageInfo?.channel_id || '', active }));
+	const handleUnmuteConversation = async () => {
+		try {
+			const body = {
+				channel_id: messageInfo?.channel_id || '',
+				clan_id: currentClanId || '',
+				active: EMuteState.UN_MUTE,
+				mute_time: 0
+			};
+			const response = await dispatch(notificationSettingActions.setMuteChannel(body));
+			if (response?.meta?.requestStatus === 'rejected') {
+				throw new Error(response?.meta?.requestStatus);
+			}
+		} catch (error) {
+			console.error('Error setting unmute channel:', error);
+			Toast.show({
+				type: 'error',
+				text1: t('notification.unMuteError')
+			});
 		}
 	};
 
@@ -274,7 +294,7 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 			title: isDmUnmute ? t('menu.muteConversation') : t('menu.unMuteConversation'),
 			onPress: () => {
 				if (!isDmUnmute) {
-					muteOrUnMuteChannel(ENotificationActive.ON);
+					handleUnmuteConversation();
 				} else {
 					navigation.navigate(APP_SCREEN.MENU_THREAD.STACK, {
 						screen: APP_SCREEN.MENU_THREAD.MUTE_THREAD_DETAIL_CHANNEL,
@@ -287,7 +307,8 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 				<MezonIconCDN icon={IconCDN.bellIcon} color={themeValue.textStrong} />
 			) : (
 				<MezonIconCDN icon={IconCDN.bellSlashIcon} color={themeValue.textStrong} />
-			)
+			),
+			isShow: !isChatWithMyself
 		}
 	];
 
@@ -306,27 +327,28 @@ function MessageMenu({ messageInfo }: IServerMenuProps) {
 		}
 	];
 
-	const handleLeaveGroupConfirm = async () => {
+	const handleLeaveGroupConfirm = useCallback(async () => {
 		const isLeaveOrDeleteGroup = lastOne
 			? await dispatch(deleteChannel({ clanId: '0', channelId: messageInfo?.channel_id ?? '', isDmGroup: true }))
 			: await dispatch(removeMemberChannel({ channelId: messageInfo?.channel_id || '', userIds: [currentUserId], kickMember: false }));
 		if (!isLeaveOrDeleteGroup) {
 			return;
 		}
+		dispatch(directActions.setDmGroupCurrentId(''));
 
 		await dispatch(fetchDirectMessage({ noCache: true }));
 		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
-	};
+	}, [currentUserId, dispatch, lastOne, messageInfo?.channel_id]);
 
 	return (
 		<View style={styles.container}>
 			<View style={styles.header}>
 				{isGroup ? (
 					messageInfo?.channel_avatar && !messageInfo?.channel_avatar?.includes('avatar-group.png') ? (
-						<View style={{ width: size.s_60, height: size.s_60, borderRadius: size.s_30, overflow: 'hidden' }}>
+						<View style={styles.groupAvatarContainer}>
 							<ImageNative
 								url={createImgproxyUrl(messageInfo?.channel_avatar ?? '')}
-								style={{ width: '100%', height: '100%' }}
+								style={styles.imageFullSize}
 								resizeMode={'cover'}
 							/>
 						</View>

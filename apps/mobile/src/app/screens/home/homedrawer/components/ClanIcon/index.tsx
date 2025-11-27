@@ -1,6 +1,6 @@
 import { useTheme } from '@mezon/mobile-ui';
 import type { ClansEntity } from '@mezon/store-mobile';
-import { selectBadgeCountByClanId, selectCurrentClanId } from '@mezon/store-mobile';
+import { selectBadgeCountByClanId, selectClanHasUnreadMessage } from '@mezon/store-mobile';
 import { createImgproxyUrl } from '@mezon/utils';
 import { memo, useCallback } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -14,17 +14,17 @@ interface IClanIconProps {
 	onPress?: any;
 	drag: () => void;
 	isActive?: boolean;
+	isActiveCurrentClan?: boolean;
 	onLayout?: (dimensions: { width: number; height: number }) => void;
+	hideActive?: boolean;
 }
 
 export const ClanIcon = memo(
 	(props: IClanIconProps) => {
 		const { themeValue } = useTheme();
 		const styles = style(themeValue);
-		const currentClanId = useSelector(selectCurrentClanId);
 		const badgeCountClan = useSelector(selectBadgeCountByClanId(props?.data?.clan_id ?? '')) || 0;
-
-		const isActiveCurrentClan = currentClanId === props?.data?.clan_id;
+		const isHaveUnreadMessage = useSelector(selectClanHasUnreadMessage(props?.data?.clan_id ?? '')) || false;
 		const onIconLayout = useCallback(
 			(event: any) => {
 				const { width, height } = event.nativeEvent.layout;
@@ -32,7 +32,6 @@ export const ClanIcon = memo(
 			},
 			[props.onLayout]
 		);
-
 		return (
 			<ScaleDecorator activeScale={1.5}>
 				<TouchableOpacity
@@ -47,15 +46,15 @@ export const ClanIcon = memo(
 				>
 					<View onLayout={onIconLayout}>
 						{props?.data?.logo ? (
-							<View style={[styles.logoClan, isActiveCurrentClan && styles.logoClanActive]}>
+							<View style={[styles.logoClan, props?.isActiveCurrentClan && styles.logoClanActive]}>
 								<ImageNative
 									url={createImgproxyUrl(props?.data?.logo ?? '', { width: 100, height: 100, resizeType: 'fit' })}
-									style={{ width: '100%', height: '100%' }}
+									style={styles.imageFullSize}
 									resizeMode={'cover'}
 								/>
 							</View>
 						) : (
-							<View style={[styles.clanIcon, isActiveCurrentClan && styles.logoClanActive]}>
+							<View style={[styles.clanIcon, props?.isActiveCurrentClan && styles.logoClanActive]}>
 								<Text style={styles.textLogoClanIcon}>{props?.data?.clan_name?.charAt(0)?.toUpperCase()}</Text>
 							</View>
 						)}
@@ -63,10 +62,11 @@ export const ClanIcon = memo(
 
 					{badgeCountClan > 0 && (
 						<View style={styles.badge}>
-							<Text style={styles.badgeText}>{badgeCountClan > 99 ? `+99` : badgeCountClan}</Text>
+							<Text style={styles.badgeText}>{badgeCountClan > 99 ? `99+` : badgeCountClan}</Text>
 						</View>
 					)}
-					{!!isActiveCurrentClan && <View style={styles.lineActiveClan} />}
+					{isHaveUnreadMessage && <View style={styles.unreadDot} />}
+					{!!props?.isActiveCurrentClan && <View style={styles.lineActiveClan} />}
 				</TouchableOpacity>
 			</ScaleDecorator>
 		);
@@ -76,7 +76,8 @@ export const ClanIcon = memo(
 			prevProps.data?.clan_id === nextProps.data?.clan_id &&
 			prevProps.data?.logo === nextProps.data?.logo &&
 			prevProps.data?.clan_name === nextProps.data?.clan_name &&
-			prevProps.isActive === nextProps.isActive
+			prevProps.isActive === nextProps.isActive &&
+			prevProps.isActiveCurrentClan === nextProps.isActiveCurrentClan
 		);
 	}
 );

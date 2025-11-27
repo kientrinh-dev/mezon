@@ -1,40 +1,39 @@
 import { useFriends } from '@mezon/core';
+import { ActionEmitEvent } from '@mezon/mobile-components';
 import { baseColor, size, useTheme } from '@mezon/mobile-ui';
-import { RootState, friendsActions, getStore, requestAddFriendParam, selectAllAccount, selectStatusSentMobile } from '@mezon/store-mobile';
+import type { RootState, requestAddFriendParam } from '@mezon/store-mobile';
+import { EStateFriend, friendsActions, getStore, selectCurrentUsername, selectStatusSentMobile } from '@mezon/store-mobile';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, StatusBar, Text, TextInput, View } from 'react-native';
+import { DeviceEventEmitter, Platform, Pressable, StatusBar, Text, TextInput, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Toast from 'react-native-toast-message';
 import { useDispatch, useSelector } from 'react-redux';
+import StatusBarHeight from '../../../../../components/StatusBarHeight/StatusBarHeight';
 import MezonButton from '../../../../../componentUI/MezonButton';
 import MezonIconCDN from '../../../../../componentUI/MezonIconCDN';
-import { MezonModal } from '../../../../../componentUI/MezonModal';
 import { testProperties } from '../../../../../configs/testProperties';
 import { IconCDN } from '../../../../../constants/icon_cdn';
 import { style } from './styles';
-interface IAddFriendModal {
-	isShow: boolean;
-	onClose: () => void;
-}
 
-export const AddFriendModal = React.memo((props: IAddFriendModal) => {
+export const AddFriendModal = React.memo(() => {
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
-	const { isShow, onClose } = props;
-	const userProfile = useSelector(selectAllAccount);
-	const { addFriend } = useFriends();
+	const currentUsername = useSelector(selectCurrentUsername);
+	const { addFriend, friends } = useFriends();
 	const dispatch = useDispatch();
-	const [visibleModal, setVisibleModal] = useState<boolean>(false);
 	const [requestAddFriend, setRequestAddFriend] = useState<requestAddFriendParam>({
 		usernames: [],
 		ids: []
 	});
-	const { t } = useTranslation('friends');
+	const { t } = useTranslation(['friends', 'friendsPage']);
 	const inputRef = useRef<TextInput>(null);
 
+	const onClose = () => {
+		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
+	};
+
 	useEffect(() => {
-		setVisibleModal(isShow);
 		const timeoutId = setTimeout(() => {
 			if (inputRef?.current) {
 				inputRef.current.focus();
@@ -47,7 +46,7 @@ export const AddFriendModal = React.memo((props: IAddFriendModal) => {
 				resetField();
 			}
 		};
-	}, [isShow]);
+	}, []);
 
 	const handleTextChange = (text: string) => {
 		if ((text || '')?.trim()?.length) {
@@ -62,12 +61,6 @@ export const AddFriendModal = React.memo((props: IAddFriendModal) => {
 		[requestAddFriend.usernames]
 	);
 
-	const onVisibleChange = (visible: boolean) => {
-		if (!visible) {
-			onClose();
-		}
-	};
-
 	const resetField = () => {
 		setRequestAddFriend({
 			usernames: [],
@@ -81,6 +74,31 @@ export const AddFriendModal = React.memo((props: IAddFriendModal) => {
 		if (inputRef?.current) {
 			inputRef.current.blur();
 		}
+
+		const friend = friends?.find((u) => u?.user?.username === firstUsername);
+
+		if (friend?.user?.username === currentUsername) {
+			Toast.show({
+				type: 'error',
+				text1: t('toast.sendAddFriendFail')
+			});
+			return;
+		}
+		if (friend?.state === EStateFriend.FRIEND) {
+			Toast.show({
+				type: 'error',
+				text1: t('friendsPage:addFriendModal.alreadyFriends')
+			});
+			return;
+		}
+		if (friend?.state === EStateFriend.OTHER_PENDING) {
+			Toast.show({
+				type: 'error',
+				text1: t('friendsPage:addFriendModal.waitAccept')
+			});
+			return;
+		}
+
 		await addFriend(requestAddFriend);
 		showAddFriendToast();
 	};
@@ -107,54 +125,46 @@ export const AddFriendModal = React.memo((props: IAddFriendModal) => {
 			});
 		}
 		dispatch(friendsActions.setSentStatusMobile(null));
-	}, []);
+	}, [dispatch, t]);
 
 	return (
-		<MezonModal
-			visible={visibleModal}
-			title={t('addFriend.addByUserName')}
-			visibleChange={onVisibleChange}
-			containerStyle={{ paddingHorizontal: 0 }}
+		<KeyboardAvoidingView
+			behavior={'padding'}
+			keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight + 5}
+			style={styles.addFriendModalContainer}
 		>
-			<View style={styles.addFriendModalContainer}>
-				<KeyboardAvoidingView
-					behavior={'padding'}
-					keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight + 5}
-					style={styles.fill}
-				>
-					<View style={[styles.fill, { paddingVertical: 20 }]}>
-						<View style={styles.fill}>
-							<Text style={styles.defaultText}>{t('addFriend.whoYouWantToAddFriend')}</Text>
-							<View style={styles.searchUsernameWrapper}>
-								<TextInput
-									ref={inputRef}
-									value={firstUsername}
-									placeholder={t('addFriend.searchUsernamePlaceholder')}
-									placeholderTextColor={themeValue.textDisabled}
-									style={styles.searchInput}
-									onChangeText={handleTextChange}
-									autoCapitalize="none"
-									{...testProperties('addFriend.input.username')}
-								/>
-							</View>
-							<View style={styles.byTheWayText}>
-								<Text style={styles.defaultText}>{`${t('addFriend.byTheWay')} ${userProfile?.user?.username}`}</Text>
-							</View>
-						</View>
-						<View style={[styles.buttonWrapper]}>
-							<View style={{ height: size.s_50 }}>
-								<MezonButton
-									disabled={!firstUsername?.length}
-									onPress={() => sentFriendRequest()}
-									containerStyle={[styles.sendButton, !firstUsername?.length && { backgroundColor: themeValue.textDisabled }]}
-									title={t('addFriend.sendRequestButton')}
-									titleStyle={{ color: baseColor.white, fontSize: size.medium }}
-								/>
-							</View>
-						</View>
+			<StatusBarHeight />
+			<Pressable style={styles.btnClose} onPress={() => onClose()}>
+				<MezonIconCDN icon={IconCDN.closeIcon} width={size.s_28} height={size.s_28} color={themeValue.white} />
+			</Pressable>
+			<Text style={styles.titleHeader}>{t('addFriend.addByUserName')}</Text>
+			<View style={[styles.form]}>
+				<View style={styles.fill}>
+					<Text style={styles.defaultText}>{t('addFriend.whoYouWantToAddFriend')}</Text>
+					<View style={styles.searchUsernameWrapper}>
+						<TextInput
+							ref={inputRef}
+							value={firstUsername}
+							placeholder={t('addFriend.searchUsernamePlaceholder')}
+							placeholderTextColor={themeValue.textDisabled}
+							style={styles.searchInput}
+							onChangeText={handleTextChange}
+							autoCapitalize="none"
+							{...testProperties('addFriend.input.username')}
+						/>
 					</View>
-				</KeyboardAvoidingView>
+					<View style={styles.byTheWayText}>
+						<Text style={styles.defaultText}>{`${t('addFriend.byTheWay')} ${currentUsername}`}</Text>
+					</View>
+				</View>
+				<MezonButton
+					disabled={!firstUsername?.length}
+					onPress={() => sentFriendRequest()}
+					containerStyle={[styles.sendButton, !firstUsername?.length && { backgroundColor: themeValue.textDisabled }]}
+					title={t('addFriend.sendRequestButton')}
+					titleStyle={styles.buttonTitleStyle}
+				/>
 			</View>
-		</MezonModal>
+		</KeyboardAvoidingView>
 	);
 });

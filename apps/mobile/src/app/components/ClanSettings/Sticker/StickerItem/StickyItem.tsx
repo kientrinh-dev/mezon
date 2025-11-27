@@ -1,17 +1,21 @@
-import { useClanRestriction } from '@mezon/core';
+/* eslint-disable @nx/enforce-module-boundaries */
+import { usePermissionChecker } from '@mezon/core';
 import { baseColor, size, useTheme } from '@mezon/mobile-ui';
 import { deleteSticker, selectCurrentUserId, selectMemberClanByUserId, updateSticker, useAppDispatch, useAppSelector } from '@mezon/store-mobile';
 import { EPermission } from '@mezon/utils';
-import { ClanSticker } from 'mezon-js';
-import React, { Ref, forwardRef, useCallback, useMemo, useState } from 'react';
+import type { ClanSticker } from 'mezon-js';
+import type { Ref } from 'react';
+import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import Swipeable, { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
+import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Toast from 'react-native-toast-message';
-import MezonAvatar from '../../../../componentUI/MezonAvatar';
+import MezonClanAvatar from '../../../../componentUI/MezonClanAvatar';
 import MezonIconCDN from '../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../constants/icon_cdn';
+import { CLAN_MEDIA_NAME_REGEX, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../Emoji/EmojiPreview';
 import { style } from './styles';
 
 interface IStickerItem {
@@ -23,24 +27,35 @@ interface IStickerItem {
 export const StickerSettingItem = forwardRef(({ data, clanID, onSwipeOpen }: IStickerItem, ref: Ref<SwipeableMethods>) => {
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
-	const user = useAppSelector((state) => selectMemberClanByUserId(state, data.creator_id));
-	const [stickerName, setStickerName] = useState<string>(data.shortname);
+	const user = useAppSelector((state) => selectMemberClanByUserId(state, data?.creator_id ?? ''));
+	const [stickerName, setStickerName] = useState<string>(data?.shortname || '');
 	const dispatch = useAppDispatch();
 	const { t } = useTranslation(['clanStickerSetting']);
 	const currentUserId = useAppSelector(selectCurrentUserId);
 
-	const [hasAdminPermission, { isClanOwner }] = useClanRestriction([EPermission.administrator]);
-	const [hasManageClanPermission] = useClanRestriction([EPermission.manageClan]);
-	const hasDeleteOrEditPermission = useMemo(() => {
-		return hasAdminPermission || isClanOwner || hasManageClanPermission || currentUserId === data.creator_id;
-	}, [hasAdminPermission, isClanOwner, hasManageClanPermission, currentUserId, data.creator_id]);
-
 	const [sticker, setSticker] = useState({
-		shortname: data.shortname ?? '',
-		source: data.source ?? '',
-		id: data.id ?? '0',
-		category: data.category ?? ''
+		shortname: data?.shortname ?? '',
+		source: data?.source ?? '',
+		id: data?.id ?? '0',
+		category: data?.category ?? ''
 	});
+
+	const [hasAdminPermission, isClanOwner, hasManageClanPermission] = usePermissionChecker([EPermission.administrator, EPermission.clanOwner]);
+	const hasDeleteOrEditPermission = useMemo(() => {
+		return hasAdminPermission || isClanOwner || hasManageClanPermission || currentUserId === data?.creator_id;
+	}, [hasAdminPermission, isClanOwner, hasManageClanPermission, currentUserId, data?.creator_id]);
+
+	const authorDisplayName = useMemo(() => {
+		return user?.clan_nick || user?.user?.display_name || user?.user?.username || '';
+	}, [user?.clan_nick, user?.user?.display_name, user?.user?.username]);
+
+	const authorAvatarUrl = useMemo(() => {
+		return user?.clan_avatar || user?.user?.avatar_url || '';
+	}, [user?.clan_avatar, user?.user?.avatar_url]);
+
+	const stickerImageSrc = useMemo(() => {
+		return (sticker?.source ? sticker.source : `${process.env.NX_BASE_IMG_URL}/stickers/${sticker?.id}.webp`) || '';
+	}, [sticker?.id, sticker.source]);
 
 	const renderRightAction = () => {
 		return (
@@ -58,11 +73,11 @@ export const StickerSettingItem = forwardRef(({ data, clanID, onSwipeOpen }: ISt
 	}, []);
 
 	const handleDeleteSticker = useCallback(async () => {
-		if (data.id) {
+		if (data?.id) {
 			const result = (await dispatch(
 				deleteSticker({
-					stickerId: data.id,
-					clan_id: clanID,
+					stickerId: data?.id || '',
+					clan_id: clanID || '',
 					stickerLabel: ''
 				})
 			)) as any;
@@ -76,7 +91,19 @@ export const StickerSettingItem = forwardRef(({ data, clanID, onSwipeOpen }: ISt
 	}, []);
 
 	const handleUpdateSticker = useCallback(async () => {
-		if (sticker && sticker.id && stickerName !== sticker.shortname) {
+		if (sticker && sticker?.id && stickerName !== sticker?.shortname) {
+			if (!stickerName) {
+				setStickerName(sticker?.shortname);
+				return;
+			}
+			if (!CLAN_MEDIA_NAME_REGEX.test(stickerName) || stickerName?.length < MIN_NAME_LENGTH || stickerName?.length > MAX_NAME_LENGTH) {
+				setStickerName(sticker?.shortname);
+				Toast.show({
+					type: 'error',
+					text1: t('toast.validateName', { min: MIN_NAME_LENGTH, max: MAX_NAME_LENGTH })
+				});
+				return;
+			}
 			setSticker({
 				...sticker,
 				shortname: stickerName
@@ -87,7 +114,7 @@ export const StickerSettingItem = forwardRef(({ data, clanID, onSwipeOpen }: ISt
 					stickerId: sticker?.id ?? '',
 					request: {
 						...sticker,
-						clan_id: clanID,
+						clan_id: clanID || '',
 						shortname: stickerName
 					}
 				})
@@ -105,11 +132,8 @@ export const StickerSettingItem = forwardRef(({ data, clanID, onSwipeOpen }: ISt
 	return (
 		<Swipeable ref={ref} renderRightActions={renderRightAction} onSwipeableWillOpen={handleSwipeOpen} enabled={hasDeleteOrEditPermission}>
 			<View style={styles.container}>
-				<View style={styles.flexRow}>
-					<FastImage
-						source={{ uri: sticker.source ? sticker.source : `${process.env.NX_BASE_IMG_URL}/stickers/` + sticker.id + `.webp` }}
-						style={{ height: size.s_36, width: size.s_36 }}
-					/>
+				<View style={styles.stickerItem}>
+					<FastImage source={{ uri: stickerImageSrc }} style={styles.stickerImage} />
 
 					<View style={styles.stickerName}>
 						<TextInput
@@ -122,11 +146,13 @@ export const StickerSettingItem = forwardRef(({ data, clanID, onSwipeOpen }: ISt
 					</View>
 				</View>
 
-				<View style={[styles.flexRow, { justifyContent: 'flex-end' }]}>
-					<Text style={styles.text} numberOfLines={1}>
-						{user?.clan_nick || user?.user?.display_name || user?.user?.username}
+				<View style={styles.user}>
+					<Text style={styles.title} numberOfLines={1}>
+						{authorDisplayName}
 					</Text>
-					<MezonAvatar height={size.s_30} width={size.s_30} avatarUrl={user?.user?.avatar_url} username={user?.user?.username} />
+					<View style={styles.imgWrapper}>
+						<MezonClanAvatar alt={user?.user?.username || ''} image={authorAvatarUrl} />
+					</View>
 				</View>
 			</View>
 		</Swipeable>

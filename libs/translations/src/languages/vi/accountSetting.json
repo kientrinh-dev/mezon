@@ -30,6 +30,9 @@
 		"yesConfirm": "Có"
 	},
 	"setPasswordAccount": {
+		"linkEmailRequiredTitle": "Yêu cầu liên kết email",
+		"linkEmailRequiredDescription": "Bạn cần liên kết email trước khi đặt mật khẩu",
+		"goTo": "Đi đến",
 		"title": "Đặt mật khẩu",
 		"email": "Email",
 		"password": "Mật khẩu",
@@ -52,8 +55,8 @@
 			"incorrectCurrent": "Mật khẩu hiện tại không đúng. Hãy thử lại"
 		},
 		"toast": {
-			"success": "Đổi mật khẩu thành công",
-			"error": "Mật khẩu hiện tại không chính xác"
+			"success": "Cập nhật mật khẩu thành công",
+			"error": "Cập nhật mật khẩu thất bại"
 		},
 		"placeholder": {
 			"currentPassword": "Nhập mật khẩu hiện tại",
@@ -82,9 +85,12 @@
 		"updatePhoneFail": "Có lỗi xảy ra. Thử lại sau",
 		"emptyOtp": "Mã OTP không hợp lệ!",
 		"resendOtp": "Gửi lại mã OTP!",
-		"tooFast": "Quá nhanh. Vui lòng chờ {{seconds}} giây trước khi gửi mã OTP lại.",
+		"tooFast": "Quá nhanh. Vui lòng chờ {{seconds}} giây trước khi gửi mã OTP lại.",
 		"alreadyLinked": "Số này đã liên kết với tài khoản của bạn",
-		"alreadyLinkedToAnother": "Số này đã liên kết với tài khoản khác"
+		"alreadyLinkedToAnother": "Số này đã liên kết với tài khoản khác",
+		"country": "Quốc gia",
+		"otpSentMessage": "Vui lòng kiểm tra mã OTP đã được gửi đến số điện thoại {{phone}}",
+		"backToPhoneInput": "Thay đổi số điện thoại?"
 	},
 	"toast": {
 		"deleteAccount": {
@@ -104,8 +110,21 @@
 		"verifyPhoneNumber": {
 			"description": "Nhập mã 6 chữ số mà chúng tôi đã gửi đến",
 			"verifyButton": "Xác nhận",
-			"success": "Cập nhật số điện thoại thành công",
-			"failed": "Mã OTP không hợp lệ"
+			"success": "Cập nhật số điện thoại thành công"
+		}
+	},
+	"emailSetting": {
+		"updateEmail": {
+			"newEmail": "Email mới",
+			"nextButton": "Tiếp theo",
+			"failed": "Cập nhật email thất bại",
+			"invalidEmail": "Email không hợp lệ",
+			"emailAlreadyLinked": "Email này bạn đang sử dụng"
+		},
+		"verifyEmail": {
+			"description": "Nhập mã 6 chữ số mà chúng tôi đã gửi đến",
+			"verifyButton": "Xác nhận",
+			"success": "Cập nhật email thành công"
 		}
 	}
 }

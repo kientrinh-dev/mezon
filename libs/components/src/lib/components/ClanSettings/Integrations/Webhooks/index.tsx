@@ -1,7 +1,8 @@
 import { generateWebhook, selectCurrentClanId, useAppDispatch } from '@mezon/store';
 import { Image } from '@mezon/ui';
-import { generateE2eId, IChannel } from '@mezon/utils';
-import { ApiWebhook, ApiWebhookCreateRequest } from 'mezon-js/api.gen';
+import type { IChannel } from '@mezon/utils';
+import { generateE2eId } from '@mezon/utils';
+import type { ApiWebhook, ApiWebhookCreateRequest } from 'mezon-js/api.gen';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import WebhookItemModal from './WebhookItemModal';
@@ -39,16 +40,14 @@ const Webhooks = ({ allWebhooks, currentChannel, isClanSetting }: IWebhooksProps
 			avatar: getRandomAvatar(),
 			clan_id: clanId
 		};
-		dispatch(
-			generateWebhook({ request: newWebhookReq, channelId: currentChannel?.channel_id as string, clanId: clanId, isClanSetting: isClanSetting })
-		);
+		dispatch(generateWebhook({ request: newWebhookReq, channelId: currentChannel?.channel_id as string, clanId, isClanSetting }));
 	};
 
 	return (
 		<div className="pb-5">
-			<div className=" text-sm pt-5 text-theme-primary">
+			<div className="font-semibold text-sm pt-5 text-theme-primary">
 				{t('webhookDescription')}
-				<b className="font-semibold text-[#00a8fc] hover:underline cursor-pointer"> {t('learnMoreWebhook')}</b> or try{' '}
+				<b className="font-semibold text-[#00a8fc] hover:underline cursor-pointer"> {t('learnMoreWebhook')}</b> {t('orTry')}{' '}
 				<b className="font-semibold text-[#00a8fc] hover:underline cursor-pointer">{t('buildWebhook')}</b>
 			</div>
 			<div className="border-b-theme-primary my-[32px]" />

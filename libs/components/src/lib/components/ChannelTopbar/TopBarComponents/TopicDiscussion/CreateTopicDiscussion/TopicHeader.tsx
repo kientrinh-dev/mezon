@@ -2,15 +2,12 @@ import { useMessageValue } from '@mezon/core';
 import { selectComposeInputByChannelId, selectCurrentChannelId, topicsActions, useAppDispatch, useAppSelector } from '@mezon/store';
 import { Icons } from '@mezon/ui';
 import { generateE2eId } from '@mezon/utils';
-import { ApiChannelDescription } from 'mezon-js/api.gen';
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 
-type TopicHeaderProps = {
-	topicCurrentChannel?: ApiChannelDescription | null;
-};
-
-const TopicHeader = ({ topicCurrentChannel }: TopicHeaderProps) => {
+const TopicHeader = () => {
+	const { t } = useTranslation('channelTopbar');
 	const dispatch = useAppDispatch();
 	const currentChannelId = useSelector(selectCurrentChannelId);
 
@@ -48,7 +45,7 @@ const TopicHeader = ({ topicCurrentChannel }: TopicHeaderProps) => {
 		>
 			<div className="flex flex-row items-center text-theme-primary gap-2 pointer-events-none">
 				<Icons.TopicIcon />
-				<span className="text-base font-semibold text-theme-primary-active">{'Topic'}</span>
+				<span className="text-base font-semibold text-theme-primary-active">{t('topic')}</span>
 			</div>
 			<button
 				onClick={(e) => handleCloseModal(e)}

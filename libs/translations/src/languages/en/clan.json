@@ -25,14 +25,17 @@
 	},
 	"leaveClanModal": {
 		"title": "Leave {{clanName}}",
-		"description": "Are you sure you want to leave <strong>{{clanName}}</strong>? You won't be able to re-join this Clan unless you are re-invited.",
+		"description": "Please confirm if you would like to leave <strong>{{clanName}}</strong>? You won't be able to re-join this Clan unless you are re-invited.",
 		"cancel": "Cancel"
 	},
+	"leaveClan": "Leave Clan",
+	"leaveClanTitle": "Leave",
 	"categoryOverview": {
 		"categoryName": "Category Name",
 		"categoryNamePlaceholder": "Enter your category name here...",
 		"hasWelcomeChannelError": "This category has welcome channel",
 		"deleteCategory": "Delete Category",
+		"deleteCategoryTitle": "Delete Category",
 		"deleteCategoryButton": "Delete category",
 		"cannotBeUndone": "This cannot be undone",
 		"categoryLabel": "Category"

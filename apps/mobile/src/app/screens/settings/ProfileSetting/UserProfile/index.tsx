@@ -15,7 +15,7 @@ interface IUserProfile {
 	navigation: any;
 }
 
-const NX_LOGO_MEZON = 'https://cdn.mezon.ai/1775731152322039808/1820659489792069632/mezon_logo.png';
+const NX_LOGO_MEZON = 'https://cdn.mezon.ai/images/mezon_logo.png';
 const UserProfile = forwardRef(function UserProfile({ navigation }: IUserProfile, ref) {
 	const { themeValue } = useTheme();
 	const { updateUser } = useAccount();
@@ -38,7 +38,7 @@ const UserProfile = forwardRef(function UserProfile({ navigation }: IUserProfile
 		const initialValue: IUserProfileValue = {
 			username: username || '',
 			imgUrl: avatar_url || '',
-			displayName: display_name || username || '',
+			displayName: display_name || '',
 			aboutMe: about_me || ''
 		};
 		setCurrentUserProfileValue(initialValue);

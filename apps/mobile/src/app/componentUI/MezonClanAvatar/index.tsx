@@ -59,10 +59,7 @@ export default memo(function MezonClanAvatar({
 			{...testProperties('mezonClanAvatar.fakeBox')}
 		>
 			{!noDefaultText ? (
-				<FastImage
-					source={alt === 'Anonymous' ? IconCDN.anonymousAvatar : Images.ANONYMOUS_AVATAR}
-					style={{ width: '100%', height: '100%', borderRadius: size.s_100 }}
-				/>
+				<FastImage source={alt === 'Anonymous' ? IconCDN.anonymousAvatar : Images.ANONYMOUS_AVATAR} style={styles.defaultImageStyle} />
 			) : null}
 		</View>
 	);

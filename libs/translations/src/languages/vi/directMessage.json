@@ -12,7 +12,8 @@
 		"createDMOrGroupChat": "Tạo tin nhắn hoặc nhóm chat",
 		"createDM": "Tạo tin nhắn",
 		"createGroupChat": "Tạo nhóm chat",
-		"noFriendsFound": "Không tìm thấy bạn bè nào chưa có trong cuộc trò chuyện này."
+		"noFriendsFound": "Không tìm thấy bạn bè nào chưa có trong cuộc trò chuyện này.",
+		"creating": "Đang tạo..."
 	},
 	"editGroup": {
 		"title": "Chỉnh sửa nhóm",
@@ -34,7 +35,7 @@
 		"invitePeople": "Mời người khác",
 		"hideConversation": "Ẩn cuộc trò chuyện",
 		"profile": "Hồ sơ",
-		"message": "Gọi",
+		"message": "Nhắn tin",
 		"removeFriend": "Xóa bạn",
 		"block": "Chặn",
 		"unblock": "Bỏ chặn",

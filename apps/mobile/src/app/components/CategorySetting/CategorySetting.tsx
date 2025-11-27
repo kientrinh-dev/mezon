@@ -11,6 +11,8 @@ import MezonIconCDN from '../../componentUI/MezonIconCDN';
 import MezonInput from '../../componentUI/MezonInput';
 import { IconCDN } from '../../constants/icon_cdn';
 import { APP_SCREEN, MenuClanScreenProps } from '../../navigation/ScreenTypes';
+import { validInput } from '../../utils/validate';
+import { MAX_NAME_LENGTH } from '../ClanSettings/Emoji/EmojiPreview';
 import { style } from './styles';
 
 type ScreenCategorySetting = typeof APP_SCREEN.MENU_CLAN.CATEGORY_SETTING;
@@ -26,6 +28,7 @@ export function CategorySetting({ navigation, route }: MenuClanScreenProps<Scree
 
 	const isNotChanged = useMemo(() => {
 		if (!currentSettingValue) return true;
+		if (!validInput(currentSettingValue)) return true;
 		return isEqual(categorySettingValue, currentSettingValue);
 	}, [categorySettingValue, currentSettingValue]);
 
@@ -56,7 +59,7 @@ export function CategorySetting({ navigation, route }: MenuClanScreenProps<Scree
 		navigation.setOptions({
 			headerStatusBarHeight: Platform.OS === 'android' ? 0 : undefined,
 			headerRight: () => (
-				<Pressable onPress={() => handleSaveCategorySetting()}>
+				<Pressable onPress={() => handleSaveCategorySetting()} disabled={isNotChanged}>
 					<Text style={[styles.saveChangeButton, !isNotChanged ? styles.changed : styles.notChange]}>{t('confirm.save')}</Text>
 				</Pressable>
 			)
@@ -76,7 +79,13 @@ export function CategorySetting({ navigation, route }: MenuClanScreenProps<Scree
 
 	return (
 		<ScrollView style={styles.container}>
-			<MezonInput label={t('fields.categoryName.title')} value={currentSettingValue} onTextChange={handleUpdateValue} />
+			<MezonInput
+				label={t('fields.categoryName.title')}
+				value={currentSettingValue}
+				errorMessage={t('fields.categoryName.errorMessage')}
+				onTextChange={handleUpdateValue}
+				maxCharacter={MAX_NAME_LENGTH}
+			/>
 		</ScrollView>
 	);
 }

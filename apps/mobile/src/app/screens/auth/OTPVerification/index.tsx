@@ -1,5 +1,6 @@
 import { useAuth } from '@mezon/core';
-import { baseColor, size } from '@mezon/mobile-ui';
+import { ActionEmitEvent } from '@mezon/mobile-components';
+import { size } from '@mezon/mobile-ui';
 import { appActions, authActions } from '@mezon/store';
 import { useAppDispatch } from '@mezon/store-mobile';
 import type { ApiLinkAccountConfirmRequest } from 'mezon-js/api.gen';
@@ -7,8 +8,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
 	ActivityIndicator,
-	Alert,
 	AppState,
+	DeviceEventEmitter,
 	Dimensions,
 	Platform,
 	ScrollView,
@@ -21,8 +22,8 @@ import {
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-toast-message';
-import MezonIconCDN from '../../../componentUI/MezonIconCDN';
-import { IconCDN } from '../../../constants/icon_cdn';
+import MezonConfirm from '../../../componentUI/MezonConfirm';
+import ModalRootListener from '../../../components/ModalRootListener';
 import useTabletLandscape from '../../../hooks/useTabletLandscape';
 import OTPInput from '../../home/homedrawer/components/OTPInput';
 import { style } from './styles';
@@ -42,7 +43,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 	const styles = style();
 	const { t } = useTranslation('common');
 	const { reqId, email = '', phoneNumber = '' } = route.params;
-	const { confirmEmailOTP } = useAuth();
+	const { confirmAuthenticateOTP } = useAuth();
 
 	const [currentOtp, setCurrentOtp] = useState<string[]>(new Array(6).fill(''));
 	const [reqIdSent, setReqIdSent] = useState<string>(reqId);
@@ -141,7 +142,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 			try {
 				if (otpConfirm?.length === 6) {
 					setIsLoading(true);
-					const resp: any = await confirmEmailOTP({ otp_code: otpConfirm, req_id: reqIdSent });
+					const resp: any = await confirmAuthenticateOTP({ otp_code: otpConfirm, req_id: reqIdSent });
 
 					if (!resp) {
 						Toast.show({
@@ -153,8 +154,10 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 						setIsError(true);
 					} else {
 						// If the account is newly created or a username is missing, prompt for username update
-						if (!resp?.username || resp?.username === phoneNumber) {
+						if (!resp?.username || resp?.username === phoneNumber || resp?.created === true) {
 							dispatch(appActions.setIsShowUpdateUsername(true));
+						} else {
+							dispatch(appActions.setIsShowUpdateUsername(false));
 						}
 					}
 
@@ -171,7 +174,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 				});
 			}
 		},
-		[confirmEmailOTP, dispatch, phoneNumber, reqIdSent, t]
+		[confirmAuthenticateOTP, dispatch, phoneNumber, reqIdSent, t]
 	);
 
 	const handleResendOTP = async () => {
@@ -200,28 +203,23 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 	};
 
 	const handleChangeEmail = () => {
-		Alert.alert(
-			email ? t('otpVerify.changeEmailTitle') : t('otpVerify.changePhone'),
-			email ? t('otpVerify.changeEmailMessage') : t('otpVerify.changePhoneMessage'),
-			[
-				{
-					text: t('otpVerify.cancel'),
-					style: 'cancel'
-				},
-				{
-					text: t('otpVerify.confirm'),
-					style: 'destructive',
-					onPress: () => {
+		const data = {
+			children: (
+				<MezonConfirm
+					title={email ? t('otpVerify.changeEmailTitle') : t('otpVerify.changePhone')}
+					content={email ? t('otpVerify.changeEmailMessage') : t('otpVerify.changePhoneMessage')}
+					confirmText={t('otpVerify.confirm')}
+					onConfirm={() => {
 						if (timerRef.current) {
 							clearInterval(timerRef.current);
 							timerRef.current = null;
 						}
 						navigation.goBack();
-					}
-				}
-			],
-			{ cancelable: true }
-		);
+					}}
+				/>
+			)
+		};
+		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: false, data });
 	};
 
 	const handleOtpChange = useCallback(
@@ -246,7 +244,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 		<ScrollView contentContainerStyle={styles.container} bounces={false} keyboardShouldPersistTaps={'handled'}>
 			<LinearGradient colors={['#f0edfd', '#beb5f8', '#9774fa']} style={[StyleSheet.absoluteFillObject]} />
 			<KeyboardAvoidingView
-				style={{ flex: 1 }}
+				style={styles.keyboardAvoidingView}
 				behavior={'padding'}
 				keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight}
 			>
@@ -258,13 +256,14 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 						<Text style={styles.emailText}>{email || phoneNumber}</Text>
 					</View>
 
-					<View style={{ alignSelf: 'center' }}>
+					<View style={styles.otpInputContainer}>
 						<OTPInput
 							onOtpChange={handleOtpChange}
 							onOtpComplete={handleOtpComplete}
 							isError={isError}
 							resetTrigger={resetTrigger}
 							isSms={!!phoneNumber}
+							styleTextOtp={styles.textInputOtp}
 						/>
 
 						<TouchableOpacity
@@ -273,7 +272,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 							disabled={(!isValidOTP && !isResendEnabled) || isLoading}
 						>
 							{isLoading ? (
-								<ActivityIndicator size="small" color="#FFFFFF" style={{ zIndex: 10 }} />
+								<ActivityIndicator size="small" color="#FFFFFF" style={styles.activityIndicator} />
 							) : (
 								<Text style={[styles.verifyButtonText]}>
 									{isResendEnabled ? t('otpVerify.resendOTP') : `${t('otpVerify.verifyOTP')} (${countdown})`}
@@ -301,6 +300,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({ navigatio
 					</View>
 				</View>
 			</KeyboardAvoidingView>
+			<ModalRootListener />
 		</ScrollView>
 	);
 };

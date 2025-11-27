@@ -4,8 +4,8 @@ import { ActionEmitEvent, isEqual } from '@mezon/mobile-components';
 import { baseColor, size, useTheme } from '@mezon/mobile-ui';
 import {
 	appActions,
-	channelUsersActions,
 	channelsActions,
+	channelUsersActions,
 	fetchSystemMessageByClanId,
 	selectAllChannels,
 	selectChannelById,
@@ -15,7 +15,7 @@ import {
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store-mobile';
-import { EOverriddenPermission, EPermission, checkIsThread } from '@mezon/utils';
+import { checkIsThread, EOverriddenPermission, EPermission } from '@mezon/utils';
 import { ChannelType } from 'mezon-js';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -113,7 +113,7 @@ export function ChannelSetting({ navigation, route }: MenuChannelScreenProps<Scr
 			headerStatusBarHeight: Platform.OS === 'android' ? 0 : undefined,
 			headerTitle: isChannel ? t1('menuChannelStack.channelSetting') : t1('menuChannelStack.threadSetting'),
 			headerRight: () => (
-				<Pressable onPress={() => handleSaveChannelSetting()}>
+				<Pressable onPress={() => handleSaveChannelSetting()} disabled={isNotChanged}>
 					<Text style={[styles.saveChangeButton, !isNotChanged ? styles.changed : styles.notChange]}>{t('confirm.save')}</Text>
 				</Pressable>
 			)
@@ -203,9 +203,38 @@ export function ChannelSetting({ navigation, route }: MenuChannelScreenProps<Scr
 					onPress: () => {
 						bottomSheetRef?.current?.present();
 					}
+				},
+				{
+					title: t('streamBanner.title'),
+					expandable: true,
+					icon: <MezonIconCDN icon={IconCDN.channelStream} color={themeValue.text} />,
+					isShow: isChannel && channel?.type === ChannelType.CHANNEL_TYPE_STREAMING,
+					onPress: () => {
+						navigation.navigate(APP_SCREEN.MENU_CHANNEL.STACK, {
+							screen: APP_SCREEN.MENU_CHANNEL.STREAM_BANNER,
+							params: {
+								channelId
+							}
+						});
+					}
+				},
+				{
+					title: t('banList'),
+					expandable: true,
+					icon: <MezonIconCDN icon={IconCDN.hammerIcon} color={themeValue.text} />,
+					isShow: isAdminstrator,
+					onPress: () => {
+						navigation.navigate(APP_SCREEN.MENU_CHANNEL.STACK, {
+							screen: APP_SCREEN.MENU_CHANNEL.LIST_BANNED_USERS,
+							params: {
+								channelId,
+								clanId: channel?.clan_id
+							}
+						});
+					}
 				}
 			] satisfies IMezonMenuItemProps[],
-		[channel, channelId, currentSystemMessage?.channel_id, isChannel, navigation, t, themeValue.text]
+		[channel, channelId, currentSystemMessage?.channel_id, isAdminstrator, isChannel, navigation, t, themeValue.text]
 	);
 
 	const webhookMenu = useMemo(
@@ -333,7 +362,7 @@ export function ChannelSetting({ navigation, route }: MenuChannelScreenProps<Scr
 					throw new Error(response?.meta?.requestStatus);
 				}
 			}
-
+			await dispatch(channelsActions.setCurrentChannelId({ clanId: channel?.clan_id || '', channelId: '' }));
 			navigation.navigate(APP_SCREEN.HOME);
 		} catch (error) {
 			Toast.show({ type: 'error', text1: t('confirm.leave.error', { error }) });

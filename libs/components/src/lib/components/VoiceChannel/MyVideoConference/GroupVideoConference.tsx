@@ -1,9 +1,9 @@
+import type { TrackReferenceOrPlaceholder } from '@livekit/components-react';
 import {
 	ConnectionStateToast,
 	isTrackReference,
 	LayoutContextProvider,
 	RoomAudioRenderer,
-	TrackReferenceOrPlaceholder,
 	useCreateLayoutContext,
 	usePinnedTracks,
 	useTracks
@@ -25,8 +25,9 @@ interface GroupVideoConferenceProps {
 	tracks?: TrackReferenceOrPlaceholder[];
 	isShowChatVoice?: boolean;
 	onToggleChat?: () => void;
-	currentChannel?: any;
 }
+
+const TOOLTIP_OVERLAY_STYLE = { background: 'none', boxShadow: 'none' } as const;
 
 export function GroupVideoConference({
 	channelLabel,
@@ -202,7 +203,7 @@ export function GroupVideoConference({
 											{focusTrack ? 'Grid' : 'Focus'}
 										</span>
 									}
-									overlayInnerStyle={{ background: 'none', boxShadow: 'none' }}
+									overlayInnerStyle={TOOLTIP_OVERLAY_STYLE}
 									overlayClassName="whitespace-nowrap z-50 !p-0 !pt-4"
 									getTooltipContainer={() => document.getElementById('livekitRoom') || document.body}
 								>

@@ -39,7 +39,7 @@ const JoinClanModal = () => {
 				save(STORAGE_CLAN_ID, res?.clan_id);
 				store.dispatch(clansActions.joinClan({ clanId: res?.clan_id }));
 				store.dispatch(clansActions.changeCurrentClan({ clanId: res?.clan_id }));
-				await store.dispatch(clansActions.fetchClans({ noCache: true }));
+				await store.dispatch(clansActions.fetchClans({ noCache: true, isMobile: true }));
 				DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
 			}
 		});
@@ -55,7 +55,7 @@ const JoinClanModal = () => {
 	};
 
 	return (
-		<View style={{ flex: 1, paddingBottom: size.s_100 }}>
+		<View style={styles.container}>
 			<StatusBarHeight />
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
@@ -63,8 +63,8 @@ const JoinClanModal = () => {
 				colors={[themeValue.primary, themeValue?.primaryGradiant || themeValue.primary]}
 				style={[StyleSheet.absoluteFillObject]}
 			/>
-			<View style={{ width: '100%', height: '100%', paddingHorizontal: size.s_16, paddingTop: size.s_20, position: 'relative' }}>
-				<View style={{ marginBottom: size.s_40 }}>
+			<View style={styles.contentWrapper}>
+				<View style={styles.headerSection}>
 					<TouchableOpacity style={styles.backButton} onPress={onBack} activeOpacity={0.7}>
 						<MezonIconCDN icon={IconCDN.closeIcon} color={themeValue.text} width={size.s_30} height={size.s_30} />
 					</TouchableOpacity>

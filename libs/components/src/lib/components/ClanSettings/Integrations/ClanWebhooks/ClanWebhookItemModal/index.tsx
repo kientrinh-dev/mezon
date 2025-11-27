@@ -8,7 +8,7 @@ import {
 } from '@mezon/store';
 import { handleUploadFile, useMezon } from '@mezon/transport';
 import { Icons } from '@mezon/ui';
-import { MAX_FILE_SIZE_8MB, fileTypeImage, generateE2eId } from '@mezon/utils';
+import { MAX_FILE_SIZE_8MB, fileTypeImage, generateE2eId, timeFormatI18n } from '@mezon/utils';
 import type { ApiClanWebhook, ApiMessageAttachment, MezonUpdateClanWebhookByIdBody } from 'mezon-js/api.gen';
 import type { ChangeEvent } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -24,32 +24,23 @@ interface IClanWebhookItemModalProps {
 	webhookItem: ApiClanWebhook;
 }
 
-const convertDate = (isoDateString: string): string => {
-	const date = new Date(isoDateString);
-	const options: Intl.DateTimeFormatOptions = {
-		day: 'numeric',
-		month: 'long',
-		year: 'numeric'
-	};
-	return date.toLocaleDateString('en-GB', options);
-};
-
 const ClanWebhookItemModal = ({ webhookItem }: IClanWebhookItemModalProps) => {
 	const { t } = useTranslation('clanIntegrationsSetting');
+	const { t: tCommon } = useTranslation('common');
 	const [isExpand, setIsExpand] = useState(false);
 	const webhookOwner = useAppSelector((state) => selectMemberClanByUserId(state, webhookItem.creator_id as string));
 	return (
 		<div className="bg-theme-setting-nav border-theme-primary p-[20px] border  rounded-md mb-[20px]">
-			<div className="flex gap-[20px] items-center">
+			<div className="flex gap-[20px] items-center" data-e2e={generateE2eId('clan_page.settings.integrations.webhook_item')}>
 				<img src={webhookItem.avatar} alt="Webhook avatar" className="aspect-square w-[50px] rounded-full" />
 				<div className="flex w-full justify-between items-center text-theme-primary-active">
 					<div className="">
-						<div>{webhookItem.webhook_name}</div>
-						<div className="flex gap-1 items-center">
+						<div data-e2e={generateE2eId('clan_page.settings.integrations.webhook_item.webhook_title')}>{webhookItem.webhook_name}</div>
+						<div className="flex gap-1 items-center"  data-e2e={generateE2eId('clan_page.settings.integrations.webhook_item.webhook_description')}>
 							<Icons.ClockIcon className="text-theme-primary" />
 							<div className="text-theme-primary text-[13px]">
 								{t('webhooksItem.createdBy', {
-									webhookCreateTime: convertDate(webhookItem.create_time || ''),
+									webhookCreateTime: timeFormatI18n(webhookItem.create_time || '', tCommon),
 									webhookUserOwnerName: webhookOwner?.user?.username
 								})}
 							</div>
@@ -103,12 +94,11 @@ const ExpendedClanWebhookModal = ({ webhookItem }: IExpendedClanWebhookModal) =>
 				toast.success(t('webhooksEdit.copied'));
 			})
 			.catch((error) => {
-				toast.error('Failed to copy URL');
+				toast.error(t('toast.copyError'));
 				console.error('Copy failed:', error);
 			});
 	};
 	const { sessionRef, clientRef } = useMezon();
-	const currentClanId = useSelector(selectCurrentClanId);
 	const avatarRef = useRef<HTMLInputElement>(null);
 
 	const [dataForUpdate, setDataForUpdate] = useState<IDataForUpdate>({
@@ -149,14 +139,12 @@ const ExpendedClanWebhookModal = ({ webhookItem }: IExpendedClanWebhookModal) =>
 			if (!client || !session) {
 				throw new Error('Client or file is not initialized');
 			}
-			handleUploadFile(client, session, currentClanId || '', '', e.target.files[0].name, e.target.files[0]).then(
-				(attachment: ApiMessageAttachment) => {
-					setDataForUpdate({
-						...dataForUpdate,
-						webhookAvatarUrl: attachment.url
-					});
-				}
-			);
+			handleUploadFile(client, session, e.target.files[0].name, e.target.files[0]).then((attachment: ApiMessageAttachment) => {
+				setDataForUpdate({
+					...dataForUpdate,
+					webhookAvatarUrl: attachment.url
+				});
+			});
 		}
 	};
 	const clanId = useSelector(selectCurrentClanId) as string;
@@ -193,9 +181,9 @@ const ExpendedClanWebhookModal = ({ webhookItem }: IExpendedClanWebhookModal) =>
 				})
 			);
 
-			toast.success('Token reset successfully!');
+			toast.success(t('toast.resetTokenSuccess'));
 		} catch (error) {
-			toast.error('Failed to reset token');
+			toast.error(t('toast.resetTokenError'));
 		}
 	};
 
@@ -214,7 +202,13 @@ const ExpendedClanWebhookModal = ({ webhookItem }: IExpendedClanWebhookModal) =>
 			<div ref={modalRef} tabIndex={-1} className="pt-[20px] mt-[12px] border-t dark:border-[#3b3d44]">
 				<div className="flex gap-2">
 					<div className="w-3/12 dark:text-[#b5bac1] text-textLightTheme">
-						<input onChange={handleChooseFile} ref={avatarRef} type="file" hidden data-e2e={generateE2eId('clan_page.settings.upload.clan_webhook_avatar_input')}  />
+						<input
+							onChange={handleChooseFile}
+							ref={avatarRef}
+							type="file"
+							hidden
+							data-e2e={generateE2eId('clan_page.settings.upload.clan_webhook_avatar_input')}
+						/>
 						<div className="relative w-fit">
 							<div
 								onClick={() => avatarRef.current?.click()}
@@ -235,7 +229,7 @@ const ExpendedClanWebhookModal = ({ webhookItem }: IExpendedClanWebhookModal) =>
 						<div className="flex gap-6 w-full">
 							<div className="w-1/2">
 								<div className="dark:text-[#b5bac1] text-textLightTheme text-[12px] mb-[10px]">
-									<b>NAME</b>
+									<b>{t('webhooksEdit.name')}</b>
 								</div>
 								<input
 									onChange={(e) =>
@@ -252,7 +246,7 @@ const ExpendedClanWebhookModal = ({ webhookItem }: IExpendedClanWebhookModal) =>
 							<div className="w-1/2 dark:text-[#b5bac1] text-textLightTheme">
 								<div
 									onClick={() => handleResetToken()}
-									className="mt-7 w-full text-white bg-green-700 hover:bg-green-500 flex justify-center items-center rounded-sm outline-none h-[50px]"
+									className="mt-7 w-full  btn-primary btn-primary-hover cursor-pointer flex justify-center items-center rounded-lg outline-none h-[50px]"
 								>
 									{t('webhooksEdit.resetToken')}
 								</div>

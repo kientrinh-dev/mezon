@@ -5,7 +5,6 @@ import { autoUpdater } from 'electron-updater';
 import activeWindows from 'mezon-active-windows';
 import { join } from 'path';
 import ua from 'universal-analytics';
-import { format } from 'url';
 import tray from '../Tray';
 import { EActivityCoding, EActivityGaming, EActivityMusic } from './activities';
 import setupAutoUpdates from './autoUpdates';
@@ -24,8 +23,8 @@ const _IMAGE_WINDOW_KEY = 'IMAGE_WINDOW_KEY';
 
 const isMac = process.platform === 'darwin';
 
-dialog.showErrorBox = function (title, content) {
-	log.error(`[Disabled Dialog] Error: ${title}\n${content}`);
+dialog.showErrorBox = function (_title, _content) {
+	// ignore
 };
 
 dialog.showOpenDialog = function (...args) {
@@ -43,11 +42,27 @@ export default class App {
 	static attachmentData: any;
 	static imageScriptWindowLoaded = false;
 
+	private static updateCheckInterval: NodeJS.Timeout | null = null;
+	private static activityTrackingInterval: NodeJS.Timeout | null = null;
+	private static isActivityTrackingEnabled = true;
+
 	public static isDevelopmentMode() {
 		return !app.isPackaged;
 	}
 
+	private static cleanupIntervals() {
+		if (App.updateCheckInterval) {
+			clearInterval(App.updateCheckInterval);
+			App.updateCheckInterval = null;
+		}
+		if (App.activityTrackingInterval) {
+			clearInterval(App.activityTrackingInterval);
+			App.activityTrackingInterval = null;
+		}
+	}
+
 	private static onWindowAllClosed() {
+		App.cleanupIntervals();
 		App.application.quit();
 	}
 
@@ -83,7 +98,9 @@ export default class App {
 
 		autoUpdater.checkForUpdates();
 		const updateCheckTimeInMilliseconds = 60 * 60 * 1000;
-		setInterval(() => {
+
+		// Store interval reference for cleanup
+		App.updateCheckInterval = setInterval(() => {
 			autoUpdater.checkForUpdates();
 		}, updateCheckTimeInMilliseconds);
 
@@ -203,6 +220,38 @@ export default class App {
 			return { action: 'deny' };
 		});
 
+		App.mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+			log.error(`Failed to load: ${validatedURL}, Error code: ${errorCode}, Description: ${errorDescription}`);
+		});
+
+		App.mainWindow.webContents.on('certificate-error', (event, url, error, _certificate, callback) => {
+			log.error(`Certificate error for ${url}: ${error}`);
+			event.preventDefault();
+			callback(false);
+		});
+
+		App.mainWindow.webContents.on('render-process-gone', (_event, details) => {
+			log.error('Render process gone:', details);
+			if (details.reason !== 'clean-exit') {
+				log.info('Attempting to reload after crash...');
+				setTimeout(() => {
+					if (App.isWindowValid(App.mainWindow)) {
+						App.mainWindow.reload();
+					}
+				}, 1000);
+			}
+		});
+
+		App.mainWindow.on('unresponsive', () => {
+			log.warn('Window became unresponsive');
+		});
+
+		App.mainWindow.webContents.on('console-message', (_event, _level, message, line, sourceId) => {
+			if (message.includes('ERR_NAME_NOT_RESOLVED') || message.includes('net::ERR_')) {
+				log.error(`Network error: ${message} at ${sourceId}:${line}`);
+			}
+		});
+
 		// Intercept close to hide the window unless force quit
 		App.mainWindow.on('close', (_event) => {
 			if (forceQuit.isEnabled) {
@@ -219,6 +268,8 @@ export default class App {
 			} catch (error) {
 				console.error('Update check failed:', error);
 			}
+			// Cleanup intervals to prevent memory leaks
+			App.cleanupIntervals();
 			tray.destroy();
 			App.application.exit();
 		});
@@ -247,15 +298,7 @@ export default class App {
 			const fullUrl = this.generateFullUrl(baseUrl, params);
 			App.mainWindow.loadURL(fullUrl);
 		} else {
-			const baseUrl = join(__dirname, '..', rendererAppName, 'index.html');
-			App.mainWindow.loadURL(
-				format({
-					pathname: baseUrl,
-					protocol: 'file:',
-					slashes: true,
-					query: params
-				})
-			);
+			App.mainWindow.loadURL('https://mezon.ai/');
 		}
 	}
 
@@ -290,6 +333,18 @@ export default class App {
 		App.mainWindow.focus();
 	}
 
+	public static setActivityTrackingEnabled(enabled: boolean) {
+		App.isActivityTrackingEnabled = enabled;
+		if (enabled) {
+			App.setupWindowManager();
+		} else {
+			if (App.activityTrackingInterval) {
+				clearInterval(App.activityTrackingInterval);
+				App.activityTrackingInterval = null;
+			}
+		}
+	}
+
 	/**
 	 * setup badge for the app
 	 */
@@ -298,9 +353,9 @@ export default class App {
 	}
 
 	private static setupWindowManager() {
+		if (!App.isActivityTrackingEnabled) return;
 		let defaultApp = null;
 		const usageThreshold = 30 * 60 * 1000;
-		let activityTimeout: NodeJS.Timeout | null = null;
 
 		const fetchActiveWindow = (): void => {
 			const window = activeWindows?.getActiveWindow();
@@ -335,13 +390,15 @@ export default class App {
 			console.error(ex);
 		}
 
-		if (activityTimeout) {
-			clearInterval(activityTimeout);
+		if (App.activityTrackingInterval) {
+			clearInterval(App.activityTrackingInterval);
 		}
 
-		activityTimeout = setInterval(() => {
+		App.activityTrackingInterval = setInterval(() => {
 			try {
-				fetchActiveWindow();
+				if (App.isActivityTrackingEnabled) {
+					fetchActiveWindow();
+				}
 			} catch (ex) {
 				console.error(ex);
 			}
@@ -357,6 +414,14 @@ export default class App {
 					{
 						label: 'Check for Updates',
 						click: () => {
+							if (process.platform === 'win32') {
+								shell.openExternal('ms-windows-store://pdp/?ProductId=9pf25lf1fj17');
+								return;
+							}
+							if (process.platform === 'darwin') {
+								//shell.openExternal('macappstore://itunes.apple.com/mezon.desktop');
+								//return;
+							}
 							autoUpdater.checkForUpdates().then((data) => {
 								if (!data?.updateInfo) return;
 								const appVersion = app.getVersion();

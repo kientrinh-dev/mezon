@@ -1,6 +1,6 @@
 import { ActionEmitEvent } from '@mezon/mobile-components';
-import { baseColor, useTheme } from '@mezon/mobile-ui';
-import { ReactNode } from 'react';
+import { useTheme } from '@mezon/mobile-ui';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Text, TouchableOpacity, View } from 'react-native';
 import { testProperties } from '../../configs/testProperties';
@@ -48,9 +48,7 @@ export default function MezonConfirm({ children, title, confirmText, content, is
 						onPress={() => handleConfirm()}
 						{...testProperties('confirm.button')}
 					>
-						<Text style={[styles.btnText, { color: baseColor.white }]} {...testProperties('confirm.button.text')}>
-							{confirmText}
-						</Text>
+						<Text style={[styles.btnText, styles.btnTextWhite]}>{confirmText}</Text>
 					</TouchableOpacity>
 					<TouchableOpacity style={styles.btn} onPress={() => handleClose()} {...testProperties('confirm.button.cancel')}>
 						<Text style={styles.btnText}>{t('buzz.cancel')}</Text>

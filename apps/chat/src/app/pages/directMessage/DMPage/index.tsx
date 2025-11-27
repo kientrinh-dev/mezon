@@ -15,21 +15,25 @@ import {
 	directActions,
 	directMetaActions,
 	e2eeActions,
+	EStateFriend,
+	getStore,
 	gifsStickerEmojiActions,
 	selectAudioDialTone,
-	selectBlockedUsersForMessage,
 	selectCloseMenu,
 	selectCurrentChannelId,
 	selectCurrentDM,
 	selectDirectById,
 	selectDmGroupCurrent,
+	selectDmGroupCurrentId,
+	selectFriendById,
 	selectHasKeyE2ee,
 	selectIsSearchMessage,
 	selectIsShowCreateThread,
 	selectIsShowMemberListDM,
 	selectIsUseProfileDM,
 	selectLastMessageViewportByChannelId,
-	selectLastSeenDM,
+	selectLastSeenMessageIdDM,
+	selectLastSentMessageStateByChannelId,
 	selectPositionEmojiButtonSmile,
 	selectReactionTopState,
 	selectSearchMessagesLoadingStatus,
@@ -42,6 +46,7 @@ import { EmojiPlaces, generateE2eId, isBackgroundModeActive, isLinuxDesktop, isW
 import { ChannelStreamMode, ChannelType } from 'mezon-js';
 import type { DragEvent } from 'react';
 import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useModal } from 'react-modal-hook';
 import { useSelector } from 'react-redux';
 import ChannelMessages from '../../channel/ChannelMessages';
@@ -49,24 +54,40 @@ import { ChannelTyping } from '../../channel/ChannelTyping';
 
 const ChannelSeen = memo(({ channelId }: { channelId: string }) => {
 	const dispatch = useAppDispatch();
-	const currentDmGroup = useSelector(selectDmGroupCurrent(channelId ?? ''));
-	const lastMessage = useAppSelector((state) => selectLastMessageViewportByChannelId(state, channelId));
-	const lastSeenTimeStamp = useAppSelector((state) => selectLastSeenDM(state, channelId));
+	const lastMessageViewport = useAppSelector((state) => selectLastMessageViewportByChannelId(state, channelId));
+	const lastMessageChannel = useAppSelector((state) => selectLastSentMessageStateByChannelId(state, channelId));
+	const lastSeenMessageId = useAppSelector((state) => selectLastSeenMessageIdDM(state, channelId));
 	const { markAsReadSeen } = useSeenMessagePool();
 
 	const isMounted = useRef(false);
 	const isWindowFocused = !isBackgroundModeActive();
 
 	const markMessageAsRead = useCallback(() => {
-		if (!lastMessage) return;
-
-		if (lastMessage?.create_time_seconds && lastSeenTimeStamp && lastMessage?.create_time_seconds >= lastSeenTimeStamp) {
-			const mode =
-				currentDmGroup?.type === ChannelType.CHANNEL_TYPE_DM ? ChannelStreamMode.STREAM_MODE_DM : ChannelStreamMode.STREAM_MODE_GROUP;
-
-			markAsReadSeen(lastMessage, mode, 0);
+		if (!lastMessageViewport || !lastMessageChannel || lastMessageViewport?.isSending) return;
+		const store = getStore();
+		const state = store.getState();
+		const currentDmGroup = selectDmGroupCurrent(channelId ?? '')(state);
+		const mode = currentDmGroup?.type === ChannelType.CHANNEL_TYPE_DM ? ChannelStreamMode.STREAM_MODE_DM : ChannelStreamMode.STREAM_MODE_GROUP;
+		if (lastSeenMessageId && lastMessageViewport?.id) {
+			try {
+				const distance = Math.round(Number((BigInt(lastMessageViewport.id) >> BigInt(22)) - (BigInt(lastSeenMessageId) >> BigInt(22))));
+				if (distance >= 0) {
+					dispatch(directMetaActions.updateLastSeenTime(lastMessageViewport));
+					markAsReadSeen(lastMessageViewport, mode, 0);
+					return;
+				}
+			} catch (error) {
+				//
+			}
 		}
-	}, [lastMessage, markAsReadSeen, currentDmGroup, lastSeenTimeStamp]);
+
+		const isLastMessage = lastMessageViewport.id === lastMessageChannel.id;
+
+		if (isLastMessage) {
+			dispatch(directMetaActions.updateLastSeenTime(lastMessageViewport));
+			markAsReadSeen(lastMessageViewport, mode, 0);
+		}
+	}, [lastMessageViewport, lastMessageChannel, lastSeenMessageId, markAsReadSeen, dispatch, channelId]);
 
 	const updateChannelSeenState = useCallback(
 		(channelId: string) => {
@@ -80,19 +101,18 @@ const ChannelSeen = memo(({ channelId }: { channelId: string }) => {
 	}, [dispatch, channelId]);
 
 	useEffect(() => {
-		if (lastMessage && isWindowFocused) {
-			dispatch(directMetaActions.updateLastSeenTime(lastMessage));
+		if (lastMessageViewport && isWindowFocused) {
 			markMessageAsRead();
 		}
-	}, [lastMessage, isWindowFocused, markMessageAsRead, dispatch, channelId]);
+	}, [lastMessageViewport, isWindowFocused, markMessageAsRead, dispatch, channelId, lastSeenMessageId]);
 
 	useEffect(() => {
-		if (isMounted.current || !lastMessage) return;
+		if (isMounted.current || !lastMessageViewport) return;
 		isMounted.current = true;
 		updateChannelSeenState(channelId);
-	}, [channelId, lastMessage, updateChannelSeenState]);
+	}, [channelId, lastMessageViewport, updateChannelSeenState]);
 
-	useBackgroundMode(undefined, markMessageAsRead, isWindowFocused);
+	useBackgroundMode(undefined, markMessageAsRead);
 
 	return null;
 });
@@ -107,8 +127,10 @@ function DirectSeenListener({ channelId, mode, currentChannel }: { channelId: st
 }
 
 const DirectMessage = () => {
+	const { t } = useTranslation('message');
 	// TODO: move selector to store
 	const currentDirect = useSelector(selectCurrentDM);
+	const currentDirectId = useSelector(selectDmGroupCurrentId);
 	const directId = currentDirect?.id;
 	const type = currentDirect?.type;
 	const { draggingState, setDraggingState } = useDragAndDrop();
@@ -137,7 +159,6 @@ const DirectMessage = () => {
 	const isHaveCallInChannel = useMemo(() => {
 		return currentDmGroup?.user_ids?.some((i) => i === signalingData?.[0]?.callerId);
 	}, [currentDmGroup?.user_ids, signalingData]);
-	const blockListUser = useAppSelector((state) => selectBlockedUsersForMessage(state));
 
 	const HEIGHT_EMOJI_PANEL = 457;
 	const WIDTH_EMOJI_PANEL = 500;
@@ -175,26 +196,11 @@ const DirectMessage = () => {
 		: 0;
 
 	const isDmChannel = useMemo(() => currentDmGroup?.type === ChannelType.CHANNEL_TYPE_DM, [currentDmGroup?.type]);
+	const isBlocked = useAppSelector((state) => selectFriendById(state, currentDmGroup?.user_ids?.[0] || ''))?.state === EStateFriend.BLOCK;
 
-	const isBlocked = useMemo(() => {
-		if (
-			currentDmGroup?.type === ChannelType.CHANNEL_TYPE_DM &&
-			blockListUser &&
-			blockListUser.length > 0 &&
-			currentDmGroup?.user_ids?.[0] &&
-			userId
-		) {
-			const otherUserId = currentDmGroup.user_ids[0];
-
-			return blockListUser.some((friend) => {
-				if (!friend?.user?.id) return false;
-				const isBlockedByOther = friend.source_id === otherUserId && friend.user.id === userId;
-				const hasBlockedOther = friend.source_id === userId && friend.user.id === otherUserId;
-				return isBlockedByOther || hasBlockedOther;
-			});
-		}
-		return false;
-	}, [currentDmGroup?.type, currentDmGroup?.user_ids, blockListUser, userId]);
+	const isDmWithoutParticipants = useMemo(() => {
+		return currentDmGroup?.type === ChannelType.CHANNEL_TYPE_DM && (!currentDmGroup.user_ids || currentDmGroup.user_ids.length === 0);
+	}, [currentDmGroup?.type, currentDmGroup?.user_ids]);
 
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	const handleClose = useCallback(() => {}, []);
@@ -206,6 +212,16 @@ const DirectMessage = () => {
 			dispatch(e2eeActions.setOpenModalE2ee(true));
 		}
 	}, [directMessage, dispatch, hasKeyE2ee]);
+
+	useEffect(() => {
+		if (!currentDirect && currentDirectId) {
+			dispatch(
+				directActions.fetchDirectDetail({
+					directId: currentDirectId
+				})
+			);
+		}
+	}, []);
 
 	return (
 		<>
@@ -228,13 +244,13 @@ const DirectMessage = () => {
 								<ChannelMessages
 									clanId="0"
 									isDM={true}
-									channelId={directId ?? ''}
+									channelId={directId || currentDirectId || ''}
 									isPrivate={currentDmGroup?.channel_private}
 									channelLabel={currentDmGroup?.channel_label}
-									username={isDmChannel ? currentDmGroup?.usernames?.toString() : undefined}
+									username={isDmChannel ? currentDmGroup?.usernames?.at(-1) : undefined}
 									type={isDmChannel ? ChannelType.CHANNEL_TYPE_DM : ChannelType.CHANNEL_TYPE_GROUP}
 									mode={isDmChannel ? ChannelStreamMode.STREAM_MODE_DM : ChannelStreamMode.STREAM_MODE_GROUP}
-									avatarDM={isDmChannel ? currentDmGroup?.avatars?.at(0) : 'assets/images/avatar-group.png'}
+									avatarDM={isDmChannel ? currentDmGroup?.avatars?.at(-1) : 'assets/images/avatar-group.png'}
 								/>
 							}
 						</div>
@@ -285,13 +301,12 @@ const DirectMessage = () => {
 						)}
 
 						<div className="flex-shrink-0 flex flex-col bg-theme-chat  h-auto relative">
-							{currentDmGroup?.type === ChannelType.CHANNEL_TYPE_DM && (currentDmGroup.user_ids?.length === 0 || isBlocked) ? (
+							{currentDmGroup?.type === ChannelType.CHANNEL_TYPE_DM && (isDmWithoutParticipants || isBlocked) ? (
 								<div
-									style={{ height: 44 }}
-									className="opacity-80 bg-theme-input  ml-4 mb-4 py-2 pl-2 w-widthInputViewChannelPermission text-theme-primary rounded one-line"
+									className="h-11 opacity-80 bg-theme-input  ml-4 mb-4 py-2 pl-2 w-widthInputViewChannelPermission text-theme-primary rounded one-line"
 									data-e2e={generateE2eId('chat.message_box.input.no_permission')}
 								>
-									You do not have permission to send message
+									{t('noSendMessagePermission')}
 								</div>
 							) : (
 								<>
@@ -345,7 +360,7 @@ const DirectMessage = () => {
 								avatar={
 									Number(type) === ChannelType.CHANNEL_TYPE_GROUP
 										? currentDmGroup?.channel_avatar?.[0]
-										: currentDmGroup?.avatars?.[0]
+										: currentDmGroup?.avatars?.at(-1)
 								}
 								isDM={true}
 							/>

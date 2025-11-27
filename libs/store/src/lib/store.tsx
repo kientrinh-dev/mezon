@@ -22,11 +22,12 @@ import { inviteReducer } from './invite/invite.slice';
 import { messagesReducer } from './messages/messages.slice';
 import { referencesReducer } from './messages/references.slice';
 import { notificationReducer } from './notification/notify.slice';
-import { POLICIES_FEATURE_KEY, policiesDefaultReducer, policiesReducer } from './policies/policies.slice';
+import { POLICIES_FEATURE_KEY, policiesReducer } from './policies/policies.slice';
 import { reactionReducer } from './reactionMessage/reactionMessage.slice';
 
 import type { MezonContextValue } from '@mezon/transport';
-import { activitiesAPIReducer } from './activities/activitiesAPI.slice';
+import { safeJSONParse } from 'mezon-js';
+import { ACTIVITIES_API_FEATURE_KEY, activitiesAPIReducer } from './activities/activitiesAPI.slice';
 import { adminApplicationReducer } from './application/applications.slice';
 import { attachmentReducer } from './attachment/attachments.slice';
 import { auditLogReducer } from './auditLog/auditLog.slice';
@@ -43,7 +44,6 @@ import { listUsersByUserReducer } from './channels/listUsers.slice';
 import { integrationClanWebhookReducer } from './clanWebhook/clanWebhook.slide';
 import { settingChannelReducer } from './clans/clanSettingChannel.slice';
 import { COMUNITY_FEATURE_KEY, comunityReducer } from './comunity/comunity.slice';
-import { directMetaReducer } from './direct/directmeta.slice';
 import { USER_STATUS_FEATURE_KEY, statusReducer } from './direct/status.slice';
 import { audioCallReducer } from './dmcall/audioCall.slice';
 import { DMCallReducer } from './dmcall/dmcall.slice';
@@ -113,7 +113,8 @@ const persistedAppReducer = persistReducer(
 			'chatStreamWidth',
 			'isShowCanvas',
 			'isShowSettingFooter',
-			'isShowWelcomeMobile'
+			'isShowWelcomeMobile',
+			'history'
 		]
 	},
 	appReducer
@@ -329,6 +330,15 @@ const persistedWalletStore = persistReducer(
 	walletReducer
 );
 
+const persistedActivitiesReducer = persistReducer(
+	{
+		key: ACTIVITIES_API_FEATURE_KEY,
+		storage,
+		whitelist: ['isActivityTrackingEnabled']
+	},
+	activitiesAPIReducer
+);
+
 const reducer = {
 	app: persistedAppReducer,
 	account: accountReducer,
@@ -356,9 +366,7 @@ const reducer = {
 	userClanProfile: userClanProfileReducer,
 	friends: friendsReducer,
 	direct: directReducer,
-	directmeta: directMetaReducer,
 	roleId: roleIdReducer,
-	policiesDefaultSlice: policiesDefaultReducer,
 	[OVERRIDDEN_POLICIES_FEATURE_KEY]: overriddenPoliciesReducer,
 	notificationsetting: notificationSettingReducer,
 	pinmessages: persistedPinMsgReducer,
@@ -376,7 +384,7 @@ const reducer = {
 	channelApp: persistedChannelAppReducer,
 	canvas: canvasReducer,
 	canvasapi: canvasAPIReducer,
-	activitiesapi: activitiesAPIReducer,
+	activitiesapi: persistedActivitiesReducer,
 	auditlog: auditLogReducer,
 	audiocall: audioCallReducer,
 	fcm: fcmReducer,
@@ -444,7 +452,7 @@ const limitDataMiddleware: Middleware = () => (next) => (action: any) => {
 export const initStore = (mezon: MezonContextValue, preloadedState?: PreloadedRootState) => {
 	const store = configureStore({
 		reducer,
-		devTools: process.env.NODE_ENV !== 'production',
+		devTools: false,
 		preloadedState,
 		middleware: (getDefaultMiddleware) =>
 			getDefaultMiddleware({
@@ -460,6 +468,51 @@ export const initStore = (mezon: MezonContextValue, preloadedState?: PreloadedRo
 	storeInstance = store;
 	storeCreated = true;
 	const persistor = persistStore(store);
+
+	if (typeof window !== 'undefined') {
+		let lastStorageValue: string | null = null;
+		const handleStorageChange = async (e: StorageEvent) => {
+			if (e.key === 'persist:auth' && e.newValue) {
+				try {
+					if (e.newValue === lastStorageValue) {
+						return;
+					}
+					lastStorageValue = e.newValue;
+
+					const newAuthState = safeJSONParse(e.newValue);
+					const sessionData = newAuthState.session ? safeJSONParse(newAuthState.session) : null;
+					const activeAccount = newAuthState.activeAccount ? safeJSONParse(newAuthState.activeAccount) : null;
+
+					const currentState = store.getState();
+					const currentActiveAccount = currentState.auth?.activeAccount;
+					const currentSession = currentState.auth?.session?.[currentActiveAccount || ''];
+
+					const newSession = sessionData && activeAccount ? sessionData[activeAccount] : null;
+					const hasSessionChanged =
+						newSession?.token !== currentSession?.token || newSession?.refresh_token !== currentSession?.refresh_token;
+
+					if (hasSessionChanged) {
+						if (newSession) {
+							window.dispatchEvent(
+								new CustomEvent('mezon:session-refreshed', {
+									detail: { session: newSession }
+								})
+							);
+						}
+					}
+				} catch (err) {
+					console.error('[Storage Sync] Failed to sync auth state:', err);
+				}
+			}
+		};
+
+		window.addEventListener('storage', handleStorageChange);
+	}
+
+	import('./auth/auth.slice').then(({ setupSessionSyncListener }) => {
+		setupSessionSyncListener(store);
+	});
+
 	return { store, persistor };
 };
 

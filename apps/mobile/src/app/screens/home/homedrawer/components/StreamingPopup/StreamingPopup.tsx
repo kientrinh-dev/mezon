@@ -3,7 +3,8 @@ import {
 	appActions,
 	selectAllAccount,
 	selectCurrentChannel,
-	selectCurrentClan,
+	selectCurrentClanId,
+	selectCurrentClanName,
 	selectSession,
 	useAppDispatch,
 	videoStreamActions
@@ -23,27 +24,41 @@ const StreamingPopup = () => {
 	const isDragging = useRef(false);
 	const isFullScreen = useRef(true);
 	const [isAnimationComplete, setIsAnimationComplete] = useState(true);
-	const currentClan = useSelector(selectCurrentClan);
+	const currentClanId = useSelector(selectCurrentClanId);
+	const currentClanName = useSelector(selectCurrentClanName);
 	const currentChannel = useSelector(selectCurrentChannel);
 	const { handleChannelClick, disconnect } = useWebRTCStream();
 	const userProfile = useSelector(selectAllAccount);
 	const sessionUser = useSelector(selectSession);
 	const dispatch = useAppDispatch();
+	const layoutRef = useRef({ width: 0, height: 0 });
 
-	const resetPosition = useCallback(() => {
+	const checkOrientation = () => {
+		const { width, height } = Dimensions.get('window');
+		layoutRef.current = { width, height };
+	};
+
+	const resetPosition = () => {
 		if (!isFullScreen.current) {
 			pan.setValue({ x: 0, y: 0 });
 		}
-	}, [pan]);
+	};
 
 	useEffect(() => {
-		const subscription = Dimensions.addEventListener('change', () => {
+		checkOrientation();
+
+		const subscription = Dimensions.addEventListener('change', (handler) => {
+			const screen = handler?.screen;
+			if (screen?.width && screen?.height) {
+				layoutRef.current = { width: screen?.width, height: screen?.height };
+			}
 			resetPosition();
 		});
+
 		return () => {
 			subscription && subscription.remove();
 		};
-	}, [resetPosition]);
+	}, []);
 
 	const panResponder = useRef(
 		PanResponder.create({
@@ -63,13 +78,12 @@ const StreamingPopup = () => {
 					if (Math.abs(gestureState?.dx) > 10 || Math.abs(gestureState?.dy) > 10) {
 						isDragging.current = true;
 					}
-					const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 					const offsetX = (pan?.x as any)?._offset || 0;
 					const offsetY = (pan?.y as any)?._offset || 0;
 
-					const dx = Math.max(-offsetX, Math.min(screenWidth - MINIMIZED_WIDTH - offsetX, gestureState?.dx));
-					const dy = Math.max(-offsetY, Math.min(screenHeight - MINIMIZED_HEIGHT - offsetY, gestureState?.dy));
+					const dx = Math.max(-offsetX, Math.min(layoutRef.current.width - MINIMIZED_WIDTH - offsetX, gestureState?.dx));
+					const dy = Math.max(-offsetY, Math.min(layoutRef.current.height - MINIMIZED_HEIGHT - offsetY, gestureState?.dy));
 
 					Animated.event([null, { dx: pan?.x, dy: pan?.y }], { useNativeDriver: false })(e, {
 						...gestureState,
@@ -101,10 +115,10 @@ const StreamingPopup = () => {
 	}, [sessionUser?.token]);
 
 	const handleJoinStreamingRoom = async () => {
-		if (currentClan && currentChannel?.type === ChannelType.CHANNEL_TYPE_STREAMING) {
+		if (currentClanId && currentChannel?.type === ChannelType.CHANNEL_TYPE_STREAMING) {
 			disconnect();
 			handleChannelClick(
-				currentClan?.id as string,
+				currentClanId as string,
 				currentChannel?.channel_id as string,
 				userProfile?.user?.id as string,
 				currentChannel.channel_id as string,
@@ -113,8 +127,8 @@ const StreamingPopup = () => {
 			);
 			dispatch(
 				videoStreamActions.startStream({
-					clanId: currentClan.id || '',
-					clanName: currentClan.clan_name || '',
+					clanId: currentClanId || '',
+					clanName: currentClanName || '',
 					streamId: currentChannel.channel_id || '',
 					streamName: currentChannel.channel_label || '',
 					parentId: currentChannel.parent_id || ''
@@ -153,7 +167,7 @@ const StreamingPopup = () => {
 
 	return (
 		<Animated.View
-			{...panResponder.panHandlers}
+			{...(!isAnimationComplete ? panResponder.panHandlers : {})}
 			style={[
 				{
 					transform: [{ translateX: pan?.x }, { translateY: pan?.y }],

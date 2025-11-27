@@ -18,18 +18,21 @@
 	"changePassword": "Change Password",
 	"setPhoneNumber": "Set Phone Number",
 	"disableAccountAlert": {
-		"title": "Disable account",
-		"description": "Are you sure you want to disable your account?",
+		"title": "Disable Account",
+		"description": "Please confirm if you would like to disable your account?",
 		"noConfirm": "No",
 		"yesConfirm": "Yes"
 	},
 	"deleteAccountAlert": {
-		"title": "Delete account",
-		"description": "Are you sure you want to delete your account?",
+		"title": "Delete Account",
+		"description": "Please confirm if you would like to delete your account?",
 		"noConfirm": "No",
 		"yesConfirm": "Yes"
 	},
 	"setPasswordAccount": {
+		"linkEmailRequiredTitle": "Link Email Required",
+		"linkEmailRequiredDescription": "You need to link your email before setting a password",
+		"goTo": "Go to",
 		"title": "Set Password",
 		"email": "Email",
 		"password": "Password",
@@ -52,8 +55,8 @@
 			"incorrectCurrent": "Incorrect password. Please try again"
 		},
 		"toast": {
-			"success": "Password set successfully",
-			"error": "Current password is incorrect"
+			"success": "Password updated successfully",
+			"error": "Password update failed"
 		},
 		"placeholder": {
 			"currentPassword": "Enter your current password",
@@ -78,6 +81,7 @@
 		"sendOTP": "Send OTP",
 		"otp": "Verify your number",
 		"countryCode": "Country Code",
+		"country": "Country",
 		"confirmOtp": "Confirm OTP",
 		"invalidPhone": "Invalid phone number",
 		"updatePhoneSuccess": "Update phone number success",
@@ -86,7 +90,10 @@
 		"resendOtp": "Resend OTP!",
 		"tooFast": "Too fast. Please wait {{seconds}} seconds before sending OTP again.",
 		"alreadyLinked": "Phone number is already linked to your account",
-		"alreadyLinkedToAnother": "Phone number is already linked to another account"
+		"alreadyLinkedToAnother": "Phone number is already linked to another account",
+		"verifyOtpMessage": "Please verify the OTP code sent to",
+		"otpSentMessage": "Please check the OTP code sent to {{phone}}",
+		"backToPhoneInput": "Change phone number?"
 	},
 	"toast": {
 		"deleteAccount": {
@@ -106,8 +113,21 @@
 		"verifyPhoneNumber": {
 			"description": "Enter the 6-digit code we sent to",
 			"verifyButton": "Verify",
-			"success": "Phone number updated successfully",
-			"failed": "Invalid OTP"
+			"success": "Phone number updated successfully"
+		}
+	},
+	"emailSetting": {
+		"updateEmail": {
+			"newEmail": "New Email",
+			"nextButton": "Next",
+			"failed": "Email update failed",
+			"invalidEmail": "Invalid email",
+			"emailAlreadyLinked": "This email you are using"
+		},
+		"verifyEmail": {
+			"description": "Enter the 6-digit code we sent to",
+			"verifyButton": "Verify",
+			"success": "Email updated successfully"
 		}
 	}
 }

@@ -6,7 +6,7 @@ import type { ChannelDescription } from 'mezon-js';
 import type { CacheMetadata } from '../cache-metadata';
 import { createApiKey, createCacheMetadata, markApiFirstCalled, shouldForceApiCall } from '../cache-metadata';
 import type { MezonValueContext } from '../helpers';
-import { ensureSession, getMezonCtx } from '../helpers';
+import { ensureSession, getMezonCtx, withRetry } from '../helpers';
 
 export const LIST_CHANNELS_USER_FEATURE_KEY = 'listchannelbyusers';
 
@@ -31,7 +31,9 @@ export interface ListChannelsByUserState extends EntityState<ChannelUsersEntity,
 	cache?: CacheMetadata;
 }
 
-export const listChannelsByUserAdapter = createEntityAdapter<ChannelUsersEntity>();
+export const listChannelsByUserAdapter = createEntityAdapter({
+	selectId: (channelByUser: ChannelUsersEntity) => channelByUser.id
+});
 
 export interface ListChannelsByUserRootState {
 	[LIST_CHANNELS_USER_FEATURE_KEY]: ListChannelsByUserState;
@@ -60,7 +62,11 @@ export const fetchListChannelsByUserCached = async (getState: () => RootState, e
 		};
 	}
 
-	const response = await ensuredMezon.client.listChannelByUserId(ensuredMezon.session);
+	const response = await withRetry(() => ensuredMezon.client.listChannelByUserId(ensuredMezon.session), {
+		maxRetries: 3,
+		initialDelay: 1000,
+		scope: 'user-channels'
+	});
 
 	markApiFirstCalled(apiKey);
 
@@ -117,6 +123,7 @@ export const listChannelsByUserSlice = createSlice({
 		remove: listChannelsByUserAdapter.removeOne,
 		update: listChannelsByUserAdapter.updateOne,
 		upsertOne: listChannelsByUserAdapter.upsertOne,
+		upsertMany: listChannelsByUserAdapter.upsertMany,
 		removeByClanId: (state, action: PayloadAction<{ clanId: string }>) => {
 			const channels = listChannelsByUserAdapter.getSelectors().selectAll(state);
 			const channelsToRemove = channels.filter((channel) => channel.clan_id === action.payload.clanId).map((channel) => channel.id);
@@ -159,6 +166,7 @@ export const listChannelsByUserSlice = createSlice({
 				});
 			}
 		},
+
 		updateChannelBadgeCount: (state: ListChannelsByUserState, action: PayloadAction<{ channelId: string; count: number; isReset?: boolean }>) => {
 			const { channelId, count, isReset = false } = action.payload;
 			if (state.entities) {
@@ -166,8 +174,7 @@ export const listChannelsByUserSlice = createSlice({
 				if (entity) {
 					const newCountMessUnread = isReset ? 0 : (entity.count_mess_unread ?? 0) + count;
 					if (entity.count_mess_unread !== newCountMessUnread || isReset) {
-						const last_sent_message = state.entities[state.ids[state.ids.length - 1]].last_sent_message;
-
+						const last_sent_message = state.entities[state.ids[state.ids.length - 1]]?.last_sent_message;
 						listChannelsByUserAdapter.updateOne(state, {
 							id: channelId,
 							changes: {

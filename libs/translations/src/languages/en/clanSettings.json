@@ -12,7 +12,7 @@
 			"roles": "Roles",
 			"emoji": "Emoji",
 			"imageStickers": "Image Stickers",
-			"voiceStickers": "Voice Stickers",
+			"voiceStickers": "Sound Effect",
 			"categoryOrder": "Category Order",
 			"integrations": "Integrations",
 			"auditLog": "Audit Log",
@@ -86,5 +86,6 @@
 		"uploadHere": "Upload it here!",
 		"customizeMessage": "Let's customize the amazing stickers with your interest",
 		"uploadSticker": "upload sticker"
-	}
+	},
+	"deleteClanTitle": "Delete '{{clanName}}'"
 }

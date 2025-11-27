@@ -134,7 +134,7 @@ const BottomSheetRootListener = () => {
 	}, []);
 
 	const isTabletLandscape = useTabletLandscape();
-	const themeValue = useTheme().themeValue;
+	const { themeValue } = useTheme();
 	const styles = useMemo(() => style(themeValue, isTabletLandscape), [isTabletLandscape, themeValue]);
 
 	const sizeConfig = useMemo(() => {

@@ -1,4 +1,5 @@
-import { Attributes, baseColor, size } from '@mezon/mobile-ui';
+import type { Attributes } from '@mezon/mobile-ui';
+import { baseColor, size } from '@mezon/mobile-ui';
 import { StyleSheet } from 'react-native';
 
 export const style = (colors: Attributes) =>
@@ -16,7 +17,6 @@ export const style = (colors: Attributes) =>
 			height: '100%',
 			zIndex: 1000
 		},
-
 		// Header section
 		header: {
 			width: '100%',
@@ -147,5 +147,22 @@ export const style = (colors: Attributes) =>
 		attachmentRow: {
 			marginBottom: size.s_16,
 			flexDirection: 'row'
+		},
+		keyboardAvoidingView: {
+			flex: 1,
+			width: '100%'
+		},
+		mediaWrapperFile: {
+			height: size.s_60,
+			width: size.s_50 * 3
+		},
+		sendButtonDisabled: {
+			opacity: 0.5
+		},
+		sendButtonEnabled: {
+			opacity: 1
+		},
+		textInputHeight: {
+			height: size.s_40
 		}
 	});

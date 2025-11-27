@@ -29,6 +29,7 @@ export default memo(function BannerAvatar({ avatar, onLoad, alt, defaultAvatar }
 
 	const handleOnload = useCallback(
 		async (url: string) => {
+			DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: true });
 			onLoad && onLoad(url);
 		},
 		[onLoad]
@@ -40,7 +41,6 @@ export default memo(function BannerAvatar({ avatar, onLoad, alt, defaultAvatar }
 	};
 
 	const pickAvatar = () => {
-		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: true });
 		avatarPickerRef?.current?.openSelector();
 	};
 	const userStatus = useMemo(() => {
@@ -72,7 +72,7 @@ export default memo(function BannerAvatar({ avatar, onLoad, alt, defaultAvatar }
 		const data = {
 			heightFitContent: true,
 			children: (
-				<View style={{ padding: size.s_20 }}>
+				<View style={styles.menuContainer}>
 					<MezonMenu menu={[menu]} />
 				</View>
 			)
@@ -89,7 +89,7 @@ export default memo(function BannerAvatar({ avatar, onLoad, alt, defaultAvatar }
 					defaultValue={''}
 					defaultColor={color}
 					noDefaultText
-					style={{ borderWidth: 0, borderRadius: 0 }}
+					style={styles.bannerImage}
 					disabled={true}
 					imageSizeLimit={MAX_FILE_SIZE_10MB}
 				/>
@@ -98,12 +98,13 @@ export default memo(function BannerAvatar({ avatar, onLoad, alt, defaultAvatar }
 			<View style={styles.avatarContainer}>
 				<MezonImagePicker
 					ref={avatarPickerRef}
+					autoCloseBottomSheet={false}
 					width={size.s_100}
 					height={size.s_100}
 					defaultValue={avatar || ''}
 					alt={alt}
 					rounded
-					style={{ borderWidth: 5, borderColor: themeValue.primary }}
+					style={[styles.avatarImage, { borderColor: themeValue.primary }]}
 					onLoad={handleOnload}
 					autoUpload
 					onPressAvatar={openAvatarBS}

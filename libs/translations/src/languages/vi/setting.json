@@ -1,7 +1,6 @@
 {
 	"accountSettings": {
 		"title": "Cài đặt tài khoản",
-		"getNitro": "Mua Nitro",
 		"account": "Tài khoản",
 		"profiles": "Hồ sơ",
 		"privacySafety": "Bảo mật và an toàn",
@@ -16,8 +15,6 @@
 	},
 	"paymentSettings": {
 		"title": "Cài đặt thanh toán",
-		"serverBoost": "Nâng cấp clan",
-		"nitroGift": "Tặng nitro",
 		"restoreSubscription": "Khôi phục đăng ký"
 	},
 	"appSettings": {
@@ -26,11 +23,16 @@
 		"appearance": "Giao diện",
 		"accessibility": "Trợ năng",
 		"language": "Ngôn ngữ",
+		"activity": "Hoạt động",
 		"notifications": "Thông báo",
 		"chat": "Trò chuyện",
 		"webBrowser": "Trình duyệt web",
 		"appIcon": "Biểu tượng",
 		"advanced": "Nâng cao"
+	},
+	"activity": {
+		"title": "Hiển thị hoạt động của tôi",
+		"description": "Chia sẻ những hoạt động hiện tại của bạn với bạn bè. Điều này giúp họ biết bạn đang làm gì và dễ dàng kết nối hơn!"
 	},
 	"supportSettings": {
 		"title": "Hỗ trợ",

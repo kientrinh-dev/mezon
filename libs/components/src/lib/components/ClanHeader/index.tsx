@@ -5,8 +5,8 @@ import {
 	defaultNotificationCategoryActions,
 	emojiSuggestionSlice,
 	hasGrandchildModal,
-	selectCurrentClan,
 	selectCurrentClanId,
+	selectCurrentClanName,
 	selectCurrentVoiceChannelId,
 	selectInviteChannelId,
 	selectInviteClanId,
@@ -18,7 +18,7 @@ import {
 	soundEffectActions,
 	useAppDispatch
 } from '@mezon/store';
-import { EPermission } from '@mezon/utils';
+import { EPermission, generateE2eId } from '@mezon/utils';
 import type { ApiCreateCategoryDescRequest } from 'mezon-js/api.gen';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -47,12 +47,12 @@ function ClanHeader({ name, type }: ClanHeaderProps) {
 	const dispatch = useAppDispatch();
 	const params = useParams();
 	const currentClanId = useSelector(selectCurrentClanId);
+	const currentClanName = useSelector(selectCurrentClanName);
 	const { t } = useTranslation('clan');
 	const [isClanOwner, canManageClan] = usePermissionChecker([EPermission.clanOwner, EPermission.manageClan]);
 	const { removeMemberClan } = useChannelMembersActions();
 	const { userProfile } = useAuth();
 	const currentChannelId = useSelector(selectCurrentVoiceChannelId);
-	const currentClan = useSelector(selectCurrentClan);
 	const navigate = useNavigate();
 	const [openSearchModal, closeSearchModal] = useModal(() => <SearchModal onClose={closeSearchModal} />);
 	const toOnboard = useSelector(selectToOnboard);
@@ -122,7 +122,7 @@ function ClanHeader({ name, type }: ClanHeaderProps) {
 	}, []);
 
 	const handleLeaveClan = async () => {
-		await removeMemberClan({ channelId: currentChannelId, clanId: currentClan?.clan_id as string, userIds: [userProfile?.user?.id as string] });
+		await removeMemberClan({ channelId: currentChannelId, clanId: currentClanId as string, userIds: [userProfile?.user?.id as string] });
 		dispatch(emojiSuggestionSlice.actions.invalidateCache());
 		dispatch(settingClanStickerSlice.actions.invalidateCache());
 		dispatch(soundEffectActions.invalidateCache());
@@ -180,7 +180,10 @@ function ClanHeader({ name, type }: ClanHeaderProps) {
 	return (
 		<>
 			{type === 'direct' ? (
-				<div className="contain-strict px-3 font-semibold  h-heightHeader flex items-center border-b-theme-primary ">
+				<div
+					className="contain-strict px-3 font-semibold  h-heightHeader flex items-center border-b-theme-primary "
+					data-e2e={generateE2eId('chat.direct_message.button.search')}
+				>
 					<input
 						ref={inputRef}
 						placeholder={t('findOrStartConversation')}
@@ -210,9 +213,9 @@ function ClanHeader({ name, type }: ClanHeaderProps) {
 				<ModalConfirm
 					handleCancel={toggleLeaveClanPopup}
 					handleConfirm={handleLeaveClan}
-					modalName={currentClan?.clan_name}
-					title="leave"
-					buttonName="Leave Clan"
+					modalName={currentClanName}
+					title={t('leaveClanTitle')}
+					buttonName={t('leaveClan')}
 				/>
 			)}
 			{openCreateCate && <ModalCreateCategory onClose={onClose} onCreateCategory={handleCreateCate} />}

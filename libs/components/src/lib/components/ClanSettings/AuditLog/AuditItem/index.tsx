@@ -3,9 +3,8 @@ import {
 	selectActionAuditLog,
 	selectAllAuditLogData,
 	selectChannelById,
-	selectCurrentClan,
+	selectCurrentClanId,
 	selectMemberClanByUserId,
-	selectTotalCountAuditLog,
 	selectUserAuditLog,
 	useAppDispatch,
 	useAppSelector
@@ -15,6 +14,7 @@ import { convertTimeString, createImgproxyUrl, getAvatarForPrioritize } from '@m
 import type { ApiAuditLog } from 'mezon-js/api.gen';
 import type { Dispatch, SetStateAction } from 'react';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { AvatarImage } from '../../../AvatarImage/AvatarImage';
 
@@ -27,20 +27,20 @@ interface MainAuditLogProps {
 }
 
 const MainAuditLog = ({ pageSize, setPageSize, currentPage, setCurrentPage, selectedDate }: MainAuditLogProps) => {
+	const { t } = useTranslation('auditLog');
 	const auditLogData = useSelector(selectAllAuditLogData);
-	const totalCount = useSelector(selectTotalCountAuditLog);
-	const currentClan = useSelector(selectCurrentClan);
+	const currentClanId = useSelector(selectCurrentClanId);
 	const auditLogFilterAction = useSelector(selectActionAuditLog);
 	const auditLogFilterUser = useSelector(selectUserAuditLog);
 	const dispatch = useAppDispatch();
 
 	useEffect(() => {
-		if (currentClan?.clan_id) {
+		if (currentClanId) {
 			const body = {
 				noCache: true,
 				actionLog: auditLogFilterAction ?? '',
 				userId: auditLogFilterUser?.userId ?? '',
-				clanId: currentClan?.clan_id ?? '',
+				clanId: currentClanId,
 				date_log: selectedDate
 			};
 			dispatch(auditLogList(body));
@@ -49,14 +49,13 @@ const MainAuditLog = ({ pageSize, setPageSize, currentPage, setCurrentPage, sele
 
 	return (
 		<div className="flex flex-col">
-			<div className="border-b-theme-primary my-[32px]" />
 			{auditLogData && auditLogData.length > 0 ? (
 				auditLogData.map((log) => <AuditLogItem key={log.id} logItem={log} />)
 			) : (
 				<div className="flex flex-col items-center justify-center text-center py-10 max-w-[440px] mx-auto">
 					<div className="flex flex-col items-center justify-center text-center max-w-[300px]">
-						<div className="text-lg font-semibold">NO LOGS YET</div>
-						<p className=" mt-2">Once moderators begin moderating, you can moderate the moderation here.</p>
+						<div className="text-lg font-semibold">{t('emptyAuditLog.noLogsYet')}</div>
+						<p className=" mt-2">{t('emptyAuditLog.description')}</p>
 					</div>
 				</div>
 			)}

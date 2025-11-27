@@ -1,4 +1,3 @@
-
 <div align="center">
   <h1>Mezon</h1>
   
@@ -29,7 +28,7 @@
 
 ## The Live, Work, and Play Platform the best Discord Alternative
 
-Mezon is great for playing games and chilling with friends, or even building a worldwide community. Customize your own space to talk, play, and hang out., Mezon delivers enterprise-grade performance with sub-millisecond response times and support for millions of concurrent connections.
+Mezon is a Live, Work, and Play platform. It’s perfect for gaming and chilling with friends, or even building a global community. Customize your own space to talk, play, and hang out. Mezon also delivers enterprise-grade performance with sub-millisecond response times and support for millions of concurrent connections.
 
 <div align="center">
   <img src="docs/mezon_header_bot_battle.png" alt="Mezon Platform Overview" width="100%">
@@ -288,6 +287,8 @@ We welcome contributions from the community! Here's how you can help:
 -   [**JavaScript SDK**](https://github.com/mezonai/mezon-js) - Official JS/TS SDK
 -   [**Go SDK**](https://github.com/mezonai/mezon-go-sdk) - Official Go SDK
 -   [**Java SDK**](https://github.com/mezonai/mezon-java-sdk) - Official Java SDK
+-   [**Python SDK**](https://github.com/phuvinh010701/mezon-sdk-python) - Official Python SDK
+-   [**NestJS SDK**](https://github.com/n0xgg04/nezon) - Official NestJs SDK
 -   [**Mezon WebJs SDK**](https://github.com/mezonai/mezon-web-js) - SDK for channel apps integration
 -   [**MCP Integration**](https://github.com/mezonai/mezon-mcp) - AI-ready integration
 
@@ -341,6 +342,8 @@ Mezon is built on top of amazing open-source technologies:
 
 -   [webrtc](https://github.com/pion/webrtc) - Pion WebRTC A pure Go implementation of the WebRTC API
 -   [livekit](https://livekit.io) - Livekit
+-   [ScyllaDB](https://www.scylladb.com) - ScyllaDB
+-   [Redis](https://redis.io) - Redis
 -   [imgproxy](https://imgproxy.net) - imgproxy
 -   [minio](https://min.io) - minio
 -   [Ory Hydra](https://www.ory.sh/hydra) - OAuth 2.0 and OpenID Connect server

@@ -1,8 +1,8 @@
 import {
 	getFirstMessageOfTopic,
-	selectCurrentChannel,
 	selectIsShowCreateThread,
 	selectIsShowCreateTopic,
+	selectLastSentMessageStateByChannelId,
 	selectMemberClanByUserId,
 	selectMessageByMessageId,
 	threadsActions,
@@ -12,9 +12,9 @@ import {
 } from '@mezon/store';
 import { Icons } from '@mezon/ui';
 import type { IExtendedMessage, IMessageWithUser } from '@mezon/utils';
-import { EBacktickType, ETypeLinkMedia, addMention, createImgproxyUrl, generateE2eId, isValidEmojiData } from '@mezon/utils';
+import { EBacktickType, ETypeLinkMedia, addMention, convertTimeDifference, createImgproxyUrl, generateE2eId, isValidEmojiData } from '@mezon/utils';
 import { safeJSONParse } from 'mezon-js';
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { AvatarImage } from '../AvatarImage/AvatarImage';
@@ -65,25 +65,32 @@ const MessageContent = ({ message, mode, isSearchMessage, isEphemeral, isSending
 };
 
 export const TopicViewButton = ({ message }: { message: IMessageWithUser }) => {
-	const { t } = useTranslation('message');
+	const { t, i18n } = useTranslation('message');
 	const dispatch = useAppDispatch();
-	const latestMessage = useAppSelector((state) => selectMessageByMessageId(state, message.channel_id, message.id)) || message;
+	const latestMessage = useAppSelector((state) => selectMessageByMessageId(state, message.channel_id, message.id));
+	const lastSentMessageState = useAppSelector((state) => selectLastSentMessageStateByChannelId(state, message.channel_id));
+	const rplCount = latestMessage?.content?.rpl || 0;
 	const topicCreator = useAppSelector((state) => selectMemberClanByUserId(state, latestMessage?.content?.cid as string));
 	const avatarToDisplay = topicCreator?.clan_avatar ? topicCreator?.clan_avatar : topicCreator?.user?.avatar_url;
-
 	const handleOpenTopic = useCallback(() => {
 		dispatch(topicsActions.setIsShowCreateTopic(true));
 		dispatch(threadsActions.setIsShowCreateThread({ channelId: message.channel_id as string, isShowCreateThread: false }));
 		dispatch(topicsActions.setCurrentTopicId(message?.content?.tp || ''));
 		dispatch(getFirstMessageOfTopic(message?.content?.tp || ''));
 	}, [dispatch, message]);
-	const currentChannel = useSelector(selectCurrentChannel);
-	const isShowCreateThread = useSelector((state) => selectIsShowCreateThread(state, currentChannel?.id as string));
+	const isShowCreateThread = useSelector((state) => selectIsShowCreateThread(state, message.channel_id as string));
 	const isShowCreateTopic = useSelector(selectIsShowCreateTopic);
+
+	const timeMessage = useMemo(() => {
+		if (!latestMessage?.create_time_seconds || !lastSentMessageState?.timestamp_seconds) return;
+
+		const lastTime = convertTimeDifference(lastSentMessageState.timestamp_seconds, latestMessage?.create_time_seconds, i18n.language);
+		return lastTime;
+	}, [latestMessage, i18n.language, lastSentMessageState.timestamp_seconds]);
 
 	return (
 		<div
-			className={`border-theme-primary  text-theme-primary bg-item-theme text-theme-primary-hover rounded-lg my-1 p-1  flex justify-between items-center cursor-pointer group/view-topic-btn  ${isShowCreateThread || isShowCreateTopic ? 'w-[70%] max-2xl:w-full' : 'w-[70%]'}`}
+			className={`border-theme-primary min-w-250 text-theme-primary bg-item-theme text-theme-primary-hover rounded-lg gap-5 my-1 p-1  flex justify-between items-center cursor-pointer group/view-topic-btn  ${isShowCreateThread || isShowCreateTopic ? '' : 'w-fit'}`}
 			onClick={handleOpenTopic}
 			data-e2e={generateE2eId('chat.topic.button.view_topic')}
 		>
@@ -96,15 +103,14 @@ export const TopicViewButton = ({ message }: { message: IMessageWithUser }) => {
 					src={avatarToDisplay}
 				/>
 				<div className="flex flex-wrap items-center gap-x-2 flex-1 min-w-0">
-					<div className="font-semibold text-blue-500 flex-shrink-0">{t('creator')}</div>
-					<p className="break-words min-w-0">
-						{t('viewTopic')}{' '}
-						{latestMessage?.content?.rpl &&
-							`(${t('reply', { number: latestMessage?.content?.rpl > 99 ? '99+' : latestMessage?.content?.rpl })})`}
+					<p className="break-words color-mention min-w-0" data-e2e={generateE2eId('chat.topic.number_replies')}>
+						{rplCount > 0 &&
+							(rplCount === 1 ? t('reply', { number: 1 }) : t('numberReplies', { number: rplCount > 99 ? '99+' : rplCount }))}
 					</p>
+					{timeMessage}
 				</div>
 			</div>
-			<Icons.ArrowRight className="flex-shrink-0" />
+			<Icons.ArrowRight className="flex-shrink-0 text-center" />
 		</div>
 	);
 };

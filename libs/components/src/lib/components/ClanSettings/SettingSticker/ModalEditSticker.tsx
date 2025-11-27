@@ -3,7 +3,7 @@ import { createSticker, emojiSuggestionActions, selectCurrentClanId, updateStick
 import { handleUploadEmoticon, useMezon } from '@mezon/transport';
 
 import { Button, ButtonLoading, Checkbox, Icons, InputField } from '@mezon/ui';
-import { LIMIT_SIZE_UPLOAD_IMG, fileTypeImage, generateE2eId, resizeFileImage, sanitizeUrlSecure } from '@mezon/utils';
+import { LIMIT_SIZE_UPLOAD_IMG, fileTypeImage, generateE2eId, getIdSaleItemFromSource, resizeFileImage, sanitizeUrlSecure } from '@mezon/utils';
 import { Snowflake } from '@theinternetfolks/snowflake';
 import type { ClanEmoji, ClanSticker } from 'mezon-js';
 import type { ApiClanStickerAddRequest, MezonUpdateClanEmojiByIdBody } from 'mezon-js/api.gen';
@@ -103,10 +103,13 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 	};
 
 	const handleChangeShortName = (e: ChangeEvent<HTMLInputElement>) => {
-		setEditingGraphic({
-			...editingGraphic,
-			shortname: e.target.value.replace(/[^a-zA-Z0-9_-]/g, '')
-		});
+		const newValue = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '');
+		if (newValue.length <= 64) {
+			setEditingGraphic({
+				...editingGraphic,
+				shortname: newValue
+			});
+		}
 	};
 
 	const onSaveChange = async () => {
@@ -160,9 +163,9 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 		}
 		const isForSale = isForSaleRef.current?.checked;
 		const realImage = await handleUploadEmoticon(client, session, path, resizeFile as File);
-
+		const finalId = getIdSaleItemFromSource(realImage?.url || '');
 		const request: ApiClanStickerAddRequest = {
-			id,
+			id: finalId,
 			category,
 			clan_id: currentClanId,
 			source: realImage.url,
@@ -174,7 +177,6 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 			const fileBlur = await createBlurredWatermarkedImageFile(resizeFile, 'SOLD', 2);
 			const pathPreview = `${(isSticker ? 'stickers/' : 'emojis/') + idPreview}.webp`;
 			await handleUploadEmoticon(client, session, pathPreview, fileBlur as File);
-			request.id = idPreview;
 		}
 
 		const requestData = {
@@ -204,7 +206,8 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 	};
 
 	const validateSaveChange = useMemo(() => {
-		return !(editingGraphic.fileName && editingGraphic.shortname && editingGraphic.shortname !== graphic?.shortname);
+		const isValidLength = (editingGraphic?.shortname?.length ?? 0) >= 3 && (editingGraphic?.shortname?.length ?? 0) <= 64;
+		return !(editingGraphic.fileName && editingGraphic.shortname && editingGraphic.shortname !== graphic?.shortname && isValidLength);
 	}, [editingGraphic.fileName, editingGraphic.shortname, graphic?.shortname]);
 
 	const modalRef = useRef<HTMLDivElement>(null);
@@ -325,10 +328,15 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 							</div>
 						</div>
 						<div className={'w-1/2 flex flex-col gap-2'}>
-							<p className={`text-xs font-bold uppercase select-none text-theme-primary-active`}>{t('stickerName')}</p>
+							<p className={`text-xs font-bold uppercase select-none text-theme-primary-active`}>
+								{t('stickerName')}{' '}
+								<span title={t('characters')} className="text-red-500 cursor-pointer">
+									*
+								</span>
+							</p>{' '}
 							<div
 								className={
-									'border-theme-primary bg-input-secondary flex flex-row rounded-lg justify-between items-center p-2 pl-3  box-border overflow-hidden'
+									'border-theme-primary bg-input-secondary flex flex-row rounded-lg justify-between items-center p-2 pl-3  box-border overflow-hidden relative'
 								}
 							>
 								<InputField
@@ -338,17 +346,25 @@ const ModalSticker = ({ graphic, handleCloseModal, type }: ModalEditStickerProps
 									value={editingGraphic.shortname}
 									onChange={handleChangeShortName}
 									onKeyDown={handleOnEnter}
+									maxLength={62}
 								/>
+								<div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+									<span className={`text-xs font-medium ${(editingGraphic?.shortname?.length ?? 0) > 25 ? 'text-[#faa61a]' : ''}`}>
+										{editingGraphic?.shortname?.length ?? 0}/62
+									</span>
+								</div>
 							</div>
 						</div>
 					</div>
 					<div className={`w-full h-[54px] bottom-0 flex items-center justify-end select-none gap-2`}>
-						<div className="flex items-center flex-1 h-full gap-2">
-							<Checkbox ref={isForSaleRef} id="sale_item" className="accent-blue-600 w-4 h-4" />
-							<label htmlFor="sale_item" className="">
-								{t('thisIsForSale')}
-							</label>
-						</div>
+						{!graphic && (
+							<div className="flex items-center flex-1 h-full gap-2">
+								<Checkbox ref={isForSaleRef} id="sale_item" className="accent-blue-600 w-4 h-4" />
+								<label htmlFor="sale_item" className="">
+									{t('thisIsForSale')}
+								</label>
+							</div>
+						)}
 						<Button className="px-2 py-1 border-none hover:underline hover:bg-transparent bg-transparent" onClick={handleCloseModal}>
 							{t('neverMind')}
 						</Button>

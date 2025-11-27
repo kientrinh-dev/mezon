@@ -1,20 +1,23 @@
 import { useChannelMembersActions, usePermissionChecker } from '@mezon/core';
 import { ActionEmitEvent } from '@mezon/mobile-components';
 import { baseColor, size, useTheme } from '@mezon/mobile-ui';
+import type { ChannelMembersEntity } from '@mezon/store-mobile';
 import {
-	ChannelMembersEntity,
 	channelUsersActions,
 	selectAllAccount,
+	selectBanMemberCurrentClanById,
 	selectCurrentChannel,
-	selectCurrentClan,
+	selectCurrentClanCreatorId,
 	selectCurrentClanId,
 	selectMemberIdsByChannelId,
-	useAppDispatch
+	useAppDispatch,
+	useAppSelector,
+	usersClanActions
 } from '@mezon/store-mobile';
-import { EPermission } from '@mezon/utils';
+import { EPermission, sleep } from '@mezon/utils';
 import { useNavigation } from '@react-navigation/native';
 import { ChannelType } from 'mezon-js';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -22,9 +25,13 @@ import { useSelector } from 'react-redux';
 import MezonConfirm from '../../../../../../../componentUI/MezonConfirm';
 import MezonIconCDN from '../../../../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../../../../constants/icon_cdn';
-import { APP_SCREEN, AppStackScreenProps } from '../../../../../../../navigation/ScreenTypes';
-import { EActionSettingUserProfile, IProfileSetting } from '../../../../../../ManageUserScreen/types';
+import type { AppStackScreenProps } from '../../../../../../../navigation/ScreenTypes';
+import { APP_SCREEN } from '../../../../../../../navigation/ScreenTypes';
+import type { IProfileSetting } from '../../../../../../ManageUserScreen/types';
+import { EActionSettingUserProfile } from '../../../../../../ManageUserScreen/types';
+import { BanUserChannelModal } from '../BanUserChannelModal';
 import KickUserClanModal from '../KickUserClanModal';
+import { UnbanUserChannelModal } from '../UnbanUserChannelModal';
 import { style } from './UserSettingProfile.style';
 
 interface IUserSettingProfileProps {
@@ -40,16 +47,17 @@ const UserSettingProfile = ({ user, showActionOutside = true }: IUserSettingProf
 	const { t } = useTranslation('clanOverviewSetting');
 	const userProfile = useSelector(selectAllAccount);
 	const { removeMemberClan } = useChannelMembersActions();
-	const currentClan = useSelector(selectCurrentClan);
+	const currentClanId = useSelector(selectCurrentClanId);
+	const currentClanCreatorId = useAppSelector(selectCurrentClanCreatorId);
 	const currentChannel = useSelector(selectCurrentChannel);
 	const currentChannelId = currentChannel?.channel_id;
+	const isBannedUser = useSelector((state) => selectBanMemberCurrentClanById(state, currentChannelId, user?.id as string));
 	const isItMe = useMemo(() => userProfile?.user?.id === user?.user?.id, [user?.user?.id, userProfile?.user?.id]);
-	const isThatClanOwner = useMemo(() => currentClan?.creator_id === user?.user?.id, [user?.user?.id, currentClan?.creator_id]);
-	const currentClanId = useSelector(selectCurrentClanId);
+	const isThatClanOwner = useMemo(() => currentClanCreatorId === user?.user?.id, [user?.user?.id, currentClanCreatorId]);
 	const [hasClanOwnerPermission, hasAdminPermission] = usePermissionChecker([
 		EPermission.clanOwner,
 		EPermission.administrator,
-		EPermission.manageClan
+		EPermission.manageChannel
 	]);
 	const isThread = currentChannel?.type === ChannelType.CHANNEL_TYPE_THREAD;
 
@@ -61,30 +69,45 @@ const UserSettingProfile = ({ user, showActionOutside = true }: IUserSettingProf
 		return memberIds.includes(user.user.id);
 	}, [isThread, memberIds, user?.user?.id]);
 
-	const dangerActions = [EActionSettingUserProfile.Kick, EActionSettingUserProfile.ThreadRemove, EActionSettingUserProfile.TransferOwnership];
+	const dangerActions = [
+		EActionSettingUserProfile.Kick,
+		EActionSettingUserProfile.ThreadRemove,
+		EActionSettingUserProfile.TransferOwnership,
+		EActionSettingUserProfile.Ban
+	];
 
-	const handleSettingUserProfile = useCallback((action?: EActionSettingUserProfile) => {
-		switch (action) {
-			case EActionSettingUserProfile.Manage:
-				navigateToManageUser();
-				break;
-			case EActionSettingUserProfile.TimeOut:
-				break;
-			case EActionSettingUserProfile.Kick:
-				confirmKickUserClan();
-				break;
-			case EActionSettingUserProfile.Ban:
-				break;
-			case EActionSettingUserProfile.ThreadRemove:
-				confirmRemoveFromThread();
-				break;
-			case EActionSettingUserProfile.TransferOwnership:
-				navigateToTransferOwnership();
-				break;
-			default:
-				break;
+	useEffect(() => {
+		if (hasAdminPermission && !!currentChannel) {
+			dispatch(usersClanActions.fetchListBanUser({ clanId: currentChannel?.clan_id, channelId: currentChannel?.channel_id }));
 		}
 	}, []);
+
+	const handleSettingUserProfile = useCallback(
+		(action?: EActionSettingUserProfile) => {
+			switch (action) {
+				case EActionSettingUserProfile.Manage:
+					navigateToManageUser();
+					break;
+				case EActionSettingUserProfile.TimeOut:
+					break;
+				case EActionSettingUserProfile.Kick:
+					confirmKickUserClan();
+					break;
+				case EActionSettingUserProfile.Ban:
+					confirmBanUserChannel();
+					break;
+				case EActionSettingUserProfile.ThreadRemove:
+					confirmRemoveFromThread();
+					break;
+				case EActionSettingUserProfile.TransferOwnership:
+					navigateToTransferOwnership();
+					break;
+				default:
+					break;
+			}
+		},
+		[isBannedUser]
+	);
 
 	const profileSetting: IProfileSetting[] = useMemo(() => {
 		const settingList = [
@@ -103,13 +126,6 @@ const UserSettingProfile = ({ user, showActionOutside = true }: IUserSettingProf
 				action: handleSettingUserProfile,
 				isShow: hasAdminPermission
 			},
-			// {
-			// 	label: `${EActionSettingUserProfile.TimeOut}`,
-			// 	value: EActionSettingUserProfile.TimeOut,
-			// 	icon: <MezonIconCDN icon={IconCDN.clockWarningIcon} color={themeValue.text} width={20} height={20} />,
-			// 	action: handleSettingUserProfile,
-			// 	isShow: hasAdminPermission && !isItMe
-			// },
 			{
 				label: t('action.transferOwnership'),
 				value: EActionSettingUserProfile.TransferOwnership,
@@ -127,21 +143,32 @@ const UserSettingProfile = ({ user, showActionOutside = true }: IUserSettingProf
 			{
 				label: t('action.removeFromThread'),
 				value: EActionSettingUserProfile.ThreadRemove,
-				icon: <MezonIconCDN icon={IconCDN.removeFriend} width={20} height={20} color={baseColor.red} />,
+				icon: <MezonIconCDN icon={IconCDN.removeFriend} width={size.s_22} height={size.s_22} color={baseColor.red} />,
 				action: handleSettingUserProfile,
 				isShow:
 					!isItMe && isThread && isUserInThread && (isThatClanOwner || hasClanOwnerPermission || (hasAdminPermission && !isThatClanOwner))
+			},
+			{
+				label: isBannedUser ? t('action.unban') : t('action.ban'),
+				value: EActionSettingUserProfile.Ban,
+				icon: <MezonIconCDN icon={IconCDN.hammerIcon} width={size.s_22} height={size.s_22} color={baseColor.red} />,
+				action: handleSettingUserProfile,
+				isShow: hasAdminPermission && !isItMe
 			}
-			// {
-			// 	label: `${EActionSettingUserProfile.Ban}`,
-			// 	value: EActionSettingUserProfile.Ban,
-			// 	icon: <MezonIconCDN icon={IconCDN.hammerIcon} width={20} height={20} color={baseColor.red} />,
-			// 	action: handleSettingUserProfile,
-			// 	isShow: hasAdminPermission && !isItMe
-			// }
 		];
 		return settingList;
-	}, [themeValue.text, handleSettingUserProfile, hasAdminPermission, isItMe, isThatClanOwner, hasClanOwnerPermission, isThread, isUserInThread, t]);
+	}, [
+		t,
+		themeValue.text,
+		handleSettingUserProfile,
+		hasAdminPermission,
+		isItMe,
+		hasClanOwnerPermission,
+		isThatClanOwner,
+		isThread,
+		isUserInThread,
+		isBannedUser
+	]);
 
 	const confirmKickUserClan = useCallback(() => {
 		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: true });
@@ -150,6 +177,23 @@ const UserSettingProfile = ({ user, showActionOutside = true }: IUserSettingProf
 		};
 		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: false, data });
 	}, [user]);
+
+	const confirmBanUserChannel = useCallback(async () => {
+		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: true });
+		if (isBannedUser) {
+			const data = {
+				children: <UnbanUserChannelModal clanId={currentClanId} channelId={currentChannelId} user={user} />
+			};
+			DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: false, data });
+		} else {
+			await sleep(600);
+			const data = {
+				heightFitContent: true,
+				children: <BanUserChannelModal clanId={currentClanId} channelId={currentChannelId} user={user} />
+			};
+			DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: false, data });
+		}
+	}, [currentChannelId, currentClanId, isBannedUser, user]);
 
 	const navigateToManageUser = useCallback(() => {
 		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_BOTTOM_SHEET, { isDismiss: true });
@@ -195,7 +239,7 @@ const UserSettingProfile = ({ user, showActionOutside = true }: IUserSettingProf
 				});
 			}
 		}
-	}, [currentClanId, removeMemberClan, user, currentChannelId]);
+	}, [user, removeMemberClan, currentClanId, currentChannelId, t]);
 
 	const handleRemoveMemberFromThread = useCallback(
 		async (userId?: string) => {
@@ -207,7 +251,7 @@ const UserSettingProfile = ({ user, showActionOutside = true }: IUserSettingProf
 						channelId: currentChannelId,
 						userId,
 						channelType: ChannelType.CHANNEL_TYPE_THREAD,
-						clanId: currentClan?.clan_id
+						clanId: currentClanId
 					})
 				);
 				Toast.show({
@@ -228,7 +272,7 @@ const UserSettingProfile = ({ user, showActionOutside = true }: IUserSettingProf
 				});
 			}
 		},
-		[dispatch, currentClan?.clan_id, currentChannelId, isThread]
+		[currentChannelId, dispatch, currentClanId, t]
 	);
 
 	const handleCloseRemoveFromThread = () => DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });

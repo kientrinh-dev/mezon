@@ -17,7 +17,6 @@ import { style } from './styles';
 
 type EmojiSelectorContainerProps = {
 	onSelected: (emojiId: string, shortname: string) => void;
-	searchText?: string;
 	isReactMessage?: boolean;
 	handleBottomSheetExpand?: () => void;
 	handleBottomSheetCollapse?: () => void;
@@ -165,7 +164,7 @@ export default function EmojiSelectorContainer({
 
 	const ListCategoryArea = useCallback(() => {
 		return (
-			<View style={{ backgroundColor: themeValue.primary }}>
+			<View style={styles.primaryBackground}>
 				<View style={styles.textInputWrapper}>
 					<MezonIconCDN icon={IconCDN.magnifyingIcon} height={size.s_18} width={size.s_18} color={themeValue.text} />
 					<TextInput
@@ -273,9 +272,8 @@ export default function EmojiSelectorContainer({
 			removeClippedSubviews={true}
 			showsVerticalScrollIndicator={false}
 			keyboardShouldPersistTaps="handled"
-			disableVirtualization
-			style={{ marginBottom: -size.s_20 }}
-			contentContainerStyle={{ minHeight: '100%' }}
+			style={styles.flatListStyle}
+			contentContainerStyle={styles.flatListContentContainer}
 			onScrollToIndexFailed={(info) => {
 				if (info?.highestMeasuredFrameIndex) {
 					const wait = new Promise((resolve) => setTimeout(resolve, 100));

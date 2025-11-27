@@ -1,12 +1,13 @@
 import { ActionEmitEvent } from '@mezon/mobile-components';
 import { baseColor, size, useTheme } from '@mezon/mobile-ui';
-import { DirectEntity, getStore, selectAllChannelMembersClan, selectMemberByGroupId, useAppSelector } from '@mezon/store-mobile';
+import { selectAllChannelMembersClan, selectCurrentUserId, selectMemberByGroupId, useAppSelector } from '@mezon/store-mobile';
 import type { ChannelMembersEntity, UsersClanEntity } from '@mezon/utils';
 import { useNavigation } from '@react-navigation/native';
 import { ChannelType } from 'mezon-js';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Pressable, SectionList, Text, TouchableOpacity, View } from 'react-native';
+import { useSelector } from 'react-redux';
 import MezonIconCDN from '../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../constants/icon_cdn';
 import { APP_SCREEN } from '../../navigation/ScreenTypes';
@@ -30,6 +31,8 @@ export const MemberListStatus = React.memo(() => {
 	const currentChannel = useContext(threadDetailContext);
 	const navigation = useNavigation<any>();
 	const rawMembers = useAppSelector((state) => selectMemberByGroupId(state, currentChannel?.channel_id));
+	const channelMembers = useAppSelector((state) => selectAllChannelMembersClan(state, currentChannel?.channel_id));
+	const currentUserId = useSelector(selectCurrentUserId);
 
 	const [selectedUser, setSelectedUser] = useState<ChannelMembersEntity | null>(null);
 	const { t } = useTranslation();
@@ -38,6 +41,11 @@ export const MemberListStatus = React.memo(() => {
 		[EActionButton.AddMembers]: t('common:addMembers'),
 		[EActionButton.InviteMembers]: t('common:inviteMembers')
 	};
+
+	const isChatWithMyself = useMemo(() => {
+		if (Number(currentChannel?.type) !== ChannelType.CHANNEL_TYPE_DM) return false;
+		return currentChannel?.user_ids?.[0] === currentUserId;
+	}, [currentChannel?.type, currentChannel?.user_ids, currentUserId]);
 
 	const isDMThread = useMemo(() => {
 		return [ChannelType.CHANNEL_TYPE_DM, ChannelType.CHANNEL_TYPE_GROUP].includes(currentChannel?.type);
@@ -55,8 +63,7 @@ export const MemberListStatus = React.memo(() => {
 	}, []);
 
 	const listMembersChannelGroupDM = useMemo(() => {
-		const store = getStore();
-		const members = isDMThread ? rawMembers : selectAllChannelMembersClan(store.getState() as any, currentChannel?.id as string);
+		const members = isDMThread ? rawMembers : channelMembers;
 
 		if (!members) {
 			return {
@@ -79,14 +86,14 @@ export const MemberListStatus = React.memo(() => {
 			online: onlineUsers?.map((item) => item),
 			offline: offlineUsers?.map((item) => item)
 		};
-	}, [currentChannel?.id, isDMThread, rawMembers]);
+	}, [currentChannel?.id, isDMThread, rawMembers, channelMembers]);
 
 	const { online, offline } = listMembersChannelGroupDM;
 
 	const navigateToNewGroupScreen = () => {
 		navigation.navigate(APP_SCREEN.MESSAGES.STACK, {
 			screen: APP_SCREEN.MESSAGES.NEW_GROUP,
-			params: { directMessage: currentChannel as DirectEntity }
+			params: { directMessageId: currentChannel?.id || currentChannel?.channel_id || '' }
 		});
 	};
 
@@ -144,17 +151,17 @@ export const MemberListStatus = React.memo(() => {
 				</Pressable>
 			) : null}
 
-			{online?.length > 0 || offline?.length > 0 ? (
+			{(online?.length > 0 || offline?.length > 0) && !isChatWithMyself ? (
 				<SectionList
 					sections={[
-						{ title: t('common:members'), data: online, key: 'onlineMembers' },
+						{ title: t('common:onlines'), data: online, key: 'onlineMembers' },
 						{ title: t('common:offlines'), data: offline, key: 'offlineMembers' }
 					]}
 					keyExtractor={(item, index) => `channelMember[${index}]_${item?.id}`}
 					renderItem={renderMemberItem}
 					renderSectionHeader={({ section: { title } }) => (
 						<Text style={styles.text}>
-							{title} - {title === t('common:members') ? online?.length : offline?.length}
+							{title} - {title === t('common:onlines') ? online?.length : offline?.length}
 						</Text>
 					)}
 					contentContainerStyle={{ paddingBottom: size.s_60 }}

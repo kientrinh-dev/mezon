@@ -1,5 +1,5 @@
 import { ChatContext } from '@mezon/core';
-import { STORAGE_CLAN_ID, STORAGE_IS_DISABLE_LOAD_BACKGROUND, STORAGE_MY_USER_ID, load, save, setCurrentClanLoader } from '@mezon/mobile-components';
+import { load, save, setCurrentClanLoader, STORAGE_CLAN_ID, STORAGE_IS_DISABLE_LOAD_BACKGROUND, STORAGE_MY_USER_ID } from '@mezon/mobile-components';
 import {
 	accountActions,
 	appActions,
@@ -8,6 +8,7 @@ import {
 	directActions,
 	emojiSuggestionActions,
 	fcmActions,
+	FetchClansPayload,
 	friendsActions,
 	getStore,
 	gifsActions,
@@ -20,18 +21,15 @@ import {
 	selectIsFromFCMMobile,
 	selectIsLogin,
 	selectSession,
-	selectZkProofs,
 	settingClanStickerActions,
 	topicsActions,
 	useAppDispatch,
 	voiceActions,
 	walletActions
 } from '@mezon/store-mobile';
-import { SESSION_REFRESH_KEY } from '@mezon/transport';
-import asyncStorage from '@react-native-async-storage/async-storage';
 import { getAnalytics, logEvent, setAnalyticsCollectionEnabled } from '@react-native-firebase/analytics';
 import { getApp } from '@react-native-firebase/app';
-import { ChannelType, Session, safeJSONParse } from 'mezon-js';
+import { ChannelType, Session } from 'mezon-js';
 import { useCallback, useContext, useEffect, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
 import { useSelector } from 'react-redux';
@@ -43,7 +41,6 @@ const RootListener = () => {
 	const { handleReconnect } = useContext(ChatContext);
 	const dispatch = useAppDispatch();
 	const appStateRef = useRef(AppState.currentState);
-	const zkProofs = useSelector(selectZkProofs);
 
 	useEffect(() => {
 		if (isLoggedIn) {
@@ -52,7 +49,7 @@ const RootListener = () => {
 				setTimeout(() => {
 					initAppLoading();
 					mainLoader();
-				}, 2000);
+				}, 3000);
 			});
 		}
 	}, [isLoggedIn]);
@@ -108,7 +105,7 @@ const RootListener = () => {
 				await Promise.allSettled(promise);
 			}
 			dispatch(directActions.fetchDirectMessage({ noCache: true }));
-			dispatch(clansActions.fetchClans({ noCache: true }));
+			dispatch(clansActions.fetchClans({ noCache: true, isMobile: true }));
 			return null;
 		} catch (error) {
 			/* empty */
@@ -191,39 +188,32 @@ const RootListener = () => {
 		try {
 			const store = await getStore();
 			const session = selectSession(store.getState() as any);
-			const storageStr = (await asyncStorage.getItem(SESSION_REFRESH_KEY)) || '';
-			const localRefresh = safeJSONParse(storageStr);
 
 			const sessionMain = new Session(
-				localRefresh?.token || session?.token,
-				localRefresh?.refresh_token || session?.refresh_token,
+				session?.token,
+				session?.refresh_token,
 				session.created,
 				session.api_url,
+				session.id_token || '',
 				!!session.is_remember
 			);
 			const profileResponse = await dispatch(accountActions.getUserProfile());
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-expect-error
 			const { id = '', username = '' } = profileResponse?.payload?.user || {};
-			if (zkProofs && id) {
-				await dispatch(
-					walletActions.fetchZkProofs({
-						userId: id,
-						jwt: sessionMain?.token
-					})
-				);
+			if (id) {
+				save(STORAGE_MY_USER_ID, id?.toString());
 				await dispatch(
 					walletActions.fetchWalletDetail({
 						userId: id
 					})
 				);
 			}
-			if (id) save(STORAGE_MY_USER_ID, id?.toString());
 			await loadFRMConfig(username, sessionMain);
 		} catch (e) {
 			console.error('log => profileLoader: ', e);
 		}
-	}, [dispatch, loadFRMConfig, zkProofs]);
+	}, [dispatch, loadFRMConfig]);
 
 	const mainLoader = useCallback(async () => {
 		try {
@@ -252,16 +242,19 @@ const RootListener = () => {
 			try {
 				const store = getStore();
 				const currentClanId = selectCurrentClanId(store.getState() as any);
+				const response = await dispatch(clansActions.fetchClans({ noCache: true, isMobile: true }));
 				dispatch(appActions.setLoadingMainMobile(false));
 				const currentClanIdCached = await load(STORAGE_CLAN_ID);
-				const clanId = currentClanId?.toString() !== '0' ? currentClanId : currentClanIdCached;
+				const payload = response?.payload as FetchClansPayload;
+				const clans = payload?.clans ?? [];
+				const isExistClanId = clans?.some((clan) => clan?.clan_id?.toString() === currentClanId);
+				const clanId = !isExistClanId ? clans?.[0]?.clan_id : currentClanId?.toString() !== '0' ? currentClanId : currentClanIdCached;
 				const promises = [];
 				if (!isFromFCM && clanId) {
 					save(STORAGE_CLAN_ID, clanId);
 					promises.push(dispatch(clansActions.joinClan({ clanId })));
 					promises.push(dispatch(clansActions.changeCurrentClan({ clanId })));
 				}
-				promises.push(dispatch(clansActions.fetchClans({ noCache: true })));
 				const results = await Promise.all(promises);
 				if (!isFromFCM && !clanId) {
 					const clanResp = results.find((result) => result.type === 'clans/fetchClans/fulfilled');

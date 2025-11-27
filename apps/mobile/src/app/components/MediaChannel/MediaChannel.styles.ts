@@ -31,7 +31,6 @@ export const style = (colors: Attributes, widthImage: number) =>
 		},
 		sectionHeader: {
 			padding: size.s_10,
-			backgroundColor: colors.primary,
 			width: Dimensions.get('screen').width
 		},
 		sectionYearHeaderTitle: {
@@ -55,5 +54,10 @@ export const style = (colors: Attributes, widthImage: number) =>
 			height: widthImage,
 			width: widthImage,
 			margin: size.s_4
+		},
+		listFooter: {
+			paddingVertical: size.s_16,
+			alignItems: 'center',
+			justifyContent: 'center'
 		}
 	});

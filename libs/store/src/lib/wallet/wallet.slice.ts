@@ -20,7 +20,6 @@ export interface WalletState {
 	wallet?: WalletDetail;
 	zkProofs?: IZkProof;
 	ephemeralKeyPair?: IEphemeralKeyPair;
-	address?: string | null;
 	isEnabled?: boolean;
 }
 
@@ -41,17 +40,6 @@ const fetchWalletDetail = createAsyncThunk('wallet/fetchWalletDetail', async ({ 
 	};
 });
 
-const fetchAddress = createAsyncThunk('wallet/fetchAddress', async ({ userId }: { userId: string }, thunkAPI) => {
-	const mezon = await ensureSession(getMezonCtx(thunkAPI));
-	if (!mezon.mmnClient) {
-		return thunkAPI.rejectWithValue('MmnClient not initialized');
-	}
-	const address = await mezon.mmnClient.getAddressFromUserId(userId);
-	return {
-		address
-	};
-});
-
 const fetchEphemeralKeyPair = createAsyncThunk('wallet/fetchEphemeralKeyPair', async (_, thunkAPI) => {
 	const mezon = await ensureSession(getMezonCtx(thunkAPI));
 	if (!mezon.mmnClient) {
@@ -63,34 +51,40 @@ const fetchEphemeralKeyPair = createAsyncThunk('wallet/fetchEphemeralKeyPair', a
 	};
 });
 
-const fetchZkProofs = createAsyncThunk(
-	'wallet/fetchZkProofs',
-	async (req: { userId: string; ephemeralPrivateKey?: string; jwt: string }, thunkAPI) => {
-		try {
-			const mezon = await ensureSession(getMezonCtx(thunkAPI));
-			const ephemeralKeyPair = selectEphemeralKeyPair(thunkAPI.getState() as any);
-			const address = selectAddress(thunkAPI.getState() as any);
-			if (!ephemeralKeyPair || !address) {
-				return thunkAPI.rejectWithValue('Invalid ephemeral key pair or address');
-			}
-			if (!mezon.zkClient) {
-				return thunkAPI.rejectWithValue('ZkClient not initialized');
-			}
+const fetchZkProofs = createAsyncThunk('wallet/fetchZkProofs', async (req: { userId: string; jwt: string }, thunkAPI) => {
+	try {
+		const mezon = await ensureSession(getMezonCtx(thunkAPI));
+		if (!mezon.zkClient || !mezon.mmnClient) {
+			return;
+		}
+		const ephemeralKeyPair = await mezon.mmnClient.generateEphemeralKeyPair();
+		const address = await mezon.mmnClient.getAddressFromUserId(req.userId);
+		const response = await mezon.zkClient.getZkProofs({
+			userId: req.userId,
+			jwt: req.jwt,
+			address,
+			ephemeralPublicKey: ephemeralKeyPair.publicKey
+		});
+		if (response) {
+			await thunkAPI.dispatch(walletActions.fetchWalletDetail({ userId: req.userId }));
+			thunkAPI.dispatch(walletActions.setIsEnabledWallet(true));
+		}
 
-			const response = await mezon.zkClient.getZkProofs({ ...req, address, ephemeralPublicKey: ephemeralKeyPair?.publicKey });
-			return response;
-		} catch (error) {
-			if (error instanceof Error) {
-				thunkAPI.dispatch(
-					toastActions.addToast({
-						message: error.message,
-						type: 'error'
-					})
-				);
-			}
+		return {
+			response,
+			ephemeralKeyPair
+		};
+	} catch (error) {
+		if (error instanceof Error) {
+			thunkAPI.dispatch(
+				toastActions.addToast({
+					message: error.message,
+					type: 'error'
+				})
+			);
 		}
 	}
-);
+});
 
 const sendTransaction = createAsyncThunk(
 	'wallet/sendTransaction',
@@ -100,13 +94,15 @@ const sendTransaction = createAsyncThunk(
 			recipient,
 			amount,
 			textData,
-			extraInfo
+			extraInfo,
+			isSendByAddress
 		}: {
 			sender?: string;
 			recipient?: string;
 			amount?: number;
 			textData?: string;
 			extraInfo?: ExtraInfo;
+			isSendByAddress?: boolean;
 		},
 		thunkAPI
 	) => {
@@ -162,18 +158,31 @@ const sendTransaction = createAsyncThunk(
 			return thunkAPI.rejectWithValue(errMsg);
 		}
 
-		const response = await mezon.mmnClient.sendTransaction({
-			sender,
-			recipient,
-			amount: mezon.mmnClient.scaleAmountToDecimals(amount),
-			nonce: currentNonce.nonce + 1,
-			textData,
-			extraInfo,
-			publicKey: ephemeralKeyPair.publicKey,
-			privateKey: ephemeralKeyPair.privateKey,
-			zkProof: zkProofs.proof,
-			zkPub: zkProofs.public_input
-		});
+		const response = isSendByAddress
+			? await mezon.mmnClient.sendTransactionByAddress({
+					sender,
+					recipient,
+					amount: mezon.mmnClient.scaleAmountToDecimals(amount),
+					nonce: currentNonce.nonce + 1,
+					textData,
+					extraInfo,
+					publicKey: ephemeralKeyPair.publicKey,
+					privateKey: ephemeralKeyPair.privateKey,
+					zkProof: zkProofs.proof,
+					zkPub: zkProofs.public_input
+				})
+			: await mezon.mmnClient.sendTransaction({
+					sender,
+					recipient,
+					amount: mezon.mmnClient.scaleAmountToDecimals(amount),
+					nonce: currentNonce.nonce + 1,
+					textData,
+					extraInfo,
+					publicKey: ephemeralKeyPair.publicKey,
+					privateKey: ephemeralKeyPair.privateKey,
+					zkProof: zkProofs.proof,
+					zkPub: zkProofs.public_input
+				});
 
 		if (!response?.ok) {
 			const errMsg = safeJSONParse(response.error)?.message || response.error;
@@ -219,6 +228,8 @@ export const walletSlice = createSlice({
 			state.zkProofs = undefined;
 			state.ephemeralKeyPair = undefined;
 			state.loadingStatus = 'not loaded';
+			state.error = null;
+			state.isEnabled = false;
 		},
 		resetState(state) {
 			state.isEnabled = false;
@@ -243,17 +254,6 @@ export const walletSlice = createSlice({
 				state.loadingStatus = 'error';
 				state.error = action.error.message;
 			})
-			.addCase(fetchAddress.pending, (state: WalletState) => {
-				state.loadingStatus = 'loading';
-			})
-			.addCase(fetchAddress.fulfilled, (state: WalletState, action) => {
-				state.address = action.payload.address;
-				state.loadingStatus = 'loaded';
-			})
-			.addCase(fetchAddress.rejected, (state: WalletState, action) => {
-				state.loadingStatus = 'error';
-				state.error = action.error.message;
-			})
 			.addCase(fetchEphemeralKeyPair.pending, (state: WalletState) => {
 				state.loadingStatus = 'loading';
 			})
@@ -269,7 +269,10 @@ export const walletSlice = createSlice({
 				state.loadingStatus = 'loading';
 			})
 			.addCase(fetchZkProofs.fulfilled, (state: WalletState, action) => {
-				state.zkProofs = action.payload;
+				state.zkProofs = action.payload?.response;
+				if (action?.payload?.ephemeralKeyPair) {
+					state.ephemeralKeyPair = action.payload.ephemeralKeyPair;
+				}
 				state.loadingStatus = 'loaded';
 			})
 			.addCase(fetchZkProofs.rejected, (state: WalletState, action) => {
@@ -284,7 +287,6 @@ export const walletReducer = walletSlice.reducer;
 export const walletActions = {
 	...walletSlice.actions,
 	fetchWalletDetail,
-	fetchAddress,
 	fetchEphemeralKeyPair,
 	fetchZkProofs,
 	sendTransaction
@@ -296,7 +298,7 @@ export const selectZkProofs = createSelector(getWalletState, (state) => state?.z
 
 export const selectEphemeralKeyPair = createSelector(getWalletState, (state) => state?.ephemeralKeyPair);
 
-export const selectAddress = createSelector(getWalletState, (state) => state?.address);
+export const selectAddress = createSelector(getWalletState, (state) => state?.wallet?.address);
 
 export const selectIsEnabledWallet = createSelector(getWalletState, (state) => state?.isEnabled);
 

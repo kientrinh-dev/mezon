@@ -9,7 +9,9 @@
 		"startVoiceCall": "Start voice call",
 		"startVideoCall": "Start Video Call",
 		"showMemberList": "Show Member List",
+		"hideMemberList": "Hide Member List",
 		"showUserProfile": "Show User Profile",
+		"hideUserProfile": "Hide User Profile",
 		"files": "Files",
 		"canvas": "Canvas",
 		"threads": "Threads",
@@ -26,6 +28,8 @@
 	"joinedThreadsLast30Days": "Joined Threads (Last 30 Days)",
 	"olderThreads": "Older Threads",
 	"loading": "Loading...",
+	"topic": "Topic",
+	"reactions": "React",
 	"callMessages": {
 		"startedVoiceCall": "Started voice call",
 		"startedVideoCall": "Started video call"
@@ -83,6 +87,11 @@
 		"sentDate": "Sent Date",
 		"fromDate": "From Date",
 		"toDate": "To Date",
+		"filters": {
+			"all": "All",
+			"images": "Images",
+			"videos": "Videos"
+		},
 		"dateRange": {
 			"from": "From {{date}}",
 			"to": "To {{date}}",
@@ -98,11 +107,14 @@
 		},
 		"emptyState": {
 			"noMediaFiles": "No media files found",
-			"noMediaFilesDateRange": "No media files found for the selected date range"
+			"noMediaFilesDateRange": "No media files found for the selected date range",
+			"noImages": "No images found",
+			"noVideos": "No videos found"
 		},
 		"loading": {
 			"olderImages": "Loading older images...",
-			"newerImages": "Loading newer images..."
+			"newerImages": "Loading newer images...",
+			"filterChange": "Loading media..."
 		},
 		"filesCount": "{{count}} files",
 		"imageError": "Error"
@@ -144,5 +156,7 @@
 		"placeholder": {
 			"threadName": "Enter Thread Name"
 		}
-	}
+	},
+	"moreFile": "more file",
+	"moreFiles": "more files"
 }

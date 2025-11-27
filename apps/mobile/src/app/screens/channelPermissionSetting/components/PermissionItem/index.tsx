@@ -1,4 +1,4 @@
-import { baseColor, size, useTheme, verticalScale } from '@mezon/mobile-ui';
+import { baseColor, size, useTheme } from '@mezon/mobile-ui';
 import { EPermission } from '@mezon/utils';
 import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -6,12 +6,14 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import MezonIconCDN from '../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../constants/icon_cdn';
 import { EPermissionStatus } from '../../types/channelPermission.enum';
-import { IPermissionItemProps } from '../../types/channelPermission.type';
+import type { IPermissionItemProps } from '../../types/channelPermission.type';
+import { styles as stylesFn } from './PermissionItem.styles';
 
 export const PermissionItem = memo(({ permission, status, onPermissionStatusChange }: IPermissionItemProps) => {
-	const { slug, title } = permission;
+	const { slug } = permission;
 	const { themeValue } = useTheme();
-	const { t } = useTranslation('channelSetting');
+	const styles = stylesFn(themeValue);
+	const { t } = useTranslation(['channelSetting', 'clanRoles']);
 
 	const permissionOptionList = [
 		{
@@ -45,32 +47,21 @@ export const PermissionItem = memo(({ permission, status, onPermissionStatusChan
 		}
 	}, [t, slug]);
 
+	const getPermissionTitle = (slug: string) => {
+		return t(`clanRoles:permissionTitles.${slug}`, { defaultValue: '' });
+	};
+
 	return (
-		<View style={{ gap: size.s_6 }}>
-			<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-				<Text
-					style={{
-						fontSize: verticalScale(18),
-						color: themeValue.textStrong
-					}}
-				>
-					{title}
-				</Text>
-				<View style={{ flexDirection: 'row', borderRadius: size.s_4, overflow: 'hidden' }}>
+		<View style={styles.container}>
+			<View style={styles.headerRow}>
+				<Text style={styles.titleText}>{getPermissionTitle(slug)}</Text>
+				<View style={styles.optionRow}>
 					{permissionOptionList?.map((option) => {
 						const { activeBackground, icon, type, color } = option;
 						const isActive = status === type;
 						return (
 							<TouchableOpacity key={type.toString()} onPress={() => onPermissionStatusChange(permission?.id, type)}>
-								<View
-									style={{
-										backgroundColor: isActive ? activeBackground : themeValue.primary,
-										alignItems: 'center',
-										justifyContent: 'center',
-										width: size.s_34,
-										height: size.s_30
-									}}
-								>
+								<View style={[styles.optionButton, { backgroundColor: isActive ? activeBackground : themeValue.primary }]}>
 									{icon(isActive ? 'white' : color)}
 								</View>
 							</TouchableOpacity>
@@ -78,14 +69,7 @@ export const PermissionItem = memo(({ permission, status, onPermissionStatusChan
 					})}
 				</View>
 			</View>
-			<Text
-				style={{
-					fontSize: verticalScale(10),
-					color: themeValue.textDisabled
-				}}
-			>
-				{getPermissionDescription()}
-			</Text>
+			<Text style={styles.descriptionText}>{getPermissionDescription()}</Text>
 		</View>
 	);
 });

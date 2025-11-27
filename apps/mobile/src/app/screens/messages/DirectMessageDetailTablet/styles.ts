@@ -4,7 +4,7 @@ import { StyleSheet } from 'react-native';
 export const style = (colors: Attributes) =>
 	StyleSheet.create({
 		dmMessageContainer: {
-			backgroundColor: colors.secondary,
+			backgroundColor: colors.primary,
 			flex: 1
 		},
 		headerWrapper: {
@@ -101,5 +101,9 @@ export const style = (colors: Attributes) =>
 		iconWrapper: {
 			flexDirection: 'row',
 			gap: size.s_2
+		},
+		imageFullSize: {
+			width: '100%',
+			height: '100%'
 		}
 	});

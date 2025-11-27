@@ -114,14 +114,7 @@ const SettingUserClanProfileEdit: React.FC<SettingUserClanProfileEditProps> = ({
 			}
 			setIsLoading(true);
 
-			const attachment = await handleUploadFile(
-				clientRef.current,
-				sessionRef.current,
-				clanId || '0',
-				userProfile?.user?.id || '0',
-				file.name,
-				file
-			);
+			const attachment = await handleUploadFile(clientRef.current, sessionRef.current, file.name, file);
 			setUrlImage(attachment.url || '');
 			setFlagOption(attachment.url !== userProfile?.user?.avatar_url);
 			setIsLoading(false);
@@ -192,8 +185,8 @@ const SettingUserClanProfileEdit: React.FC<SettingUserClanProfileEditProps> = ({
 		setFlagOption(false);
 	};
 	const handleUpdateUser = async () => {
-		if (!checkValidate && (urlImage || displayName)) {
-			await updateUserClanProfile(userClansProfile?.clan_id ?? '', displayName.trim() || '', urlImage || '');
+		if (!checkValidate) {
+			await updateUserClanProfile(userClansProfile?.clan_id ?? '', displayName.trim() || userProfile?.user?.display_name || '', urlImage || '');
 		}
 		setFlagOption(false);
 	};

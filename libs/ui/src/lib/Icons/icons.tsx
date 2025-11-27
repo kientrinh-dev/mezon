@@ -1,6 +1,25 @@
 import { generateE2eId } from '@mezon/utils';
 import React, { useState } from 'react';
 
+const svgFullSizeStyle = {
+	width: '100%',
+	height: '100%',
+	transform: 'translate3d(0px, 0px, 0px)',
+	contentVisibility: 'visible'
+} as const;
+
+const displayBlockStyle = {
+	display: 'block'
+} as const;
+
+const displayNoneStyle = {
+	display: 'none'
+} as const;
+
+const maskTypeAlphaStyle = {
+	maskType: 'alpha'
+} as const;
+
 export * from './attachmentThumb';
 export * from './iconInEmojiPanel';
 export * from './iconRightClick';
@@ -716,7 +735,7 @@ export const Gif: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', isWhite = fa
 			height="24"
 			preserveAspectRatio="xMidYMid meet"
 			className={`text-theme-primary text-theme-primary-hover ${className}`}
-			style={{ width: '100%', height: '100%', transform: 'translate3d(0px, 0px, 0px)', contentVisibility: 'visible' }}
+			style={svgFullSizeStyle}
 		>
 			<defs>
 				<clipPath id="__lottie_element_129">
@@ -730,12 +749,12 @@ export const Gif: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', isWhite = fa
 						clipPath="url(#__lottie_element_139)"
 						transform="matrix(1,0,0,1,0.000030517578125,-0.000030517578125)"
 						opacity="1"
-						style={{ display: 'block' }}
+						style={displayBlockStyle}
 					>
 						<g
 							transform="matrix(24.999998092651367,0.0000197777699213475,-0.000019777766283368692,25.000003814697266,300.0060119628906,299.99285888671875)"
 							opacity="1"
-							style={{ display: 'block' }}
+							style={displayBlockStyle}
 						>
 							<g opacity="1" transform="matrix(1,0,0,1,0,0)">
 								<path
@@ -748,7 +767,7 @@ export const Gif: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', isWhite = fa
 						<g
 							transform="matrix(24.999998092651367,0,0,25.000003814697266,299.9960021972656,299.99298095703125)"
 							opacity="1"
-							style={{ display: 'block' }}
+							style={displayBlockStyle}
 						>
 							<g opacity="1" transform="matrix(1,0,0,1,0,0)">
 								<path
@@ -761,7 +780,7 @@ export const Gif: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', isWhite = fa
 						<g
 							transform="matrix(24.999998092651367,0,0,25.000003814697266,299.9950256347656,299.99298095703125)"
 							opacity="1"
-							style={{ display: 'block' }}
+							style={displayBlockStyle}
 						>
 							<g opacity="1" transform="matrix(1,0,0,1,0,0)">
 								<path
@@ -793,9 +812,9 @@ export const Gif: React.FC<IconProps> = ({ defaultFill = '#AEAEAE', isWhite = fa
 					clipPath="url(#__lottie_element_131)"
 					transform="matrix(0.03999999910593033,0,0,0.03999999910593033,0,0)"
 					opacity="1"
-					style={{ display: 'block' }}
+					style={displayBlockStyle}
 				>
-					<g mask="url(#__lottie_element_135_2)" style={{ display: 'block' }}>
+					<g mask="url(#__lottie_element_135_2)" style={displayBlockStyle}>
 						<g transform="matrix(25,0.0000018166268773711636,-0.0000018166268773711636,25,300,300)" opacity="1">
 							<g opacity="1" transform="matrix(1,0,0,1,0,0)">
 								<path
@@ -822,7 +841,7 @@ export const Sticker: React.FC<IconProps> = ({ className = '', defaultFill = '#A
 			height="24"
 			preserveAspectRatio="xMidYMid meet"
 			className={`text-theme-primary text-theme-primary-hover ${className} `}
-			style={{ width: '100%', height: '100%', transform: 'translate3d(0px, 0px, 0px)', contentVisibility: 'visible' }}
+			style={svgFullSizeStyle}
 		>
 			<defs>
 				<clipPath id="__lottie_element_339">
@@ -832,7 +851,7 @@ export const Sticker: React.FC<IconProps> = ({ className = '', defaultFill = '#A
 					<path d="M0,0 L600,0 L600,600 L0,600z"></path>
 				</clipPath>
 				<g id="__lottie_element_346">
-					<g style={{ display: 'block' }} transform="matrix(25,0,0,25,300,300)" opacity="1">
+					<g style={displayBlockStyle} transform="matrix(25,0,0,25,300,300)" opacity="1">
 						<g opacity="1" transform="matrix(1,0,0,1,0,0)">
 							<path
 								fill="currentColor"
@@ -843,9 +862,9 @@ export const Sticker: React.FC<IconProps> = ({ className = '', defaultFill = '#A
 					</g>
 				</g>
 				<g id="__lottie_element_356">
-					<g clipPath="url(#__lottie_element_357)" transform="matrix(1,0,0,1,0,0)" opacity="1" style={{ display: 'none' }}>
+					<g clipPath="url(#__lottie_element_357)" transform="matrix(1,0,0,1,0,0)" opacity="1" style={displayNoneStyle}>
 						<g
-							style={{ display: 'block' }}
+							style={displayBlockStyle}
 							transform="matrix(25,0.00002699064862099476,-0.00002699064862099476,25,299.9999084472656,300.0001525878906)"
 							opacity="1"
 						>
@@ -858,7 +877,7 @@ export const Sticker: React.FC<IconProps> = ({ className = '', defaultFill = '#A
 							</g>
 						</g>
 						<g
-							style={{ display: 'block' }}
+							style={displayBlockStyle}
 							transform="matrix(25,-0.00003855806789943017,0.00003855806789943017,25,300.0001220703125,300.0002136230469)"
 							opacity="1"
 						>
@@ -870,7 +889,7 @@ export const Sticker: React.FC<IconProps> = ({ className = '', defaultFill = '#A
 								></path>
 							</g>
 						</g>
-						<g style={{ display: 'block' }} transform="matrix(25,0,0,25,299.99700927734375,300)" opacity="1">
+						<g style={displayBlockStyle} transform="matrix(25,0,0,25,299.99700927734375,300)" opacity="1">
 							<g opacity="1" transform="matrix(1,0,0,1,0,0)">
 								<path
 									strokeLinecap="round"
@@ -884,7 +903,7 @@ export const Sticker: React.FC<IconProps> = ({ className = '', defaultFill = '#A
 								></path>
 							</g>
 						</g>
-						<g style={{ display: 'block' }} transform="matrix(25,0,0,25,300.0119934082031,300.0119934082031)" opacity="1">
+						<g style={displayBlockStyle} transform="matrix(25,0,0,25,300.0119934082031,300.0119934082031)" opacity="1">
 							<g opacity="1" transform="matrix(1,0,0,1,0,0)">
 								<path
 									strokeLinecap="butt"
@@ -898,7 +917,7 @@ export const Sticker: React.FC<IconProps> = ({ className = '', defaultFill = '#A
 								></path>
 							</g>
 						</g>
-						<g clipPath="url(#__lottie_element_363)" style={{ display: 'block' }} transform="matrix(25,0,0,25,300,300)" opacity="1">
+						<g clipPath="url(#__lottie_element_363)" style={displayBlockStyle} transform="matrix(25,0,0,25,300,300)" opacity="1">
 							<g opacity="1" transform="matrix(1,0,0,1,0,0)">
 								<path
 									fill="currentColor"
@@ -954,9 +973,9 @@ export const Sticker: React.FC<IconProps> = ({ className = '', defaultFill = '#A
 					clipPath="url(#__lottie_element_341)"
 					transform="matrix(0.03999999910593033,0,0,0.03999999910593033,0,0)"
 					opacity="1"
-					style={{ display: 'block' }}
+					style={displayBlockStyle}
 				>
-					<g mask="url(#__lottie_element_356_2)" style={{ display: 'none' }}>
+					<g mask="url(#__lottie_element_356_2)" style={displayNoneStyle}>
 						<g transform="matrix(25,0,0,25,300,300)" opacity="1">
 							<g opacity="1" transform="matrix(1,0,0,1,0,0)">
 								<path
@@ -967,7 +986,7 @@ export const Sticker: React.FC<IconProps> = ({ className = '', defaultFill = '#A
 							</g>
 						</g>
 					</g>
-					<g transform="matrix(25,0,0,25,300,300)" opacity="1" style={{ display: 'none' }}>
+					<g transform="matrix(25,0,0,25,300,300)" opacity="1" style={displayNoneStyle}>
 						<g opacity="1" transform="matrix(1,0,0,1,0,0)">
 							<path
 								fill="rgb(88,101,242)"
@@ -976,7 +995,7 @@ export const Sticker: React.FC<IconProps> = ({ className = '', defaultFill = '#A
 							></path>
 						</g>
 					</g>
-					<g mask="url(#__lottie_element_346_2)" style={{ display: 'block' }}>
+					<g mask="url(#__lottie_element_346_2)" style={displayBlockStyle}>
 						<g transform="matrix(25,0,0,25,300,300)" opacity="1">
 							<g opacity="1" transform="matrix(1,0,0,1,0,0)">
 								<path
@@ -1074,6 +1093,40 @@ export const ArrowRight: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5 min-w-4
 					d="M5.91083 3.41075C6.23626 3.08531 6.7639 3.08531 7.08934 3.41075L12.0893 8.41075C12.4148 8.73619 12.4148 9.26382 12.0893 9.58926L7.08934 14.5893C6.7639 14.9147 6.23626 14.9147 5.91083 14.5893C5.58539 14.2638 5.58539 13.7362 5.91083 13.4107L10.3216 9L5.91083 4.58926C5.58539 4.26382 5.58539 3.73619 5.91083 3.41075Z"
 					fill="currentColor"
 				/>
+			</g>
+		</svg>
+	);
+};
+
+export const TopRight: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5 min-w-4' }) => {
+	return (
+		<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={defaultSize}>
+			<g id="Live area" clipPath="url(#clip0_429_11179)">
+				<path
+					id="Vector"
+					d="M7 7H17M17 7V17M17 7L7 17"
+					stroke="currentColor"
+					strokeWidth="1.5"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+				/>
+			</g>
+			<defs>
+				<clipPath id="clip0_429_11179">
+					<rect width="24" height="24" fill="white" />
+				</clipPath>
+			</defs>
+		</svg>
+	);
+};
+
+export const ArrowLeft: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5 min-w-4' }) => {
+	return (
+		<svg viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" className={defaultSize}>
+			<g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+			<g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+			<g id="SVGRepo_iconCarrier">
+				<path d="M768 903.232l-50.432 56.768L256 512l461.568-448 50.432 56.768L364.928 512z" fill="currentColor" />
 			</g>
 		</svg>
 	);
@@ -2842,7 +2895,7 @@ export function AppDirectoryFooterRobot() {
 						d="M96.289 68.1853C96.1535 68.1853 96.0181 68.1609 95.8868 68.1122C95.2958 67.8926 94.9963 67.242 95.2179 66.6565C95.2261 66.6321 96.1617 64.0623 95.1399 62.0374C94.8567 61.4763 95.0865 60.7973 95.6488 60.5167C96.211 60.2361 96.9004 60.4638 97.1836 61.0209C98.6568 63.9403 97.4134 67.303 97.36 67.4453C97.1877 67.9007 96.7527 68.1813 96.289 68.1813V68.1853Z"
 						fill="black"
 					/>
-					<mask id="mask0_6215_282581" style={{ maskType: 'alpha' }} maskUnits="userSpaceOnUse" x="45" y="56" width="28" height="18">
+					<mask id="mask0_6215_282581" style={maskTypeAlphaStyle} maskUnits="userSpaceOnUse" x="45" y="56" width="28" height="18">
 						<path
 							d="M51.9966 59.1099C52.1731 59.9191 52.407 60.6469 52.7189 61.2893C52.7886 61.452 52.8871 61.6024 52.9651 61.7569C53.002 61.8342 53.0513 61.9074 53.1005 61.9765C53.1457 62.0497 53.1908 62.1188 53.2318 62.192C53.2811 62.2611 53.3344 62.3262 53.3837 62.3912C53.437 62.4563 53.4699 62.5295 53.5314 62.5864C53.6422 62.7084 53.7284 62.8385 53.8474 62.9442C54.2824 63.3956 54.7379 63.7656 55.2386 64.0177C55.3699 64.0705 55.4807 64.1559 55.6161 64.1966C55.6818 64.221 55.7434 64.2495 55.8049 64.2779C55.8706 64.3023 55.9403 64.3145 56.0019 64.343C56.0676 64.3633 56.1291 64.3958 56.1989 64.4121C56.2686 64.4284 56.3384 64.4446 56.4041 64.4609C56.5354 64.5097 56.6872 64.5137 56.8268 64.5422C56.8637 64.5463 56.8965 64.5625 56.9335 64.5625L57.0443 64.5707C57.1181 64.5788 57.192 64.5869 57.2659 64.5951C57.3397 64.6113 57.4218 64.5991 57.4957 64.6032C57.5737 64.6032 57.6516 64.6032 57.7296 64.6113C57.8896 64.6113 58.0538 64.5951 58.2179 64.5951C58.3862 64.5829 58.5586 64.5503 58.7268 64.5381C59.4204 64.4446 60.1714 64.2413 60.9511 63.9567C61.3409 63.8266 61.7349 63.6395 62.1371 63.4688L62.7403 63.1719C62.8429 63.1191 62.9455 63.0784 63.044 63.0215L63.3477 62.8507C64.1684 62.4238 64.981 61.883 65.8387 61.3666L66.0931 61.2121C67.9891 60.0654 70.4637 60.6591 71.6168 62.5376C72.5853 64.1112 72.3186 66.0873 71.0916 67.36C70.1846 68.3033 69.2079 69.206 68.0917 70.007L67.6772 70.312C67.5418 70.4136 67.3858 70.5031 67.2422 70.6007C66.9467 70.7877 66.6553 70.9788 66.3558 71.1618L65.416 71.6782L65.178 71.8042C65.0959 71.8449 65.0138 71.8815 64.9318 71.9222L64.4311 72.1499C63.0933 72.7516 61.6241 73.2152 60.04 73.4591C59.6379 73.5079 59.2398 73.5567 58.8335 73.5893C58.4231 73.6055 58.0128 73.6258 57.5983 73.6218L56.9704 73.5893C56.7611 73.573 56.5518 73.573 56.3425 73.5364L55.7105 73.451L55.3945 73.4022C55.2878 73.3859 55.1852 73.3575 55.0785 73.3372C54.66 73.2355 54.2373 73.1542 53.8269 73.0078L53.2113 72.8045C53.0061 72.7354 52.805 72.6419 52.604 72.5605C52.4029 72.4751 52.2018 72.3898 52.0089 72.2922L51.4303 71.9832L51.143 71.8246C51.0486 71.7717 50.9583 71.7107 50.8681 71.6497C50.6834 71.5318 50.5028 71.4098 50.3264 71.2878C50.1417 71.1699 49.9816 71.0276 49.8093 70.8934C49.641 70.7593 49.4728 70.6251 49.3086 70.4828C49.1486 70.3364 48.9926 70.19 48.8408 70.0396C48.6848 69.8891 48.533 69.7427 48.3935 69.576C48.1103 69.2548 47.823 68.9417 47.585 68.592C47.4619 68.4213 47.3347 68.2505 47.2198 68.0756L46.8915 67.543C46.7807 67.3641 46.6781 67.1852 46.5878 66.9981L46.3128 66.4411C46.2185 66.2581 46.1487 66.0629 46.0748 65.8718C46.001 65.6807 45.9271 65.4896 45.8573 65.2985C45.607 64.5259 45.41 63.7412 45.3197 62.9483C45.1227 61.3707 45.2376 59.789 45.685 58.3333C46.202 56.654 47.9913 55.7066 49.6862 56.2149C50.8393 56.5605 51.6519 57.4916 51.8899 58.5813L52.0007 59.0937L51.9966 59.1099Z"
 							fill="url(#paint5_linear_6215_282581)"
@@ -4318,8 +4371,7 @@ export function CheckedIcon(props: React.HTMLAttributes<SVGElement>) {
 			data-qa="menu_item_checkmark"
 			aria-hidden="true"
 			viewBox="0 0 20 20"
-			className="is-inline"
-			style={{ width: '1em', height: '1em', fontSize: '10px' }}
+			className="is-inline w-[1em] h-[1em] text-[10px]"
 			{...props}
 		>
 			<path
@@ -4334,15 +4386,7 @@ export function CheckedIcon(props: React.HTMLAttributes<SVGElement>) {
 
 export function H1Icon(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg
-			data-315="true"
-			data-qa="heading-1"
-			aria-hidden="true"
-			viewBox="0 0 20 20"
-			className="is-inline"
-			style={{ width: '1em', height: '1em' }}
-			{...props}
-		>
+		<svg data-315="true" data-qa="heading-1" aria-hidden="true" viewBox="0 0 20 20" className="is-inline w-[1em] h-[1em]" {...props}>
 			<path
 				fill="currentColor"
 				fillRule="evenodd"
@@ -4354,15 +4398,7 @@ export function H1Icon(props: React.HTMLAttributes<SVGElement>) {
 }
 export function H2Icon(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg
-			data-315="true"
-			data-qa="heading-2"
-			aria-hidden="true"
-			viewBox="0 0 20 20"
-			className="is-inline"
-			style={{ width: '1em', height: '1em' }}
-			{...props}
-		>
+		<svg data-315="true" data-qa="heading-2" aria-hidden="true" viewBox="0 0 20 20" className="is-inline w-[1em] h-[1em]" {...props}>
 			<path
 				fill="currentColor"
 				fillRule="evenodd"
@@ -4374,15 +4410,7 @@ export function H2Icon(props: React.HTMLAttributes<SVGElement>) {
 }
 export function H3Icon(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg
-			data-315="true"
-			data-qa="heading-3"
-			aria-hidden="true"
-			viewBox="0 0 20 20"
-			className="is-inline"
-			style={{ width: '1em', height: '1em' }}
-			{...props}
-		>
+		<svg data-315="true" data-qa="heading-3" aria-hidden="true" viewBox="0 0 20 20" className="is-inline w-[1em] h-[1em]" {...props}>
 			<path
 				fill="currentColor"
 				fillRule="evenodd"
@@ -4395,15 +4423,7 @@ export function H3Icon(props: React.HTMLAttributes<SVGElement>) {
 
 export function CheckListIcon(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg
-			data-315="true"
-			data-qa="checkbox"
-			aria-hidden="true"
-			viewBox="0 0 20 20"
-			className="is-inline"
-			style={{ width: '1em', height: '1em' }}
-			{...props}
-		>
+		<svg data-315="true" data-qa="checkbox" aria-hidden="true" viewBox="0 0 20 20" className="is-inline w-[1em] h-[1em]" {...props}>
 			<path
 				fill="currentColor"
 				fillRule="evenodd"
@@ -4416,15 +4436,7 @@ export function CheckListIcon(props: React.HTMLAttributes<SVGElement>) {
 
 export function OrderedListIcon(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg
-			data-315="true"
-			data-qa="numbered-list"
-			aria-hidden="true"
-			viewBox="0 0 20 20"
-			className="is-inline"
-			style={{ width: '1em', height: '1em' }}
-			{...props}
-		>
+		<svg data-315="true" data-qa="numbered-list" aria-hidden="true" viewBox="0 0 20 20" className="is-inline w-[1em] h-[1em]" {...props}>
 			<path
 				fill="currentColor"
 				fillRule="evenodd"
@@ -4437,15 +4449,7 @@ export function OrderedListIcon(props: React.HTMLAttributes<SVGElement>) {
 
 export function BulletListIcon(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg
-			data-315="true"
-			data-qa="bulleted-list"
-			aria-hidden="true"
-			viewBox="0 0 20 20"
-			className="is-inline"
-			style={{ width: '1em', height: '1em' }}
-			{...props}
-		>
+		<svg data-315="true" data-qa="bulleted-list" aria-hidden="true" viewBox="0 0 20 20" className="is-inline w-[1em] h-[1em]" {...props}>
 			<path
 				fill="currentColor"
 				fillRule="evenodd"
@@ -4458,15 +4462,7 @@ export function BulletListIcon(props: React.HTMLAttributes<SVGElement>) {
 
 export function BlockquoteIcon(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg
-			data-315="true"
-			data-qa="quote"
-			aria-hidden="true"
-			viewBox="0 0 20 20"
-			className="is-inline"
-			style={{ width: '1em', height: '1em' }}
-			{...props}
-		>
+		<svg data-315="true" data-qa="quote" aria-hidden="true" viewBox="0 0 20 20" className="is-inline w-[1em] h-[1em]" {...props}>
 			<path
 				fill="currentColor"
 				fillRule="evenodd"
@@ -4479,7 +4475,7 @@ export function BlockquoteIcon(props: React.HTMLAttributes<SVGElement>) {
 
 export function ChevronDownIcon(props: React.HTMLAttributes<SVGElement>) {
 	return (
-		<svg data-315="true" data-qa="caret-down" aria-hidden="true" viewBox="0 0 20 20" style={{ width: '1em', height: '1em' }} {...props}>
+		<svg data-315="true" data-qa="caret-down" aria-hidden="true" viewBox="0 0 20 20" className="w-[1em] h-[1em]" {...props}>
 			<path
 				fill="currentColor"
 				fillRule="evenodd"
@@ -5280,15 +5276,7 @@ export function CalendarIcon(props: React.HTMLAttributes<SVGElement>) {
 
 export const FileIcon: React.FC<IconProps> = ({ isWhite, defaultSize = 'w-5 h-5' }) => {
 	return (
-		<svg
-			className={defaultSize}
-			data-testid="geist-icon"
-			height="16"
-			strokeLinejoin="round"
-			style={{ color: 'currentColor' }}
-			viewBox="0 0 16 16"
-			width="16"
-		>
+		<svg className={`${defaultSize} text-current`} data-testid="geist-icon" height="16" strokeLinejoin="round" viewBox="0 0 16 16" width="16">
 			<path
 				fillRule="evenodd"
 				clipRule="evenodd"
@@ -5469,6 +5457,21 @@ export function VoiceEmojiControlIcon(props: React.HTMLAttributes<SVGElement>) {
 	);
 }
 
+export function NoiseSupressionIcon(props: React.HTMLAttributes<SVGElement>) {
+	return (
+		<svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+			<path
+				d="M3 11V13M6 8V16M9 10V14M12 7V17M15 4V20M18 9V15M21 11V13"
+				stroke="white"
+				strokeWidth="1.5"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			/>
+			{props.children}
+		</svg>
+	);
+}
+
 export function VoiceSoundControlIcon(props: React.HTMLAttributes<SVGElement>) {
 	return (
 		<svg
@@ -5502,7 +5505,6 @@ export function VoiceSoundControlIcon(props: React.HTMLAttributes<SVGElement>) {
 		</svg>
 	);
 }
-
 export function VoiceMicIcon({ scale = 1, ...props }: { scale?: number } & React.SVGProps<SVGSVGElement>) {
 	return (
 		<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" {...props}>
@@ -5850,3 +5852,47 @@ export function FileAndFolder(props: React.HTMLAttributes<SVGElement>) {
 		</svg>
 	);
 }
+export const Linux: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5 min-w-4', size = '' }) => {
+	return (
+		<svg fill="currentColor" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" className={`${defaultSize} ${size}`}>
+			<g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+			<g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+			<g id="SVGRepo_iconCarrier">
+				<path d="M16.672 0c-0.208 0-0.421 0.011-0.641 0.027-5.635 0.447-4.14 6.411-4.224 8.4-0.104 1.453-0.4 2.604-1.4 4.027-1.183 1.401-2.839 3.667-3.625 6.025-0.369 1.109-0.547 2.251-0.38 3.324-0.052 0.041-0.104 0.088-0.151 0.176-0.344 0.36-0.6 0.803-0.881 1.12-0.265 0.265-0.645 0.355-1.063 0.532-0.416 0.181-0.88 0.359-1.151 0.911-0.12 0.251-0.183 0.521-0.177 0.803 0 0.26 0.037 0.531 0.073 0.713 0.079 0.531 0.156 0.969 0.052 1.292-0.333 0.905-0.369 1.525-0.14 1.979 0.233 0.448 0.713 0.625 1.249 0.803 1.084 0.265 2.547 0.181 3.704 0.796 1.233 0.625 2.489 0.896 3.489 0.631 0.697-0.156 1.291-0.62 1.609-1.26 0.781-0.005 1.64-0.36 3.011-0.448 0.932-0.079 2.099 0.359 3.437 0.265 0.036 0.183 0.083 0.265 0.156 0.448v0.005c0.52 1.036 1.484 1.505 2.516 1.427 1.025-0.083 2.119-0.713 3.004-1.744 0.844-1.016 2.245-1.444 3.172-2 0.464-0.267 0.839-0.625 0.865-1.141 0.031-0.531-0.265-1.083-0.948-1.833v-0.131l-0.005-0.005c-0.229-0.265-0.333-0.713-0.453-1.233-0.115-0.537-0.24-1.047-0.656-1.396-0.084-0.073-0.167-0.089-0.255-0.177-0.073-0.052-0.163-0.083-0.251-0.088 0.573-1.704 0.349-3.396-0.235-4.923-0.708-1.88-1.953-3.52-2.896-4.645-1.063-1.339-2.104-2.609-2.083-4.489 0.036-2.871 0.317-8.177-4.724-8.188zM17.375 4.541h0.021c0.281 0 0.525 0.084 0.776 0.261 0.255 0.181 0.443 0.443 0.583 0.713 0.141 0.344 0.215 0.609 0.224 0.963 0-0.025 0.005-0.052 0.005-0.077v0.14c0-0.011-0.005-0.020-0.005-0.031l-0.005-0.032c0 0.324-0.067 0.647-0.197 0.943-0.063 0.167-0.156 0.319-0.287 0.448-0.036-0.020-0.073-0.041-0.115-0.057-0.14-0.063-0.265-0.083-0.38-0.176-0.093-0.037-0.192-0.068-0.292-0.089 0.063-0.077 0.193-0.177 0.245-0.265 0.068-0.167 0.104-0.349 0.115-0.536v-0.027c0.005-0.177-0.027-0.359-0.084-0.531-0.057-0.177-0.129-0.267-0.239-0.443-0.115-0.089-0.224-0.177-0.36-0.177h-0.020c-0.125 0-0.235 0.036-0.349 0.177-0.125 0.124-0.219 0.276-0.271 0.443-0.073 0.172-0.115 0.353-0.12 0.531v0.027c0 0.119 0.011 0.239 0.025 0.359-0.26-0.088-0.583-0.183-0.812-0.271-0.011-0.088-0.021-0.177-0.021-0.265v-0.027c-0.009-0.353 0.057-0.703 0.199-1.025 0.109-0.292 0.307-0.543 0.573-0.709 0.228-0.171 0.504-0.265 0.791-0.265zM13.427 4.62h0.047c0.188 0 0.36 0.063 0.532 0.177 0.197 0.172 0.355 0.385 0.459 0.619 0.12 0.267 0.187 0.537 0.208 0.891v0.005c0.005 0.177 0.005 0.272-0.005 0.355v0.109c-0.041 0.011-0.073 0.021-0.109 0.031-0.203 0.073-0.364 0.177-0.527 0.267 0.016-0.12 0.016-0.24 0.005-0.355v-0.021c-0.015-0.176-0.052-0.265-0.109-0.443-0.041-0.135-0.12-0.26-0.224-0.359-0.063-0.057-0.151-0.089-0.239-0.084h-0.032c-0.093 0.005-0.172 0.052-0.244 0.177-0.089 0.099-0.141 0.224-0.161 0.36-0.037 0.14-0.048 0.291-0.032 0.443v0.015c0.016 0.183 0.047 0.272 0.109 0.448 0.057 0.177 0.131 0.267 0.219 0.355 0.016 0.016 0.027 0.027 0.047 0.031-0.093 0.079-0.156 0.095-0.233 0.183-0.053 0.037-0.109 0.084-0.177 0.095-0.141-0.168-0.261-0.349-0.365-0.537-0.129-0.281-0.197-0.583-0.208-0.891-0.021-0.301 0.016-0.604 0.104-0.891 0.079-0.26 0.204-0.505 0.38-0.713 0.172-0.177 0.344-0.265 0.557-0.265zM15.255 6.896c0.443 0 0.975 0.083 1.62 0.531 0.391 0.267 0.699 0.36 1.407 0.62 0.344 0.183 0.541 0.36 0.64 0.537v-0.177c0.095 0.197 0.105 0.421 0.021 0.624-0.167 0.417-0.688 0.86-1.421 1.125v0.005c-0.355 0.177-0.667 0.443-1.032 0.62-0.369 0.177-0.787 0.391-1.349 0.355-0.203 0.009-0.405-0.021-0.599-0.089-0.145-0.077-0.291-0.167-0.427-0.265-0.26-0.177-0.484-0.443-0.817-0.62v-0.005h-0.005c-0.537-0.328-0.823-0.683-0.917-0.948-0.088-0.359-0.005-0.624 0.261-0.801 0.296-0.177 0.504-0.36 0.64-0.448 0.14-0.099 0.193-0.136 0.235-0.172h0.005v-0.005c0.224-0.271 0.577-0.625 1.12-0.803 0.181-0.047 0.391-0.083 0.619-0.083zM18.984 9.749c0.48 1.891 1.6 4.636 2.319 5.964 0.38 0.713 1.14 2.213 1.468 4.032 0.208-0.005 0.437 0.025 0.683 0.088 0.864-2.229-0.724-4.625-1.448-5.292-0.297-0.265-0.312-0.443-0.167-0.443 0.787 0.708 1.817 2.095 2.192 3.672 0.172 0.713 0.215 1.475 0.032 2.229 0.088 0.036 0.177 0.083 0.271 0.088 1.375 0.715 1.885 1.251 1.64 2.052v-0.057c-0.077-0.004-0.161 0-0.239 0h-0.021c0.204-0.624-0.244-1.104-1.421-1.635-1.219-0.531-2.193-0.448-2.36 0.62-0.011 0.057-0.015 0.088-0.020 0.183-0.095 0.031-0.188 0.067-0.281 0.083-0.573 0.36-0.881 0.896-1.057 1.584-0.172 0.713-0.224 1.541-0.271 2.495-0.032 0.448-0.229 1.119-0.428 1.801-2 1.432-4.776 2.052-7.129 0.448-0.152-0.26-0.329-0.5-0.537-0.713-0.099-0.167-0.224-0.312-0.369-0.443 0.244 0 0.453-0.041 0.62-0.089 0.192-0.093 0.344-0.255 0.421-0.447 0.141-0.355 0-0.928-0.464-1.553-0.457-0.619-1.239-1.323-2.38-2.025-0.843-0.531-1.317-1.161-1.536-1.86-0.219-0.713-0.188-1.448-0.021-2.192 0.328-1.427 1.167-2.817 1.704-3.688 0.14-0.083 0.047 0.183-0.547 1.303-0.527 1-1.521 3.328-0.163 5.135 0.053-1.317 0.344-2.619 0.865-3.833 0.749-1.703 2.323-4.671 2.448-7.025 0.063 0.052 0.287 0.183 0.385 0.271 0.287 0.177 0.505 0.443 0.787 0.62 0.281 0.265 0.635 0.448 1.167 0.448 0.052 0.005 0.099 0.005 0.145 0.005 0.547 0 0.975-0.177 1.328-0.355 0.385-0.183 0.699-0.448 0.989-0.536h0.005c0.62-0.177 1.115-0.537 1.391-0.933zM21.901 21.693c0.052 0.801 0.459 1.661 1.177 1.837 0.781 0.177 1.911-0.443 2.385-1.020l0.281-0.011c0.421-0.011 0.771 0.011 1.129 0.355l0.005 0.005c0.276 0.265 0.407 0.708 0.521 1.167 0.115 0.536 0.203 1.041 0.547 1.421 0.645 0.703 0.859 1.208 0.849 1.521v0c-0.021 0.348-0.251 0.525-0.667 0.791-0.839 0.537-2.328 0.948-3.276 2.095-0.824 0.984-1.828 1.52-2.715 1.588-0.885 0.073-1.651-0.265-2.099-1.197l-0.005-0.005c-0.281-0.532-0.161-1.365 0.073-2.251 0.235-0.891 0.573-1.796 0.62-2.531 0.047-0.953 0.099-1.781 0.255-2.423 0.161-0.62 0.412-1.063 0.86-1.307l0.057-0.032zM7.479 21.76h0.016c0.073 0 0.141 0.005 0.208 0.021 0.5 0.073 0.943 0.443 1.365 1l1.213 2.219 0.005 0.005c0.323 0.708 1.005 1.416 1.583 2.183 0.579 0.796 1.027 1.509 0.975 2.093v0.011c-0.079 0.989-0.641 1.525-1.5 1.724-0.86 0.177-2.027 0-3.193-0.62-1.291-0.713-2.828-0.625-3.812-0.803-0.489-0.088-0.812-0.271-0.964-0.536-0.145-0.265-0.151-0.803 0.167-1.641v-0.004c0.156-0.448 0.043-1.005-0.036-1.495-0.073-0.532-0.109-0.944 0.057-1.251 0.213-0.448 0.531-0.531 0.921-0.713 0.391-0.177 0.855-0.265 1.219-0.625h0.005v-0.005c0.339-0.353 0.595-0.796 0.891-1.115 0.251-0.271 0.505-0.448 0.88-0.448zM17.027 9.661c-0.579 0.265-1.261 0.713-1.985 0.713s-1.292-0.353-1.703-0.62c-0.208-0.181-0.375-0.359-0.5-0.448-0.219-0.176-0.193-0.447-0.099-0.447 0.145 0.020 0.172 0.181 0.265 0.271 0.131 0.088 0.287 0.265 0.479 0.443 0.391 0.265 0.912 0.624 1.557 0.624 0.647 0 1.407-0.359 1.865-0.624 0.26-0.177 0.593-0.443 0.864-0.62 0.208-0.183 0.199-0.36 0.369-0.36 0.172 0.021 0.048 0.177-0.192 0.443-0.245 0.183-0.62 0.448-0.921 0.625zM15.584 7.547v-0.025c-0.005-0.027 0.015-0.057 0.041-0.068 0.093-0.057 0.239-0.037 0.344 0.005 0.083 0 0.213 0.088 0.203 0.181-0.011 0.063-0.115 0.089-0.183 0.089-0.072 0-0.125-0.057-0.187-0.093-0.068-0.021-0.199-0.011-0.219-0.089zM14.849 7.547c-0.027 0.079-0.152 0.068-0.219 0.089-0.063 0.036-0.115 0.093-0.188 0.093-0.068 0-0.177-0.027-0.183-0.093-0.009-0.089 0.115-0.177 0.199-0.177 0.109-0.043 0.244-0.063 0.348-0.005 0.021 0.011 0.048 0.041 0.037 0.068v0.025z"></path>
+			</g>
+		</svg>
+	);
+};
+export const Apple: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5 min-w-4', size = '' }) => {
+	return (
+		<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className={`${defaultSize} ${size}`}>
+			<g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+			<g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+			<g id="SVGRepo_iconCarrier">
+				<path
+					fillRule="evenodd"
+					clipRule="evenodd"
+					d="M16.365 2.43c.705-.849 1.183-2.057 1.054-3.228-1.052.04-2.317.673-3.072 1.514-.688.747-1.273 1.937-1.11 3.08 1.186.085 2.394-.575 3.128-1.366ZM18.983 9.86c.03 3.027 2.77 4.034 2.8 4.046-.022.071-.438 1.435-1.444 2.845-.87 1.217-1.773 2.43-3.195 2.456-1.397.025-1.847-.794-3.446-.794-1.598 0-2.098.768-3.421.819-1.373.049-2.419-1.318-3.296-2.532C5.187 14.879 3.817 10.345 5.657 7.285c.914-1.519 2.547-2.482 4.321-2.506 1.348-.025 2.621.869 3.445.869.824 0 2.371-1.075 3.997-.917 1.32.027 3.232.263 4.458 1.983-.099.06-2.28 1.276-2.255 3.806Z"
+					fill="currentColor"
+				/>
+			</g>
+		</svg>
+	);
+};
+
+export const Windows: React.FC<IconProps> = ({ defaultSize = 'w-5 h-5 min-w-4', size = '' }) => {
+	return (
+		<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className={`${defaultSize} ${size}`}>
+			<g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+			<g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+			<g id="SVGRepo_iconCarrier">
+				<path
+					fillRule="evenodd"
+					clipRule="evenodd"
+					d="M11.5 4L22 2.5V11H11.5V4ZM10 4.2V11H2V5.3L10 4.2ZM2 12.5V18.7L10 19.8V12.5H2ZM11.5 12.5H22V21.5L11.5 20V12.5Z"
+					fill="currentColor"
+				/>
+			</g>
+		</svg>
+	);
+};

@@ -31,5 +31,14 @@ export const style = (colors: Attributes) =>
 		username: {
 			fontSize: size.small,
 			fontWeight: 'bold'
+		},
+		outerWrapper: {
+			flexDirection: 'row'
+		},
+		avatarWrapper: {
+			width: size.s_20,
+			height: size.s_20,
+			borderRadius: size.s_20,
+			overflow: 'hidden'
 		}
 	});

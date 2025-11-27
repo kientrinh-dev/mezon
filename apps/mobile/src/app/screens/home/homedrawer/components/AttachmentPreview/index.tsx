@@ -1,7 +1,7 @@
-import { baseColor, size, useTheme, verticalScale } from '@mezon/mobile-ui';
+import { baseColor, size, useTheme } from '@mezon/mobile-ui';
 import { referencesActions, selectAttachmentByChannelId, useAppDispatch, useAppSelector } from '@mezon/store-mobile';
 import React, { memo } from 'react';
-import { Image, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, TouchableOpacity, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { ScrollView } from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
@@ -34,14 +34,13 @@ const AttachmentPreview = memo(({ channelId }: IProps) => {
 	if (!checkAttachment) {
 		return null;
 	}
-
 	return (
 		<View style={styles.container}>
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
 				end={{ x: 0, y: 0 }}
 				colors={[themeValue.primary, themeValue?.primaryGradiant || themeValue.primary]}
-				style={[StyleSheet.absoluteFillObject]}
+				style={styles.gradientBackground}
 			/>
 			<ScrollView
 				horizontal
@@ -50,11 +49,8 @@ const AttachmentPreview = memo(({ channelId }: IProps) => {
 				scrollEventThrottle={16}
 				bounces={false}
 				alwaysBounceHorizontal={false}
-				contentContainerStyle={{
-					paddingRight: verticalScale(20),
-					alignItems: 'center'
-				}}
-				style={{ flex: 1 }}
+				contentContainerStyle={styles.scrollViewContent}
+				style={styles.scrollViewContainer}
 			>
 				{attachmentFilteredByChannelId.files.map((attachment, index) => {
 					const isFile = !attachment?.filetype?.includes?.('video') && !attachment?.filetype?.includes?.('image');

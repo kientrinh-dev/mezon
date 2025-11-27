@@ -22,6 +22,7 @@ import { GridLayout } from './GridLayout/GridLayout';
 import { ParticipantTile } from './ParticipantTile/ParticipantTile';
 import { ReactionCallHandler } from './Reaction';
 import { useSoundReactions } from './Reaction/useSoundReactions';
+import { useDeepFilterNet3 } from './useDeepFilterNet3';
 
 interface MyVideoConferenceProps {
 	channelLabel?: string;
@@ -34,7 +35,6 @@ interface MyVideoConferenceProps {
 	tracks?: TrackReferenceOrPlaceholder[];
 	isShowChatVoice?: boolean;
 	onToggleChat?: () => void;
-	currentChannel?: any;
 }
 
 export function MyVideoConference({
@@ -45,7 +45,6 @@ export function MyVideoConference({
 	tracks: propTracks,
 	isShowChatVoice,
 	onToggleChat,
-	currentChannel,
 	onJoinRoom,
 	url,
 	token
@@ -53,6 +52,8 @@ export function MyVideoConference({
 	const [isFocused, setIsFocused] = useState<boolean>(false);
 	const [isGridView, setIsGridView] = useState<boolean>(true);
 	const { activeSoundReactions, handleSoundReaction } = useSoundReactions();
+
+	useDeepFilterNet3({ enabled: true });
 
 	const tracksFromHook = useTracks(
 		[
@@ -196,12 +197,12 @@ export function MyVideoConference({
 
 	return (
 		<div className="lk-video-conference flex-1">
-			<ReactionCallHandler currentChannel={currentChannel} onSoundReaction={handleSoundReaction} />
+			<ReactionCallHandler onSoundReaction={handleSoundReaction} />
 			<LayoutContextProvider value={layoutContext}>
 				<div className="lk-video-conference-inner relative bg-gray-100 dark:bg-black group">
 					{!focusTrack ? (
 						<div className="lk-grid-layout-wrapper bg-gray-300 dark:bg-black !h-full !py-[68px]">
-							<GridLayout tracks={tracks}>
+							<GridLayout tracks={tracks} isExternalCalling={isExternalCalling}>
 								<ParticipantTile
 									room={room}
 									roomName={room?.name}
@@ -317,7 +318,6 @@ export function MyVideoConference({
 							isExternalCalling={isExternalCalling}
 							onLeaveRoom={onLeaveRoom}
 							onFullScreen={onFullScreen}
-							currentChannel={currentChannel}
 							isShowMember={isShowMember}
 							isGridView={isGridView}
 						/>

@@ -1,4 +1,6 @@
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import {
+	ActionEmitEvent,
 	remove,
 	STORAGE_CHANNEL_CURRENT_CACHE,
 	STORAGE_DATA_CLAN_CHANNEL_CACHE,
@@ -12,7 +14,9 @@ import {
 	authActions,
 	channelsActions,
 	clansActions,
+	directActions,
 	getStoreAsync,
+	listChannelsByUserActions,
 	messagesActions,
 	selectAllAccount,
 	selectBlockedUsers,
@@ -20,20 +24,21 @@ import {
 } from '@mezon/store-mobile';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, FlatList, Platform, Text, TouchableOpacity, View } from 'react-native';
-// eslint-disable-next-line @nx/enforce-module-boundaries
+import { DeviceEventEmitter, Platform, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useSelector } from 'react-redux';
-import { SeparatorWithLine } from '../../../components/Common';
+import MezonConfirm from '../../../componentUI/MezonConfirm';
 import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../constants/icon_cdn';
 import type { SettingScreenProps } from '../../../navigation/ScreenTypes';
 import { APP_SCREEN } from '../../../navigation/ScreenTypes';
+import { maskEmail, maskPhoneNumber } from '../../../utils/helpers';
 import { style } from './styles';
 
 enum EAccountSettingType {
 	UserName,
 	DisplayName,
+	Email,
 	PhoneNumber,
 	BlockedUsers,
 	DisableAccount,
@@ -55,16 +60,24 @@ export const AccountSetting = ({ navigation }: SettingScreenProps<AccountSetting
 	const dispatch = useAppDispatch();
 	const { t } = useTranslation('accountSetting');
 	const blockedUsers = useSelector(selectBlockedUsers);
-	const blockedUsersCount = blockedUsers?.length.toString();
+	const blockedUsersCount = useMemo(() => {
+		if (!blockedUsers?.length) {
+			return '';
+		}
+		return blockedUsers.length?.toString() || '';
+	}, [blockedUsers]);
 
 	const logout = async () => {
 		const store = await getStoreAsync();
+		store.dispatch(directActions.removeAll());
 		store.dispatch(channelsActions.removeAll());
 		store.dispatch(messagesActions.removeAll());
+		store.dispatch(listChannelsByUserActions.removeAll());
 		store.dispatch(clansActions.setCurrentClanId(''));
 		store.dispatch(clansActions.removeAll());
 		store.dispatch(clansActions.collapseAllGroups());
 		store.dispatch(clansActions.clearClanGroups());
+		store.dispatch(clansActions.refreshStatus());
 
 		await remove(STORAGE_DATA_CLAN_CHANNEL_CACHE);
 		await remove(STORAGE_CHANNEL_CURRENT_CACHE);
@@ -72,6 +85,7 @@ export const AccountSetting = ({ navigation }: SettingScreenProps<AccountSetting
 		await remove(STORAGE_KEY_TEMPORARY_ATTACHMENT);
 		store.dispatch(appActions.setIsShowWelcomeMobile(false));
 		store.dispatch(authActions.logOut({ device_id: userProfile.user.username, platform: Platform.OS }));
+		store.dispatch(appActions.setLoadingMainMobile(false));
 	};
 
 	const handleDeleteAccount = async () => {
@@ -104,6 +118,12 @@ export const AccountSetting = ({ navigation }: SettingScreenProps<AccountSetting
 			case EAccountSettingType.DisplayName:
 				navigation.navigate(APP_SCREEN.SETTINGS.STACK, { screen: APP_SCREEN.SETTINGS.PROFILE });
 				break;
+			case EAccountSettingType.Email:
+				navigation.navigate(APP_SCREEN.SETTINGS.STACK, {
+					screen: APP_SCREEN.SETTINGS.UPDATE_EMAIL,
+					params: { currentEmail: userProfile?.email || '' }
+				});
+				break;
 			case EAccountSettingType.PhoneNumber:
 				navigation.navigate(APP_SCREEN.SETTINGS.STACK, {
 					screen: APP_SCREEN.SETTINGS.UPDATE_PHONE_NUMBER,
@@ -113,42 +133,56 @@ export const AccountSetting = ({ navigation }: SettingScreenProps<AccountSetting
 			case EAccountSettingType.BlockedUsers:
 				navigation.navigate(APP_SCREEN.SETTINGS.STACK, { screen: APP_SCREEN.SETTINGS.BLOCKED_USERS });
 				break;
-			case EAccountSettingType.DeleteAccount:
-				Alert.alert(
-					t('deleteAccountAlert.title'),
-					t('deleteAccountAlert.description'),
-					[
-						{
-							text: t('deleteAccountAlert.noConfirm'),
-							style: 'cancel'
-						},
-						{
-							text: t('deleteAccountAlert.yesConfirm'),
-							onPress: () => handleDeleteAccount()
-						}
-					],
-					{ cancelable: false }
-				);
+			case EAccountSettingType.DeleteAccount: {
+				const data = {
+					children: (
+						<MezonConfirm
+							title={t('deleteAccountAlert.title')}
+							content={t('deleteAccountAlert.description')}
+							confirmText={t('deleteAccountAlert.yesConfirm')}
+							isDanger
+							onConfirm={() => handleDeleteAccount()}
+						/>
+					)
+				};
+				DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: false, data });
 				break;
-			case EAccountSettingType.DisableAccount:
-				Alert.alert(
-					t('disableAccountAlert.title'),
-					t('disableAccountAlert.description'),
-					[
-						{
-							text: t('deleteAccountAlert.noConfirm'),
-							style: 'cancel'
-						},
-						{
-							text: t('deleteAccountAlert.yesConfirm'),
-							onPress: () => logout()
-						}
-					],
-					{ cancelable: false }
-				);
+			}
+			case EAccountSettingType.DisableAccount: {
+				const disableData = {
+					children: (
+						<MezonConfirm
+							title={t('disableAccountAlert.title')}
+							content={t('disableAccountAlert.description')}
+							confirmText={t('deleteAccountAlert.yesConfirm')}
+							onConfirm={() => logout()}
+						/>
+					)
+				};
+				DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: false, data: disableData });
 				break;
+			}
 			case EAccountSettingType.SetPassword:
-				navigation.navigate(APP_SCREEN.SETTINGS.STACK, { screen: APP_SCREEN.SETTINGS.SET_PASSWORD });
+				if (!userProfile?.email) {
+					const linkEmailRequiredData = {
+						children: (
+							<MezonConfirm
+								title={t('setPasswordAccount.linkEmailRequiredTitle')}
+								content={t('setPasswordAccount.linkEmailRequiredDescription')}
+								confirmText={t('setPasswordAccount.goTo')}
+								onConfirm={() => {
+									navigation.navigate(APP_SCREEN.SETTINGS.STACK, {
+										screen: APP_SCREEN.SETTINGS.UPDATE_EMAIL
+									});
+									DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
+								}}
+							/>
+						)
+					};
+					DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: false, data: linkEmailRequiredData });
+				} else {
+					navigation.navigate(APP_SCREEN.SETTINGS.STACK, { screen: APP_SCREEN.SETTINGS.SET_PASSWORD });
+				}
 				break;
 			default:
 				break;
@@ -168,8 +202,13 @@ export const AccountSetting = ({ navigation }: SettingScreenProps<AccountSetting
 				type: EAccountSettingType.DisplayName
 			},
 			{
+				title: 'Email',
+				description: maskEmail(userProfile?.email),
+				type: EAccountSettingType.Email
+			},
+			{
 				title: t('phoneNumberSetting.title'),
-				description: userProfile?.user?.phone_number || '',
+				description: maskPhoneNumber(userProfile?.user?.phone_number),
 				type: EAccountSettingType.PhoneNumber
 			}
 		];
@@ -201,102 +240,87 @@ export const AccountSetting = ({ navigation }: SettingScreenProps<AccountSetting
 			usersOptions,
 			accountManagementOptions
 		};
-	}, [t, userProfile?.user?.username, userProfile?.user?.display_name, userProfile?.user?.phone_number, blockedUsersCount]);
+	}, [t, userProfile?.user?.username, userProfile?.user?.display_name, userProfile?.user?.phone_number, userProfile?.email, blockedUsersCount]);
 
 	return (
 		<View style={styles.container}>
 			<View style={styles.settingGroup}>
 				<Text style={styles.settingGroupTitle}>{t('accountInformation')}</Text>
 				<View style={styles.optionListWrapper}>
-					<FlatList
-						data={settingOptions.accountInformationOptions}
-						keyExtractor={(item) => item.type.toString()}
-						ItemSeparatorComponent={SeparatorWithLine}
-						renderItem={({ item }) => {
-							return (
-								<TouchableOpacity onPress={() => handleSettingOption(item.type)} style={styles.optionItem}>
-									<Text style={styles.optionTitle}>{item.title}</Text>
-									<View style={styles.optionRightSide}>
-										{item?.description ? (
-											<Text numberOfLines={1} style={styles.optionDescription}>
-												{item.description}
-											</Text>
-										) : null}
-										<MezonIconCDN
-											icon={IconCDN.chevronSmallRightIcon}
-											height={size.s_16}
-											width={size.s_16}
-											color={themeValue?.text}
-										/>
-									</View>
-								</TouchableOpacity>
-							);
-						}}
-					/>
+					{settingOptions.accountInformationOptions?.map((item) => {
+						return (
+							<TouchableOpacity key={item.type.toString()} onPress={() => handleSettingOption(item.type)} style={styles.optionItem}>
+								<Text style={styles.optionTitle}>{item.title}</Text>
+								<View style={styles.optionRightSide}>
+									{item?.description ? (
+										<Text numberOfLines={1} style={styles.optionDescription}>
+											{item.description}
+										</Text>
+									) : null}
+									<MezonIconCDN
+										icon={IconCDN.chevronSmallRightIcon}
+										height={size.s_16}
+										width={size.s_16}
+										color={themeValue?.text}
+									/>
+								</View>
+							</TouchableOpacity>
+						);
+					})}
 				</View>
 			</View>
 
 			<View style={styles.settingGroup}>
 				<Text style={styles.settingGroupTitle}>{t('users')}</Text>
 				<View style={styles.optionListWrapper}>
-					<FlatList
-						data={settingOptions.usersOptions}
-						keyExtractor={(item) => item.type.toString()}
-						ItemSeparatorComponent={SeparatorWithLine}
-						renderItem={({ item }) => {
-							return (
-								<TouchableOpacity onPress={() => handleSettingOption(item.type)} style={styles.optionItem}>
-									<Text style={styles.optionTitle}>{item.title}</Text>
-									<View style={styles.optionRightSide}>
-										{item?.description ? (
-											<Text numberOfLines={1} style={styles.optionDescription}>
-												{item.description}
-											</Text>
-										) : null}
-										<MezonIconCDN
-											icon={IconCDN.chevronSmallRightIcon}
-											height={size.s_16}
-											width={size.s_16}
-											color={themeValue?.text}
-										/>
-									</View>
-								</TouchableOpacity>
-							);
-						}}
-					/>
+					{settingOptions.usersOptions?.map((item) => {
+						return (
+							<TouchableOpacity key={item.type.toString()} onPress={() => handleSettingOption(item.type)} style={styles.optionItem}>
+								<Text style={styles.optionTitle}>{item.title}</Text>
+								<View style={styles.optionRightSide}>
+									{item?.description ? (
+										<Text numberOfLines={1} style={styles.optionDescription}>
+											{item.description}
+										</Text>
+									) : null}
+									<MezonIconCDN
+										icon={IconCDN.chevronSmallRightIcon}
+										height={size.s_16}
+										width={size.s_16}
+										color={themeValue?.text}
+									/>
+								</View>
+							</TouchableOpacity>
+						);
+					})}
 				</View>
 			</View>
 
 			<View style={styles.settingGroup}>
 				<Text style={styles.settingGroupTitle}>{t('accountManagement')}</Text>
 				<View style={styles.optionListWrapper}>
-					<FlatList
-						data={settingOptions.accountManagementOptions}
-						keyExtractor={(item) => item.type.toString()}
-						ItemSeparatorComponent={SeparatorWithLine}
-						renderItem={({ item }) => {
-							return (
-								<TouchableOpacity onPress={() => handleSettingOption(item.type)} style={styles.optionItem}>
-									<Text style={[styles.optionTitle, [EAccountSettingType.DeleteAccount].includes(item.type) && styles.textRed]}>
-										{item.title}
-									</Text>
-									<View style={styles.optionRightSide}>
-										{item?.description ? (
-											<Text numberOfLines={1} style={styles.optionDescription}>
-												{item.description}
-											</Text>
-										) : null}
-										<MezonIconCDN
-											icon={IconCDN.chevronSmallRightIcon}
-											height={size.s_16}
-											width={size.s_16}
-											color={themeValue?.text}
-										/>
-									</View>
-								</TouchableOpacity>
-							);
-						}}
-					/>
+					{settingOptions.accountManagementOptions?.map((item) => {
+						return (
+							<TouchableOpacity key={item.type.toString()} onPress={() => handleSettingOption(item.type)} style={styles.optionItem}>
+								<Text style={[styles.optionTitle, [EAccountSettingType.DeleteAccount].includes(item.type) && styles.textRed]}>
+									{item.title}
+								</Text>
+								<View style={styles.optionRightSide}>
+									{item?.description ? (
+										<Text numberOfLines={1} style={styles.optionDescription}>
+											{item.description}
+										</Text>
+									) : null}
+									<MezonIconCDN
+										icon={IconCDN.chevronSmallRightIcon}
+										height={size.s_16}
+										width={size.s_16}
+										color={themeValue?.text}
+									/>
+								</View>
+							</TouchableOpacity>
+						);
+					})}
 				</View>
 			</View>
 		</View>

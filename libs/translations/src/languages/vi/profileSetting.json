@@ -11,8 +11,8 @@
 			"label": "Tên hiển thị",
 			"placeholder": ""
 		},
-		"clanName": {
-			"label": "Tên clan",
+		"clanNickname": {
+			"label": "Biệt danh Clan",
 			"placeholder": ""
 		},
 		"pronouns": {
@@ -61,5 +61,10 @@
 	"userProfile": "Hồ sơ người dùng",
 	"clanProfiles": "Hồ sơ Clan",
 	"directMessageIcon": "Biểu tượng tin nhắn riêng",
+	"directMessageIconAction": {
+		"remove": "Xóa",
+		"removeTitle": "Xóa biểu tượng tin nhắn riêng",
+		"removeDescription": "Bạn có chắc muốn xóa biểu tượng tin nhắn riêng?"
+	},
 	"displayName": "TÊN HIỂN THỊ"
 }

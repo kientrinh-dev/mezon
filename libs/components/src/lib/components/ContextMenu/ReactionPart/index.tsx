@@ -1,4 +1,4 @@
-import { IEmoji, IMessageWithUser } from '@mezon/utils';
+import type { IEmoji, IMessageWithUser } from '@mezon/utils';
 import { memo } from 'react';
 import ReactionItem from '../ReactionItem';
 

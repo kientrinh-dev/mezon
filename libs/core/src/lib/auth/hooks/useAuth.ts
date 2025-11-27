@@ -1,12 +1,12 @@
-import { accountActions, authActions, AuthenticateEmailPayload, selectAllAccount, selectSession, useAppDispatch } from '@mezon/store';
-import { Session } from 'mezon-js';
-import { ApiLinkAccountConfirmRequest, ApiLoginIDResponse } from 'mezon-js/dist/api.gen';
+import type { AuthenticateEmailPayload } from '@mezon/store';
+import { accountActions, authActions, selectAllAccount, useAppDispatch } from '@mezon/store';
+import type { Session } from 'mezon-js';
+import type { ApiLinkAccountConfirmRequest, ApiLoginIDResponse } from 'mezon-js/dist/api.gen';
 import React, { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 export function useAuth() {
 	const userProfile = useSelector(selectAllAccount);
-	const session = useSelector(selectSession);
 	const dispatch = useAppDispatch();
 
 	const userId = useMemo(() => userProfile?.user?.id, [userProfile]);
@@ -26,9 +26,9 @@ export function useAuth() {
 		[dispatch]
 	);
 
-	const confirmEmailOTP = useCallback(
+	const confirmAuthenticateOTP = useCallback(
 		async (data: ApiLinkAccountConfirmRequest) => {
-			const action = await dispatch(authActions.confirmEmailOTP(data));
+			const action = await dispatch(authActions.confirmAuthenticateOTP(data));
 			const session = action.payload;
 			dispatch(accountActions.setAccount(session));
 			return session;
@@ -80,25 +80,23 @@ export function useAuth() {
 			userProfile,
 			userId,
 			loginByEmail,
-			confirmEmailOTP,
+			confirmAuthenticateOTP,
 			authenticateEmailPassword,
 			qRCode,
 			checkLoginRequest,
 			fetchUserProfile,
-			confirmLoginRequest,
-			session
+			confirmLoginRequest
 		}),
 		[
 			userProfile,
 			userId,
 			loginByEmail,
-			confirmEmailOTP,
+			confirmAuthenticateOTP,
 			authenticateEmailPassword,
 			qRCode,
 			checkLoginRequest,
 			fetchUserProfile,
-			confirmLoginRequest,
-			session
+			confirmLoginRequest
 		]
 	);
 }

@@ -11,6 +11,7 @@ import {
 	DOWNLOAD_FILE,
 	GET_WINDOW_STATE,
 	IMAGE_WINDOW_TITLE_BAR_ACTION,
+	LOAD_MORE_ATTACHMENTS,
 	MAC_WINDOWS_ACTION,
 	MAXIMIZE_WINDOW,
 	MINIMIZE_WINDOW,
@@ -19,7 +20,9 @@ import {
 	SENDER_ID,
 	SET_RATIO_WINDOW,
 	TITLE_BAR_ACTION,
-	UNMAXIMIZE_WINDOW
+	UNMAXIMIZE_WINDOW,
+	UPDATE_ACTIVITY_TRACKING,
+	UPDATE_ATTACHMENTS
 } from './app/events/constants';
 import ElectronEvents from './app/events/electron.events';
 import SquirrelEvents from './app/events/squirrel.events';
@@ -88,14 +91,19 @@ ipcMain.handle(DOWNLOAD_FILE, async (event, { url, defaultFileName }) => {
 
 	try {
 		const response = await fetch(url);
+		if (!response.ok) {
+			log.error(`Download failed: ${response.status} ${response.statusText}`);
+			return null;
+		}
 		const buffer = await response.arrayBuffer();
 		fs.writeFileSync(filePath, Buffer.from(buffer));
 
 		shell.showItemInFolder(filePath);
 		return filePath;
 	} catch (error) {
-		console.error('Error downloading file:', error);
-		throw new Error('Failed to download file');
+		// Silently log error without throwing to prevent error dialogs
+		log.error('Error downloading file:', error);
+		return null;
 	}
 });
 
@@ -207,11 +215,18 @@ ipcMain.handle(OPEN_NEW_WINDOW, (event, props: any, _options?: Electron.BrowserW
 		return;
 	}
 	const newWindow = openImagePopup(props, App.mainWindow);
-	// Remove the existing listener if it exists
+
+	// Remove the existing listener if it exists to prevent memory leaks
 	ipcMain.removeAllListeners(IMAGE_WINDOW_TITLE_BAR_ACTION);
 
-	ipcMain.on(IMAGE_WINDOW_TITLE_BAR_ACTION, (event, action, _data) => {
+	const imageWindowHandler = (_event: any, action: string, _data: any) => {
 		handleWindowAction(newWindow, action);
+	};
+
+	ipcMain.on(IMAGE_WINDOW_TITLE_BAR_ACTION, imageWindowHandler);
+
+	newWindow.on('closed', () => {
+		ipcMain.removeListener(IMAGE_WINDOW_TITLE_BAR_ACTION, imageWindowHandler);
 	});
 });
 
@@ -240,6 +255,26 @@ ipcMain.handle(GET_WINDOW_STATE, () => {
 
 ipcMain.on(TITLE_BAR_ACTION, (event, action, _data) => {
 	handleWindowAction(App.mainWindow, action);
+});
+
+ipcMain.on(LOAD_MORE_ATTACHMENTS, (event, { direction }) => {
+	if (App.mainWindow && !App.mainWindow.isDestroyed()) {
+		App.mainWindow.webContents.send(LOAD_MORE_ATTACHMENTS, { direction });
+	}
+});
+
+ipcMain.on(UPDATE_ATTACHMENTS, (event, { attachments, hasMoreBefore, hasMoreAfter }) => {
+	if (App.imageViewerWindow && !App.imageViewerWindow.isDestroyed()) {
+		App.imageViewerWindow.webContents.send(UPDATE_ATTACHMENTS, {
+			attachments,
+			hasMoreBefore,
+			hasMoreAfter
+		});
+	}
+});
+
+ipcMain.on(UPDATE_ACTIVITY_TRACKING, (event, { isActivityTrackingEnabled }) => {
+	App.setActivityTrackingEnabled(isActivityTrackingEnabled);
 });
 
 async function copyBlobToClipboardElectron(blob: Buffer | null) {
@@ -286,12 +321,14 @@ const copyImageToClipboardElectron = async (imageUrl?: string) => {
 		});
 
 		if (!response.ok) {
-			return;
+			log.error(`Copy image failed: ${response.status} ${response.statusText}`);
+			return false;
 		}
 
 		const contentLength = response.headers.get('content-length');
 		if (contentLength && parseInt(contentLength) > 50 * 1024 * 1024) {
-			return;
+			log.warn('Image too large to copy to clipboard');
+			return false;
 		}
 		const blob = await response.blob();
 		const arrayBuffer = await blob.arrayBuffer();
@@ -299,6 +336,7 @@ const copyImageToClipboardElectron = async (imageUrl?: string) => {
 
 		return await copyBlobToClipboardElectron(buffer);
 	} catch (error) {
+		log.error('Error copying image to clipboard:', error);
 		return false;
 	}
 };

@@ -1,16 +1,16 @@
-import React, { memo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
 
 interface ICachedImageWithRetryIOSProps {
 	source: { uri: string };
 	urlOriginal?: string;
-	retryCount?: number;
 	style?: any;
-	[key: string]: any;
+	resizeMode?: 'contain' | 'cover' | 'stretch' | 'center';
 }
-// For covert old records
+
 const NX_BASE_IMG_URL_OLD = 'https://cdn.mezon.vn';
+
 const extractOriginalUrl = (url: string): string | null => {
 	if (url?.includes?.(process.env.NX_IMGPROXY_BASE_URL) && (url?.includes?.(process.env.NX_BASE_IMG_URL) || url?.includes?.(NX_BASE_IMG_URL_OLD))) {
 		const parts = url?.split?.('/plain/');
@@ -22,46 +22,43 @@ const extractOriginalUrl = (url: string): string | null => {
 };
 
 const CachedImageWithRetryIOS = memo(
-	({ source, urlOriginal, retryCount = 1, style, ...props }: ICachedImageWithRetryIOSProps) => {
-		const [key, setKey] = useState(Date.now());
-		const [loading, setLoading] = useState<boolean>(false);
-		const [isError, setIsError] = useState<boolean>(false);
-		const [fallbackUrl, setFallbackUrl] = useState<string>(urlOriginal);
+	({ source, urlOriginal, style, resizeMode = 'cover', ...props }: ICachedImageWithRetryIOSProps) => {
+		const [hasError, setHasError] = useState<boolean>(false);
+		const [currentUri, setCurrentUri] = useState<string>(source?.uri);
+		const mountedRef = useRef<boolean>(true);
 
-		const handleExhaustedRetries = () => {
-			if (urlOriginal) {
-				setIsError(true);
+		useEffect(() => {
+			mountedRef.current = true;
+			setHasError(false);
+			setCurrentUri(source?.uri);
+
+			return () => {
+				mountedRef.current = false;
+			};
+		}, [source?.uri]);
+
+		const handleError = useCallback(() => {
+			if (!mountedRef.current || hasError) return;
+			const fallbackUrl = urlOriginal || extractOriginalUrl(source?.uri);
+
+			if (fallbackUrl && fallbackUrl !== currentUri) {
+				setHasError(true);
+				setCurrentUri(fallbackUrl);
 			} else {
-				const getOriginalUrl = urlOriginal ? urlOriginal : extractOriginalUrl(source?.uri);
-				if (getOriginalUrl) {
-					setKey(Date.now());
-					setFallbackUrl(getOriginalUrl);
-					setIsError(true);
-				}
+				/* empty */
 			}
-		};
-
-		const handleLoadStart = () => {
-			setLoading(true);
-		};
-
-		const handleLoadEnd = () => {
-			setLoading(false);
-		};
+		}, [source?.uri, urlOriginal, hasError, currentUri]);
 
 		return (
 			<View style={[styles.container, style]}>
-				{loading && <ActivityIndicator style={styles.loader} size="small" color="#333333" />}
 				<FastImage
-					key={`${key}_${source?.uri}`}
 					source={{
-						uri: isError && fallbackUrl ? fallbackUrl : source?.uri,
-						priority: FastImage.priority.high,
-						cache: FastImage.cacheControl.immutable
+						uri: currentUri,
+						priority: FastImage.priority.normal,
+						cache: FastImage.cacheControl.web
 					}}
-					onLoadStart={handleLoadStart}
-					onError={handleExhaustedRetries}
-					onLoadEnd={handleLoadEnd}
+					onError={handleError}
+					resizeMode={resizeMode}
 					style={StyleSheet.absoluteFill}
 					{...props}
 				/>
@@ -69,18 +66,23 @@ const CachedImageWithRetryIOS = memo(
 		);
 	},
 	(prevProps, nextProps) => {
-		return prevProps.source?.uri === nextProps.source?.uri;
+		return prevProps.source?.uri === nextProps.source?.uri && prevProps?.style === nextProps?.style;
 	}
 );
 
 const styles = StyleSheet.create({
 	container: {
 		justifyContent: 'center',
-		alignItems: 'center'
+		alignItems: 'center',
+		overflow: 'hidden'
 	},
 	loader: {
 		position: 'absolute',
 		zIndex: 1
+	},
+	placeholder: {
+		width: '100%',
+		height: '100%'
 	}
 });
 

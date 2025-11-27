@@ -1,5 +1,5 @@
-import { baseColor, size, useTheme, verticalScale } from '@mezon/mobile-ui';
-import { channelUsersActions, selectCurrentClanId, useAppDispatch } from '@mezon/store-mobile';
+import { baseColor, size, useTheme } from '@mezon/mobile-ui';
+import { channelUsersActions, rolesClanActions, selectCurrentClanId, useAppDispatch } from '@mezon/store-mobile';
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -9,11 +9,13 @@ import { useSelector } from 'react-redux';
 import MezonIconCDN from '../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../constants/icon_cdn';
 import { EOverridePermissionType, ERequestStatus } from '../../types/channelPermission.enum';
-import { IRoleItemProps } from '../../types/channelPermission.type';
+import type { IRoleItemProps } from '../../types/channelPermission.type';
+import { styles as stylesFn } from './RoleItem.styles';
 
 export const RoleItem = memo(
 	({ role, channel, isCheckbox = false, isChecked = false, onSelectRoleChange, isAdvancedSetting = false, onPress }: IRoleItemProps) => {
 		const { themeValue } = useTheme();
+		const styles = stylesFn(themeValue);
 		const currentClanId = useSelector(selectCurrentClanId);
 		const dispatch = useAppDispatch();
 		const { t } = useTranslation('channelSetting');
@@ -31,6 +33,9 @@ export const RoleItem = memo(
 			};
 			const response = await dispatch(channelUsersActions.removeChannelRole(body));
 			const isError = response?.meta?.requestStatus === ERequestStatus.Rejected;
+			if (!isError) {
+				dispatch(rolesClanActions.removeChannelRole({ channelId: channel?.channel_id, clanId: currentClanId, roleId: role?.id }));
+			}
 			Toast.show({
 				type: 'success',
 				props: {
@@ -54,41 +59,22 @@ export const RoleItem = memo(
 
 		return (
 			<TouchableOpacity onPress={onPressRoleItem} disabled={!isCheckbox && !isAdvancedSetting}>
-				<View style={{ gap: size.s_10, flexDirection: 'row', padding: size.s_10, alignItems: 'center' }}>
+				<View style={styles.container}>
 					{!isAdvancedSetting && (
 						<MezonIconCDN icon={IconCDN.bravePermission} color={role?.color || themeValue.text} width={size.s_24} height={size.s_24} />
 					)}
-					<View style={{ flex: 1 }}>
-						<View style={{ flexDirection: 'row', gap: size.s_4, alignItems: 'center' }}>
-							<Text
-								style={{
-									fontSize: size.s_14,
-									marginLeft: 0,
-									marginRight: 0,
-									color: themeValue.white
-								}}
-							>
-								{role?.title}
-							</Text>
+					<View style={styles.roleInfoContainer}>
+						<View style={styles.roleNameRow}>
+							<Text style={styles.roleNameText}>{role?.title}</Text>
 						</View>
-						{!isCheckbox && !isAdvancedSetting && (
-							<Text
-								style={{
-									marginLeft: 0,
-									marginRight: 0,
-									color: themeValue.textDisabled
-								}}
-							>
-								{'Role'}
-							</Text>
-						)}
+						{!isCheckbox && !isAdvancedSetting && <Text style={styles.roleTypeText}>{'Role'}</Text>}
 					</View>
 					{isAdvancedSetting ? (
 						<MezonIconCDN icon={IconCDN.chevronSmallRightIcon} color={themeValue.white} />
 					) : (
 						<View>
 							{isCheckbox ? (
-								<View style={{ height: size.s_20, width: size.s_20 }}>
+								<View style={styles.checkboxContainer}>
 									<BouncyCheckbox
 										size={20}
 										isChecked={isChecked}

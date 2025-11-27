@@ -1,7 +1,8 @@
 import { debounce, KEY_SLASH_COMMAND_EPHEMERAL } from '@mezon/mobile-components';
 import { size, useTheme } from '@mezon/mobile-ui';
 import { listQuickMenuAccess, selectQuickMenuByChannelId, useAppDispatch, useAppSelector } from '@mezon/store-mobile';
-import { ApiQuickMenuAccess } from 'mezon-js/api.gen';
+import { QUICK_MENU_TYPE } from '@mezon/utils';
+import type { ApiQuickMenuAccess } from 'mezon-js/api.gen';
 import { memo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
@@ -21,7 +22,7 @@ interface SlashCommandSuggestionsProps {
 }
 
 export const SlashCommandSuggestions = memo(({ keyword, onSelectCommand, channelId }: SlashCommandSuggestionsProps) => {
-	const { t } = useTranslation('message');
+	const { t } = useTranslation(['message', 'messageBox']);
 	const dispatch = useAppDispatch();
 	const slashCommands: SlashCommand[] = [
 		{
@@ -33,7 +34,7 @@ export const SlashCommandSuggestions = memo(({ keyword, onSelectCommand, channel
 
 	useEffect(() => {
 		if (channelId) {
-			dispatch(listQuickMenuAccess({ channelId }));
+			dispatch(listQuickMenuAccess({ channelId, menuType: QUICK_MENU_TYPE.FLASH_MESSAGE }));
 		}
 	}, [channelId, dispatch]);
 
@@ -72,7 +73,7 @@ export const SlashCommandSuggestions = memo(({ keyword, onSelectCommand, channel
 		<View style={styles.container}>
 			{filteredCommands?.length > 0 && (
 				<View style={styles.commandItem}>
-					<Text style={styles.headerTitle}>COMMANDS</Text>
+					<Text style={styles.headerTitle}>{t('messageBox:mentionCategories.commands')}</Text>
 				</View>
 			)}
 			<FlatList

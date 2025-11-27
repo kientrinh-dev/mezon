@@ -7,7 +7,6 @@ import {
 	directActions,
 	selectDirectsOpenlist,
 	selectFriendById,
-	selectMemberClanByUserId,
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store-mobile';
@@ -29,7 +28,6 @@ enum UserRelationshipStatus {
 	FRIENDS = 'friends',
 	PENDING_REQUEST = 'pending_request',
 	MY_PENDING = 'my_pending',
-	SAME_CLAN = 'same_clan',
 	BLOCKED = 'blocked'
 }
 
@@ -61,7 +59,6 @@ export const ProfileDetail = memo(() => {
 		}
 	}, [routeRawData, username]);
 
-	const userById = useAppSelector((state) => selectMemberClanByUserId(state, profileData?.user_id));
 	const infoFriend = useAppSelector((state) => selectFriendById(state, profileData?.user_id));
 	const listDM = useAppSelector(selectDirectsOpenlist);
 	const youSelf = useMemo(() => {
@@ -83,10 +80,8 @@ export const ProfileDetail = memo(() => {
 		const isBlocked = infoFriend?.state === EStateFriend.BLOCK;
 		if (isBlocked) return UserRelationshipStatus.BLOCKED;
 
-		if (userById) return UserRelationshipStatus.SAME_CLAN;
-
 		return UserRelationshipStatus.NOT_FRIENDS;
-	}, [profileData?.user_id, infoFriend, userById]);
+	}, [profileData?.user_id, infoFriend]);
 
 	const navigateToMessageDetail = useCallback(async () => {
 		if (!profileData?.user_id) return;
@@ -265,7 +260,7 @@ export const ProfileDetail = memo(() => {
 					)}
 
 					<Text style={styles.username} numberOfLines={1}>
-						{profileData.display_name}
+						{profileData?.display_name || profileData?.username}
 					</Text>
 				</View>
 
@@ -275,18 +270,6 @@ export const ProfileDetail = memo(() => {
 							<TouchableOpacity style={styles.actionButton} onPress={handleAddFriend}>
 								<Text style={styles.actionButtonText}>{t('addFriend', 'Add Friend')}</Text>
 							</TouchableOpacity>
-						)}
-
-						{(userRelationshipStatus === UserRelationshipStatus.FRIENDS ||
-							userRelationshipStatus === UserRelationshipStatus.SAME_CLAN) && (
-							<>
-								<TouchableOpacity style={styles.actionButton} onPress={navigateToMessageDetail}>
-									<Text style={styles.actionButtonText}>{t('message', 'Message')}</Text>
-								</TouchableOpacity>
-								<TouchableOpacity style={styles.actionButton} onPress={handleCallUser}>
-									<Text style={styles.actionButtonText}>{t('call', 'Call')}</Text>
-								</TouchableOpacity>
-							</>
 						)}
 
 						{userRelationshipStatus === UserRelationshipStatus.MY_PENDING && (
@@ -300,6 +283,9 @@ export const ProfileDetail = memo(() => {
 								<Text style={styles.actionButtonText}>{t('cancelRequest', 'Cancel Request')}</Text>
 							</TouchableOpacity>
 						)}
+						<TouchableOpacity style={styles.actionButton} onPress={navigateToMessageDetail}>
+							<Text style={styles.actionButtonText}>{t('message', 'Message')}</Text>
+						</TouchableOpacity>
 					</View>
 				)}
 

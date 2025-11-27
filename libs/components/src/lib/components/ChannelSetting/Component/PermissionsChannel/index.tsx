@@ -1,10 +1,11 @@
 import { useAuth } from '@mezon/core';
-import { channelsActions, useAppDispatch } from '@mezon/store';
+import { channelsActions, selectAllCategories, selectChannelById, useAppDispatch, useAppSelector } from '@mezon/store';
 import { Icons } from '@mezon/ui';
 import { generateE2eId, type IChannel } from '@mezon/utils';
 import type { MutableRefObject, RefObject } from 'react';
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
 import { AddMemRole } from '../Modal/addMemRoleModal';
 import ModalAskChangeChannel from '../Modal/modalAskChangeChannel';
 import PermissionManage from './PermissionManage';
@@ -20,6 +21,18 @@ export type PermissionsChannelProps = {
 
 const PermissionsChannel = (props: PermissionsChannelProps) => {
 	const { channel, openModalAdd, parentRef, clanId } = props;
+	const realTimeChannel = useAppSelector((state) => selectChannelById(state, channel.channel_id || ''));
+	const listCategory = useSelector(selectAllCategories);
+	const categoryName = useMemo(() => {
+		if (realTimeChannel?.category_name) {
+			return realTimeChannel.category_name;
+		}
+		if (realTimeChannel?.category_id) {
+			const category = listCategory.find((cat) => cat.id === realTimeChannel.category_id);
+			return category?.category_name || '';
+		}
+		return '';
+	}, [realTimeChannel?.category_name, realTimeChannel?.category_id, listCategory]);
 	const { t } = useTranslation('channelSetting');
 	const [showAddMemRole, setShowAddMemRole] = useState(false);
 	const [valueToggleInit, setValueToggleInit] = useState(!!channel.channel_private);
@@ -78,7 +91,7 @@ const PermissionsChannel = (props: PermissionsChannelProps) => {
 			openModalAdd.current = false;
 			parentRef?.current?.focus();
 		}, 0);
-	}, []);
+	}, [openModalAdd, parentRef]);
 
 	const handleSelectedUsersChange = useCallback((newSelectedUserIds: string[]) => {
 		setSelectedUserIds(newSelectedUserIds);
@@ -92,9 +105,11 @@ const PermissionsChannel = (props: PermissionsChannelProps) => {
 		<>
 			<div className="overflow-y-auto flex flex-col flex-1 shrink bg-theme-setting-primary w-1/2 pt-[94px] sbm:pb-7 sbm:px-[40px] p-4 overflow-x-hidden min-w-full sbm:min-w-[700px] 2xl:min-w-[900px] max-w-[740px] hide-scrollbar relative">
 				<div className="dark:text-white text-[15px] text-black">
-					<HeaderModal name={channel.category_name} />
+					<HeaderModal name={categoryName} />
 					<div className="rounded-md overflow-hidden mt-4">
-						<div className="bg-theme-setting-nav flex justify-between items-start p-4 border-theme-primary border-2 rounded-lg">
+						<div
+							className={`bg-theme-setting-nav flex justify-between items-start p-4 border-theme-primary border-1 ${valueToggle ? 'border-b-0 rounded-tl-lg rounded-tr-lg' : 'rounded-lg'} `}
+						>
 							<div>
 								<div className="inline-flex mb-2 text-theme-primary-active">
 									<Icons.LockIcon />
@@ -121,12 +136,16 @@ const PermissionsChannel = (props: PermissionsChannelProps) => {
 						</div>
 						{valueToggle && (
 							<div
-								className="p-4 bg-theme-setting-nav border-theme-primary"
+								className="p-4 bg-theme-setting-nav border-theme-primary rounded-bl-lg rounded-br-lg"
 								data-e2e={generateE2eId('channel_setting_page.permissions.section.member_role_management')}
 							>
 								<div className="flex justify-between items-center pb-4">
 									<p className="uppercase font-bold text-xs text-theme-primary">{t('channelPermission.whoCanAccess')}</p>
-									<button className="btn-primary btn-primary-hover px-4 py-1 rounded-lg " onClick={openAddMemRoleModal}>
+									<button
+										className="btn-primary btn-primary-hover px-4 py-1 rounded-lg "
+										onClick={openAddMemRoleModal}
+										data-e2e={generateE2eId('channel_setting_page.permissions.section.member_role_management.button.add')}
+									>
 										{t('channelPermission.addMemberAndRoles')}
 									</button>
 								</div>
@@ -134,14 +153,22 @@ const PermissionsChannel = (props: PermissionsChannelProps) => {
 								<div className="py-4">
 									<p className="uppercase font-bold text-xs pb-4 text-theme-primary">{t('channelPermission.roles')}</p>
 									<div data-e2e={generateE2eId('channel_setting_page.permissions.section.member_role_management.role_list')}>
-										<ListRolePermission channel={channel} selectedRoleIds={selectedRoleIds} />
+										<ListRolePermission
+											channel={channel}
+											selectedRoleIds={selectedRoleIds}
+											setSelectedRoleIds={setSelectedRoleIds}
+										/>
 									</div>
 								</div>
 								<hr className="border-t border-solid dark:border-borderDefault border-bgModifierHoverLight" />
 								<div className="py-4">
 									<p className="uppercase font-bold text-xs pb-4 text-theme-primary">{t('channelPermission.members')}</p>
 									<div data-e2e={generateE2eId('channel_setting_page.permissions.section.member_role_management.member_list')}>
-										<ListMemberPermission channel={channel} selectedUserIds={selectedUserIds} />
+										<ListMemberPermission
+											channel={channel}
+											selectedUserIds={selectedUserIds}
+											setSelectedUserIds={setSelectedUserIds}
+										/>
 									</div>
 								</div>
 							</div>

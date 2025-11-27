@@ -172,7 +172,7 @@
 		}
 	},
 	"quickAction": {
-		"title": "Tác vụ nhanh",
+		"title": "Menu nhanh",
 		"description": "Quản lý tin nhắn nhanh và menu nhanh cho kênh này",
 		"keyTitle": "Nhập từ khóa (VD: xinchao): ",
 		"valueTitle": "Nhập nội dung (VD: Chào buổi sáng, chúc bạn có một ngày mới tốt lành !)",
@@ -257,7 +257,8 @@
 		"roles": "Vai trò",
 		"members": "Thành viên",
 		"cancel": "Hủy",
-		"done": "Hoàn thành"
+		"done": "Hoàn thành",
+		"searchPlaceholder": "Tìm kiếm Vai trò & Thành viên"
 	},
 	"table": {
 		"columnHeaders": {
@@ -280,5 +281,9 @@
 		"members": {
 			"allMembers": "(Tất cả thành viên)"
 		}
-	}
+	},
+	"streamBanner": {
+		"title": "Ảnh bìa Stream"
+	},
+	"banList": "Danh sách cấm"
 }

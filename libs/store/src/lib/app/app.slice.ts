@@ -1,5 +1,6 @@
 import { captureSentryError } from '@mezon/logger';
 import type { LoadingStatus } from '@mezon/utils';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 import isElectron from 'is-electron';
 import { ChannelType } from 'mezon-js';
@@ -14,6 +15,7 @@ import type { RootState } from '../store';
 import { voiceActions } from '../voice/voice.slice';
 
 export const APP_FEATURE_KEY = 'app';
+const NUMBER_HISTORY = 10;
 
 export interface showSettingFooterProps {
 	status: boolean;
@@ -47,6 +49,11 @@ export interface AppState {
 	isShowPopupQuickMess: boolean;
 	categoryChannelOffsets: { [key: number]: number };
 	isShowWelcomeMobile: boolean;
+	history: {
+		url: string[];
+		current: number | null;
+	};
+	isShowUpdateUsername: boolean;
 }
 
 const getInitialLanguage = (): 'en' | 'vi' => {
@@ -91,7 +98,12 @@ export const initialAppState: AppState = {
 	isShowSettingFooter: { status: false, initTab: 'Account', isUserProfile: true, profileInitTab: 'USER_SETTING', clanId: '' },
 	isShowPopupQuickMess: false,
 	categoryChannelOffsets: {},
-	isShowWelcomeMobile: true
+	isShowWelcomeMobile: true,
+	history: {
+		url: [],
+		current: null
+	},
+	isShowUpdateUsername: false
 };
 
 export const refreshApp = createAsyncThunk('app/refreshApp', async ({ id }: { id: string }, thunkAPI) => {
@@ -251,6 +263,98 @@ export const appSlice = createSlice({
 		},
 		setIsShowWelcomeMobile: (state, action) => {
 			state.isShowWelcomeMobile = action.payload;
+		},
+		setHistory: (state, action) => {
+			if (!state.history) {
+				state.history = {
+					url: [],
+					current: null
+				};
+			}
+
+			const url = action.payload;
+			if (state.history.current !== null && state.history.url[state.history.current] === url) {
+				return;
+			}
+			if (state.history.current !== null && state.history.url.length - 2 >= state.history.current && state.history.current > 0) {
+				const history = [...state.history.url].splice(0, state.history.current + 1);
+				history.push(url);
+				state.history = {
+					url: history.slice(-NUMBER_HISTORY),
+					current: history.length > NUMBER_HISTORY ? NUMBER_HISTORY - 1 : history.length - 1
+				};
+				return;
+			}
+
+			const history = [...state.history.url, url];
+
+			state.history = {
+				url: history.slice(-NUMBER_HISTORY),
+				current: history.length > NUMBER_HISTORY ? NUMBER_HISTORY - 1 : history.length - 1
+			};
+		},
+		setBackHistory: (state, action) => {
+			if (!state.history) return;
+			if (state.history.current === null) return;
+			if (action.payload) {
+				if (!state.history.current) {
+					return;
+				}
+				state.history.current = state.history.current - 1;
+				return;
+			} else {
+				if (state.history.current === state.history.url.length - 1) {
+					return;
+				}
+				state.history.current = state.history.current + 1;
+			}
+		},
+		clearHistory: (state) => {
+			state.history = {
+				url: [],
+				current: null
+			};
+		},
+		cleanHistoryClan: (state, action: PayloadAction<string>) => {
+			const clanId = action.payload;
+			if (!state.history || !state.history?.url?.length) return;
+			const filteredHistory = state.history.url.filter((url) => !url.includes(`/clans/${clanId}/`));
+			let countCurrent = state.history?.current !== null ? state.history?.current : 0;
+			state.history.url.map((url, index) => {
+				if (index <= countCurrent && url.includes(`/clans/${clanId}/`)) {
+					if (!state.history?.current) {
+						return;
+					}
+					countCurrent = countCurrent - 1;
+				}
+			});
+			state.history = {
+				url: filteredHistory,
+				current: countCurrent
+			};
+		},
+		clearHistoryChannel: (state, action: PayloadAction<{ channelId: string }>) => {
+			const { channelId } = action.payload;
+			if (!state.history || !state.history?.url?.length) return;
+			const filteredHistory = state.history?.url.filter(
+				(url) => !(url.includes(`/channels/${channelId}`) || url.includes(`/message/${channelId}/`))
+			);
+			let countCurrent = state.history?.current !== null ? state.history.current : 0;
+			state.history.url.map((url, index) => {
+				if (index <= countCurrent && (url.includes(`/channels/${channelId}/`) || url.includes(`/message/${channelId}/`))) {
+					if (!state.history.current) {
+						return;
+					}
+					countCurrent = countCurrent - 1;
+				}
+			});
+			state.history = {
+				url: filteredHistory,
+				current: countCurrent
+			};
+		},
+		setIsShowUpdateUsername: (state, action) => {
+			state.isShowUpdateUsername = action.payload;
 		}
 	}
 });
@@ -306,3 +410,7 @@ export const selectIsShowSettingFooter = createSelector(getAppState, (state: App
 export const selectIsShowPopupQuickMess = createSelector(getAppState, (state: AppState) => state.isShowPopupQuickMess);
 
 export const selectIsShowWelcomeMobile = createSelector(getAppState, (state: AppState) => state.isShowWelcomeMobile);
+
+export const selectHistory = createSelector(getAppState, (state: AppState) => state.history);
+
+export const selectIsShowUpdateUsername = createSelector(getAppState, (state: AppState) => state.isShowUpdateUsername);

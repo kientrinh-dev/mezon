@@ -8,13 +8,13 @@ import {
 	selectDmGroupCurrentType,
 	selectLogoCustom,
 	selectTheme,
-	useAppDispatch
+	useAppDispatch,
+	useAppSelector
 } from '@mezon/store';
 import { Image } from '@mezon/ui';
-import { ModeResponsive, createImgproxyUrl } from '@mezon/utils';
+import { ModeResponsive, createImgproxyUrl, generateE2eId } from '@mezon/utils';
 import { useCallback, useState } from 'react';
 import { useModal } from 'react-modal-hook';
-import { useSelector } from 'react-redux';
 import type { Coords } from '../ChannelLink';
 import NavLinkComponent from '../NavLink';
 import PanelClan from '../PanelClan';
@@ -22,12 +22,12 @@ import PanelClan from '../PanelClan';
 const SidebarLogoItem = () => {
 	const navigate = useCustomNavigate();
 	const dispatch = useAppDispatch();
-	const appearanceTheme = useSelector(selectTheme);
+	const appearanceTheme = useAppSelector(selectTheme);
 	const { userProfile } = useAuth();
-	const currentClanId = useSelector(selectCurrentClanId);
-	const currentDmId = useSelector(selectDmGroupCurrentId);
-	const currentDmIType = useSelector(selectDmGroupCurrentType);
-	const logoCustom = useSelector(selectLogoCustom);
+	const currentClanId = useAppSelector(selectCurrentClanId);
+	const currentDmId = useAppSelector(selectDmGroupCurrentId);
+	const currentDmIType = useAppSelector(selectDmGroupCurrentType);
+	const logoCustom = useAppSelector(selectLogoCustom);
 
 	const setModeResponsive = useCallback(
 		(value: ModeResponsive) => {
@@ -35,7 +35,7 @@ const SidebarLogoItem = () => {
 		},
 		[dispatch, currentClanId]
 	);
-	const isClanView = useSelector(selectClanView);
+	const isClanView = useAppSelector(selectClanView);
 	const [coords, setCoords] = useState<Coords>({
 		mouseX: 0,
 		mouseY: 0,
@@ -64,12 +64,12 @@ const SidebarLogoItem = () => {
 			<button
 				onClick={() => {
 					setModeResponsive(ModeResponsive.MODE_DM);
-					navigate(currentDmId ? `/chat/direct/message/${currentDmId}/${currentDmIType}` : '/chat/direct/friends');
+					navigate(!currentDmId ? '/chat/direct/friends' : `/chat/direct/message/${currentDmId}/${currentDmIType}`);
 				}}
 				draggable="false"
 			>
 				<NavLinkComponent active={!isClanView}>
-					<div onContextMenu={handleMouseClick}>
+					<div onContextMenu={handleMouseClick} data-e2e={generateE2eId('clan_page.side_bar.DM_item')}>
 						<Image
 							src={
 								logoCustom

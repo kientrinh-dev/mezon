@@ -12,12 +12,13 @@ import {
 	useAppSelector,
 	voiceActions
 } from '@mezon/store-mobile';
-import { UsersClanEntity } from '@mezon/utils';
+import type { UsersClanEntity } from '@mezon/utils';
+import type { TFunction } from 'i18next';
 import type { Participant, TrackPublication } from 'livekit-client';
 import { DisconnectReason, RoomEvent, Track } from 'livekit-client';
 import LottieView from 'lottie-react-native';
 import { ChannelStreamMode } from 'mezon-js';
-import React, { memo, useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Dimensions, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { ResumableZoom } from 'react-native-zoom-toolkit';
@@ -32,6 +33,7 @@ import FocusedScreenPopup from '../FocusedScreenPopup';
 import ParticipantScreen from '../ParticipantScreen';
 import ReasonPopup from '../ReasonPopup';
 import { style } from '../styles';
+import { createStyles } from './index.styles';
 
 const RoomViewListener = memo(
 	({
@@ -39,18 +41,19 @@ const RoomViewListener = memo(
 		focusedScreenShare,
 		setFocusedScreenShare,
 		channelId,
-		clanId
+		clanId,
+		t
 	}: {
 		isShowPreCallInterface: boolean;
 		focusedScreenShare: TrackReference;
 		setFocusedScreenShare: any;
 		channelId: string;
 		clanId: string;
+		t: TFunction;
 	}) => {
 		const participants = useParticipants();
 		const dispatch = useAppDispatch();
 		const room: any = useRoomContext();
-		const { t } = useTranslation(['channelVoice']);
 		const voiceInfo = useSelector(selectVoiceInfo);
 
 		useEffect(() => {
@@ -171,15 +174,36 @@ const RoomView = ({
 	activeSoundReactions: Map<string, ActiveSoundReaction>;
 	allUserClans: UsersClanEntity[];
 }) => {
-	const marginWidth = Dimensions.get('screen').width;
 	const { themeValue, themeBasic } = useTheme();
 	const styles = style(themeValue);
+	const localStyles = createStyles();
 	const voiceInfo = useSelector(selectVoiceInfo);
 	const [focusedScreenShare, setFocusedScreenShare] = useState<TrackReference | null>(null);
 	const [isHiddenControl, setIsHiddenControl] = useState<boolean>(false);
 	const isPiPMode = useAppSelector((state) => selectIsPiPMode(state));
 	const screenCaptureRef = React.useRef(null);
 	const isShowPreCallInterface = useSelector(selectIsShowPreCallInterface);
+	const layoutRef = useRef({ width: 0, height: 0 });
+	const { t } = useTranslation(['channelVoice']);
+
+	const checkOrientation = () => {
+		const { width, height } = Dimensions.get('window');
+		layoutRef.current = { width, height };
+	};
+	useEffect(() => {
+		checkOrientation();
+
+		const subscription = Dimensions.addEventListener('change', (handler) => {
+			const screen = handler?.screen;
+			if (screen?.width && screen?.height) {
+				layoutRef.current = { width: screen?.width, height: screen?.height };
+			}
+		});
+
+		return () => {
+			subscription && subscription.remove();
+		};
+	}, []);
 
 	useEffect(() => {
 		const subscription = focusedScreenShare
@@ -219,18 +243,14 @@ const RoomView = ({
 
 	if (focusedScreenShare) {
 		return (
-			<View style={{ width: '100%', flex: 1, alignItems: 'center' }}>
-				<View style={{ height: '100%', width: '100%' }}>
+			<View style={localStyles.focusedScreenContainer}>
+				<View style={localStyles.focusedScreenWrapper}>
 					<ResumableZoom onTap={() => setIsHiddenControl((prevState) => !prevState)} allowPinchPanning={false}>
-						<View style={{ height: '100%', width: marginWidth }}>
+						<View style={{ height: layoutRef?.current?.height, width: layoutRef?.current?.width }}>
 							<VideoTrack
 								trackRef={focusedScreenShare}
 								objectFit={'contain'}
-								style={{
-									height: '100%',
-									width: '100%',
-									alignSelf: 'center'
-								}}
+								style={localStyles.videoTrack}
 								iosPIP={{ enabled: true, startAutomatically: true, preferredSize: { width: 12, height: 8 } }}
 							/>
 						</View>
@@ -260,6 +280,7 @@ const RoomView = ({
 					setFocusedScreenShare={setFocusedScreenShareProp}
 					channelId={channelId}
 					clanId={clanId}
+					t={t}
 				/>
 			</View>
 		);
@@ -280,14 +301,14 @@ const RoomView = ({
 				/>
 			)}
 			{isAnimationComplete && isGroupCall && isShowPreCallInterface && (
-				<View style={{ alignItems: 'center', justifyContent: 'center', paddingBottom: size.s_100 * 2 }}>
+				<View style={localStyles.preCallContainer}>
 					<LottieView
 						source={themeBasic === ThemeModeBase.DARK ? TYPING_DARK_MODE : TYPING_LIGHT_MODE}
 						autoPlay
 						loop
-						style={{ width: size.s_60, height: size.s_60 }}
+						style={localStyles.lottieView}
 					/>
-					<Text style={styles.text}>{`${participantsCount} members will be notified`}</Text>
+					<Text style={styles.text}>{t('membersWillBeNotified', { participantsCount })}</Text>
 				</View>
 			)}
 			<ControlBottomBar
@@ -305,6 +326,7 @@ const RoomView = ({
 				setFocusedScreenShare={setFocusedScreenShareProp}
 				channelId={channelId}
 				clanId={clanId}
+				t={t}
 			/>
 		</View>
 	);

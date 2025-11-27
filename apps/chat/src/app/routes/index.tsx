@@ -49,7 +49,19 @@ const DirectMessage = lazy(() => import(/* webpackChunkName: "dm-pages" */ '../p
 const FriendsPage = lazy(() => import(/* webpackChunkName: "dm-pages" */ '../pages/directMessage/FriendsPage'));
 const GuideMain = lazy(() => import(/* webpackChunkName: "guide-pages" */ '../pages/guide'));
 const MezonPage = lazy(() => import(/* webpackChunkName: "homepage" */ '../pages/homepage/mezonpage'));
+const AboutMezon = lazy(() => import(/* webpackChunkName: "about" */ '../pages/aboutmezon'));
 const InvitePage = lazy(() => import(/* webpackChunkName: "invite-pages" */ '../pages/invite'));
+const TextChannelPage = lazy(() => import(/* webpackChunkName: "textchannel-page" */ '../pages/textchannel'));
+const TermOfServivePage = lazy(() => import(/* webpackChunkName: "termofservice-page" */ '../pages/termofservices'));
+const PrivacyMezonPage = lazy(() => import(/* webpackChunkName: "privacymetzon-page" */ '../pages/privacymezon'));
+const BrandCenterPage = lazy(() => import(/* webpackChunkName: "brandcenter-page" */ '../pages/brandcenter'));
+const ContactUsPage = lazy(() => import(/* webpackChunkName: "contactus-page" */ '../pages/contactus'));
+const MezonDongPage = lazy(() => import(/* webpackChunkName: "textchannel-page" */ '../pages/mezondong'));
+const IntegrationsPage = lazy(() => import(/* webpackChunkName: "integrations-page" */ '../pages/integrations'));
+const ClanDetailPage = lazy(() => import(/* webpackChunkName: "clandetail-page" */ '../pages/clandetail'));
+const OrganizePage = lazy(() => import(/* webpackChunkName: "organize-page" */ '../pages/organize'));
+const CustomizePage = lazy(() => import(/* webpackChunkName: "customize-page" */ '../pages/customize'));
+const AIGenerationPage = lazy(() => import(/* webpackChunkName: "aigeneration-page" */ '../pages/aigeneration'));
 const Login = lazy(() => import(/* webpackChunkName: "auth-pages" */ '../pages/login'));
 const LoginCallback = lazy(() => import(/* webpackChunkName: "auth-pages" */ '../pages/loginCallback'));
 const LogoutCallback = lazy(() => import(/* webpackChunkName: "auth-pages" */ '../pages/logoutCallback'));
@@ -191,6 +203,103 @@ export const Routes = memo(() => {
 						element: (
 							<Suspense fallback={<SuspenseFallback />}>
 								<AppDirectory />
+							</Suspense>
+						)
+					},
+					{
+						path: '/about',
+						element: (
+							<Suspense fallback={<SuspenseFallback />}>
+								<AboutMezon />
+							</Suspense>
+						)
+					},
+					{
+						path: '/fastmessage',
+						element: (
+							<Suspense fallback={<SuspenseFallback />}>
+								<TextChannelPage />
+							</Suspense>
+						)
+					},
+					{
+						path: '/contact-us',
+						element: (
+							<Suspense fallback={<SuspenseFallback />}>
+								<ContactUsPage />
+							</Suspense>
+						)
+					},
+					{
+						path: '/terms-of-service',
+						element: (
+							<Suspense fallback={<SuspenseFallback />}>
+								<TermOfServivePage />
+							</Suspense>
+						)
+					},
+					{
+						path: '/privacy-policy',
+						element: (
+							<Suspense fallback={<SuspenseFallback />}>
+								<PrivacyMezonPage />
+							</Suspense>
+						)
+					},
+					{
+						path: '/brand-center',
+						element: (
+							<Suspense fallback={<SuspenseFallback />}>
+								<BrandCenterPage />
+							</Suspense>
+						)
+					},
+					{
+						path: '/mezondong',
+						element: (
+							<Suspense fallback={<SuspenseFallback />}>
+								<MezonDongPage />
+							</Suspense>
+						)
+					},
+
+					{
+						path: '/integrations',
+						element: (
+							<Suspense fallback={<SuspenseFallback />}>
+								<IntegrationsPage />
+							</Suspense>
+						)
+					},
+					{
+						path: '/clanworld',
+						element: (
+							<Suspense fallback={<SuspenseFallback />}>
+								<ClanDetailPage />
+							</Suspense>
+						)
+					},
+					{
+						path: '/organize',
+						element: (
+							<Suspense fallback={<SuspenseFallback />}>
+								<OrganizePage />
+							</Suspense>
+						)
+					},
+					{
+						path: '/customize',
+						element: (
+							<Suspense fallback={<SuspenseFallback />}>
+								<CustomizePage />
+							</Suspense>
+						)
+					},
+					{
+						path: '/aigeneration',
+						element: (
+							<Suspense fallback={<SuspenseFallback />}>
+								<AIGenerationPage />
 							</Suspense>
 						)
 					},

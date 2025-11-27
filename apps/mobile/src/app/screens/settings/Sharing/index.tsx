@@ -8,7 +8,7 @@ import {
 	STORAGE_DATA_CLAN_CHANNEL_CACHE
 } from '@mezon/mobile-components';
 import { baseColor, size, useTheme } from '@mezon/mobile-ui';
-import { selectBlockedUsersForMessage, selectDirectsOpenlist } from '@mezon/store';
+import { selectBanMemberCurrentClanById, selectBlockedUsersForMessage, selectCurrentUserId, selectDirectsOpenlist } from '@mezon/store';
 import {
 	channelMetaActions,
 	channelsActions,
@@ -18,7 +18,6 @@ import {
 	getStoreAsync,
 	selectAllChannelsByUser,
 	selectClansEntities,
-	selectCurrentChannelId,
 	selectCurrentClanId,
 	selectDirectById,
 	useAppDispatch
@@ -166,8 +165,8 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 			const store = await getStoreAsync();
 			await store.dispatch(
 				channelsActions.joinChat({
-					clanId: channelSelected?.clan_id,
-					channelId: channelSelected?.channel_id,
+					clanId: '0',
+					channelId: channelSelected?.channel_id || '',
 					channelType: channelSelected?.type,
 					isPublic: false
 				})
@@ -175,8 +174,8 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 
 			await mezon.socketRef.current.writeChatMessage(
 				'0',
-				channelSelected?.id,
-				Number(channelSelected?.user_ids?.length) === 1 ? ChannelStreamMode.STREAM_MODE_DM : ChannelStreamMode.STREAM_MODE_GROUP,
+				channelSelected?.id || '',
+				channelSelected?.type === ChannelType.CHANNEL_TYPE_DM ? ChannelStreamMode.STREAM_MODE_DM : ChannelStreamMode.STREAM_MODE_GROUP,
 				false,
 				{
 					t: dataSend.text,
@@ -191,10 +190,21 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 		}
 	};
 
-	const sendToGroup = async (dataSend: { text: any; links: any[] }) => {
+	const sendToChannel = async (dataSend: { text: any; links: any[] }) => {
 		const clanIdStore = selectCurrentClanId(store.getState());
 		const isPublic = channelSelected ? isPublicChannel(channelSelected) : false;
 		const isDiffClan = clanIdStore !== channelSelected?.clan_id;
+		const currentUserId = selectCurrentUserId(store.getState());
+		const isBannedChannel = selectBanMemberCurrentClanById(store.getState(), channelSelected?.channel_id, currentUserId);
+
+		if (isBannedChannel) {
+			Toast.show({
+				type: 'error',
+				text1: t('bannedChannel', { channelName: channelSelected?.channel_label })
+			});
+			return;
+		}
+
 		requestAnimationFrame(async () => {
 			if (isDiffClan) {
 				await store.dispatch(clansActions.joinClan({ clanId: channelSelected?.clan_id }));
@@ -280,7 +290,7 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 		if (channelSelected.type === ChannelType.CHANNEL_TYPE_GROUP || channelSelected.type === ChannelType.CHANNEL_TYPE_DM) {
 			await sendToDM(dataSend);
 		} else {
-			await sendToGroup(dataSend);
+			await sendToChannel(dataSend);
 		}
 		setIsLoading(false);
 		onCloseSharing(true);
@@ -298,7 +308,6 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 		try {
 			const fileFormats = await Promise.all(
 				dataMedia.map(async (media) => {
-					if (!media?.filePath && !media?.contentUri) return null;
 					const fileName = media?.fileName || media?.contentUri || media?.filePath;
 					// Add to preview immediately
 					setAttachmentPreview((prev) => [
@@ -343,8 +352,15 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 						? await compressVideo(media?.filePath || media?.contentUri)
 						: checkIsImage
 							? await compressImage(media?.filePath || media?.contentUri)
-							: null;
-					const fileData = await RNFS.readFile(pathCompressed || media?.contentUri || media?.filePath, 'base64');
+							: media?.filePath || media?.contentUri;
+					let cleanPath = pathCompressed || '';
+					if (Platform.OS === 'ios') {
+						cleanPath = cleanPath.replace(/^file:\/\//, '');
+						cleanPath = decodeURIComponent(cleanPath);
+					} else {
+						cleanPath = cleanPath?.replace?.('%20', ' ');
+					}
+					const fileData = await RNFS.readFile(cleanPath, 'base64');
 					let width = 600;
 					let height = 900;
 					if (checkIsImage) {
@@ -388,7 +404,7 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 			});
 		} catch (error) {
 			console.error('log  => error compressImage', error);
-			return '';
+			return image;
 		}
 	};
 
@@ -406,8 +422,6 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 	const handleFiles = async (files: any) => {
 		const maxRetries = 5;
 		const retryDelay = 4000; // 4 seconds
-		const clanIdStore = selectCurrentClanId(store.getState());
-		const currentChannelId = selectCurrentChannelId(store.getState() as any);
 
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
@@ -418,11 +432,11 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 				}
 
 				const promises = Array.from(files).map((file: any) => {
-					return handleUploadFileMobile(client, session, clanIdStore, currentChannelId, file.name, file);
+					return handleUploadFileMobile(client, session, file.name, file);
 				});
 
 				const response = await Promise.all(promises);
-				setAttachmentUpload(response);
+				setAttachmentUpload((prev: any) => [...response, ...prev]);
 				setAttachmentPreview((prev) =>
 					prev.map((p) => {
 						const matched = response.find(
@@ -470,7 +484,7 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 	return (
 		<View style={styles.wrapper}>
 			<KeyboardAvoidingView
-				style={{ flex: 1, width: '100%' }}
+				style={styles.keyboardAvoidingView}
 				behavior={'padding'}
 				keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight + 5}
 			>
@@ -519,7 +533,7 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 				</View>
 				<View style={styles.chatArea}>
 					{!!attachmentPreview?.length && (
-						<View style={[styles.attachmentRow]}>
+						<View style={styles.attachmentRow}>
 							<ScrollView horizontal keyboardShouldPersistTaps={'always'}>
 								{attachmentPreview?.map((media: any, index) => {
 									const isFile =
@@ -531,7 +545,7 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 									return (
 										<View
 											key={`${media?.url}_${index}_media_sharing`}
-											style={[styles.wrapperItemMedia, isFile && { height: size.s_60, width: size.s_50 * 3 }]}
+											style={[styles.wrapperItemMedia, isFile && styles.mediaWrapperFile]}
 										>
 											{isVideo(media?.filename?.toLowerCase()) && isVideo(media?.url?.toLowerCase()) && (
 												<View style={styles.videoOverlay}>
@@ -584,7 +598,7 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 					<View style={styles.inputRow}>
 						<View style={styles.chatInput}>
 							<TextInput
-								style={[styles.textInput, { height: size.s_40 }]}
+								style={[styles.textInput, styles.textInputHeight]}
 								value={dataText}
 								onChangeText={(text) => setDataText(text)}
 								placeholder={t('addCommentPlaceholder')}
@@ -600,7 +614,10 @@ export const Sharing = ({ data, topUserSuggestionId, onClose }: ISharing) => {
 						<TouchableOpacity
 							onPress={onSend}
 							disabled={!channelSelected || !isAttachmentUploaded}
-							style={[styles.sendButton, { opacity: channelSelected && isAttachmentUploaded ? 1 : 0.5 }]}
+							style={[
+								styles.sendButton,
+								channelSelected && isAttachmentUploaded ? styles.sendButtonEnabled : styles.sendButtonDisabled
+							]}
 						>
 							{isLoading ? (
 								<Flow size={size.s_28} color={'white'} />

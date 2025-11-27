@@ -1,16 +1,16 @@
 import {
 	ActionEmitEvent,
+	load,
+	remove,
 	STORAGE_CHANNEL_CURRENT_CACHE,
 	STORAGE_KEY_TEMPORARY_ATTACHMENT,
-	STORAGE_MY_USER_ID,
-	load,
-	remove
+	STORAGE_MY_USER_ID
 } from '@mezon/mobile-components';
 import {
-	DMCallActions,
 	appActions,
 	channelsActions,
 	directActions,
+	DMCallActions,
 	getStoreAsync,
 	messagesActions,
 	selectAllAccount,
@@ -20,6 +20,7 @@ import {
 	selectCurrentTopicId,
 	selectDmGroupCurrentId,
 	selectLoadingMainMobile,
+	selectVoiceFullScreen,
 	useAppSelector
 } from '@mezon/store-mobile';
 import { useMezon } from '@mezon/transport';
@@ -28,11 +29,10 @@ import { getApp } from '@react-native-firebase/app';
 import { getMessaging, onMessage } from '@react-native-firebase/messaging';
 import { useNavigation } from '@react-navigation/native';
 import type { WebrtcSignalingFwd } from 'mezon-js';
-import { WebrtcSignalingType, safeJSONParse } from 'mezon-js';
+import { safeJSONParse, WebrtcSignalingType } from 'mezon-js';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { AppStateStatus } from 'react-native';
-import { AppState, DeviceEventEmitter, Keyboard, Linking, Platform, StatusBar } from 'react-native';
+import { AppState, AppStateStatus, DeviceEventEmitter, Keyboard, Linking, Platform, StatusBar } from 'react-native';
 import ReceiveSharingIntent from 'react-native-receive-sharing-intent';
 import Sound from 'react-native-sound';
 import Toast from 'react-native-toast-message';
@@ -58,11 +58,13 @@ export const AuthenticationLoader = () => {
 	const currentDmGroupId = useSelector(selectDmGroupCurrentId);
 	const currentTopicId = useSelector(selectCurrentTopicId);
 	const isLoadingMain = useSelector(selectLoadingMainMobile);
+	const isFullVoiceScreen = useSelector(selectVoiceFullScreen);
 	const dispatch = useDispatch();
 	const currentDmGroupIdRef = useRef(currentDmGroupId);
 	const currentChannelRef = useRef(currentClan);
 	const currentTopicRef = useRef(currentTopicId);
 	const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+	const voiceFullScreenRef = useRef(isFullVoiceScreen);
 
 	useEffect(() => {
 		const subscription = AppState.addEventListener('change', (nextAppState) => {
@@ -112,6 +114,20 @@ export const AuthenticationLoader = () => {
 			}
 		};
 		getUrl();
+
+		const urlListener =
+			Platform.OS === 'ios'
+				? Linking.addEventListener('url', ({ url }) => {
+						if (url) {
+							onNavigationDeeplink(url);
+						}
+					})
+				: undefined;
+		return () => {
+			if (Platform.OS === 'ios') {
+				urlListener?.remove?.();
+			}
+		};
 	}, []);
 
 	const extractChannelParams = (url: string) => {
@@ -150,7 +166,7 @@ export const AuthenticationLoader = () => {
 				}
 			}
 		} else if (path?.includes?.('/invite/')) {
-			const inviteMatch = path.match(/invite\/(\d+)/);
+			const inviteMatch = path?.match?.(/invite\/(\d+)/) || path?.match?.(/invite\/chat\/(\d+)/);
 			const inviteId = inviteMatch?.[1];
 			if (inviteId) {
 				navigation.navigate(APP_SCREEN.INVITE_CLAN, {
@@ -165,6 +181,13 @@ export const AuthenticationLoader = () => {
 				navigation.navigate(APP_SCREEN.PROFILE_DETAIL, {
 					username,
 					data: dataParam || undefined
+				});
+			}
+		} else if (path?.includes?.('bot/install/')) {
+			const applicationId = path?.match?.(/bot\/install\/(\d+)/)?.[1];
+			if (applicationId) {
+				navigation.navigate(APP_SCREEN.INSTALL_CLAN, {
+					appId: applicationId
 				});
 			}
 		}
@@ -187,6 +210,10 @@ export const AuthenticationLoader = () => {
 	useEffect(() => {
 		currentTopicRef.current = currentTopicId;
 	}, [currentTopicId]);
+
+	useEffect(() => {
+		voiceFullScreenRef.current = isFullVoiceScreen;
+	}, [isFullVoiceScreen]);
 
 	useEffect(() => {
 		let timer;
@@ -247,18 +274,26 @@ export const AuthenticationLoader = () => {
 			const activeScreenIndex = routes[navigationState?.index]?.state?.index || 0;
 			const activeState = routes[navigationState?.index]?.state || {};
 			const currentRoute = activeState?.routes[activeScreenIndex]?.params?.screen || activeState?.routes[activeScreenIndex]?.name || '';
+			if (isTabletLandscape && currentRoute === APP_SCREEN.BOTTOM_BAR) {
+				const bottomBarIndex = activeState?.routes[activeScreenIndex]?.state?.index || 0;
+				const bottomBarRoute =
+					activeState?.routes[activeScreenIndex]?.state?.routes?.[bottomBarIndex]?.params?.screen ||
+					activeState?.routes[activeScreenIndex]?.state?.routes?.[bottomBarIndex]?.name ||
+					'';
+				if (bottomBarRoute) return bottomBarRoute;
+			}
 
 			return currentRoute;
 		} catch (error) {
 			console.warn('Error getting top route:', error);
 			return '';
 		}
-	}, [navigation]);
+	}, [isTabletLandscape, navigation]);
 
 	const initFirebaseMessaging = () => {
 		const unsubscribe = onMessage(messaging, (remoteMessage) => {
 			try {
-				const message = remoteMessage?.data?.message;
+				const message = remoteMessage?.data?.message || '{}';
 				const messageData = safeJSONParse(message as string);
 
 				let messageCode = 0;
@@ -273,7 +308,10 @@ export const AuthenticationLoader = () => {
 				const topRoute = getTopRoute();
 
 				// Determine current view state for suppression decision
-				const isViewingChannel = topRoute === APP_SCREEN.HOME_DEFAULT || topRoute === APP_SCREEN.MESSAGES.CHAT_STREAMING;
+				const isViewingChannel =
+					topRoute === APP_SCREEN.HOME_DEFAULT ||
+					topRoute === APP_SCREEN.MESSAGES.CHAT_STREAMING ||
+					(topRoute === APP_SCREEN.HOME && isTabletLandscape);
 				const isViewingDirectMessage = topRoute === APP_SCREEN.MESSAGES.MESSAGE_DETAIL || topRoute === APP_SCREEN.MESSAGES.HOME;
 
 				if (
@@ -285,7 +323,8 @@ export const AuthenticationLoader = () => {
 							isViewingChannel,
 							isViewingDirectMessage
 						},
-						currentTopicRef.current
+						currentTopicRef.current,
+						voiceFullScreenRef.current
 					)
 				) {
 					// Case: FCM start call
@@ -293,7 +332,7 @@ export const AuthenticationLoader = () => {
 					const body: any = remoteMessage?.notification?.body || remoteMessage?.data?.body;
 					if (
 						title === 'Incoming call' ||
-						(body && ['video call', 'audio call', 'Untitled message'].some((text) => body?.includes?.(text))) ||
+						(body && ['video call', 'audio call', 'voice call', 'Untitled message'].some((text) => body?.includes?.(text))) ||
 						!body ||
 						!title ||
 						body?.includes?.('"Untitled message"')
@@ -315,6 +354,7 @@ export const AuthenticationLoader = () => {
 							store.dispatch(directActions.setDmGroupCurrentId(''));
 							store.dispatch(messagesActions.setIdMessageToJump(null));
 							store.dispatch(appActions.setIsFromFCMMobile(true));
+							DeviceEventEmitter.emit(ActionEmitEvent.ON_VOICE_ROOM_RESIZE);
 							DeviceEventEmitter.emit(ActionEmitEvent.ON_PANEL_KEYBOARD_BOTTOM_SHEET, {
 								isShow: false
 							});

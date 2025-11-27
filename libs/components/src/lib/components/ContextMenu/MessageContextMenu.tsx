@@ -25,11 +25,15 @@ import {
 	selectClanView,
 	selectClickedOnThreadBoxStatus,
 	selectClickedOnTopicStatus,
-	selectCurrentChannel,
+	selectCurrentChannelId,
+	selectCurrentChannelParentId,
+	selectCurrentChannelPrivate,
 	selectCurrentClanId,
 	selectCurrentTopicId,
 	selectDefaultCanvasByChannelId,
-	selectDmGroupCurrent,
+	selectDmChannelIdById,
+	selectDmChannelPrivateById,
+	selectDmCreatorIdById,
 	selectDmGroupCurrentId,
 	selectMessageByMessageId,
 	selectMessageEntitiesByChannelId,
@@ -53,7 +57,7 @@ import {
 	EEventAction,
 	EMOJI_GIVE_COFFEE,
 	EOverriddenPermission,
-	FOR_10_MINUTES,
+	FORWARD_MESSAGE_TIME,
 	MenuBuilder,
 	ModeResponsive,
 	SHOW_POSITION,
@@ -100,11 +104,11 @@ type JsonObject = {
 const useIsOwnerGroupDM = () => {
 	const { userProfile } = useAuth();
 	const { directId } = useAppParams();
-	const currentGroupDM = useSelector(selectDmGroupCurrent(directId as string));
+	const creatorId = useAppSelector((state) => selectDmCreatorIdById(state, (directId as string) || ''));
 
 	const isOwnerGroupDM = useMemo(() => {
-		return currentGroupDM?.creator_id === userProfile?.user?.id;
-	}, [currentGroupDM?.creator_id, userProfile?.user?.id]);
+		return creatorId === userProfile?.user?.id;
+	}, [creatorId, userProfile?.user?.id]);
 
 	return isOwnerGroupDM;
 };
@@ -124,45 +128,59 @@ function MessageContextMenu({
 	const NX_CHAT_APP_ANNONYMOUS_USER_ID = process.env.NX_CHAT_APP_ANNONYMOUS_USER_ID || 'anonymous';
 	const { setOpenThreadMessageState } = useReference();
 	const dmGroupChatList = useSelector(selectAllDirectMessages);
-	const currentChannel = useSelector(selectCurrentChannel);
+	const currentChannelId = useSelector(selectCurrentChannelId);
+	const currentChannelPrivate = useSelector(selectCurrentChannelPrivate);
+	const currentChannelParentId = useSelector(selectCurrentChannelParentId);
 	const currentClanId = useSelector(selectCurrentClanId);
-	const listPinMessages = useAppSelector((state) => selectPinMessageByChannelId(state, currentChannel?.id as string));
+	const listPinMessages = useAppSelector((state) => selectPinMessageByChannelId(state, currentChannelId as string));
 	const currentDmId = useSelector(selectDmGroupCurrentId);
 	const isClanView = useSelector(selectClanView);
 	const currentTopicId = useSelector(selectCurrentTopicId);
 	const isFocusThreadBox = useSelector(selectClickedOnThreadBoxStatus);
 	const currentThread = useAppSelector(selectThreadCurrentChannel);
-	const currentDmGroup = useSelector(selectDmGroupCurrent(currentDmId || ''));
+	const dmChannelPrivate = useAppSelector((state) => selectDmChannelPrivateById(state, (currentDmId || '') as string));
+	const dmChannelId = useAppSelector((state) => selectDmChannelIdById(state, (currentDmId || '') as string));
 
 	const { createDirectMessageWithUser } = useDirect();
 	const { sendInviteMessage } = useSendInviteMessage();
 
+	const channelOrDirect = useMemo(() => {
+		if (isClanView) {
+			return {
+				clan_id: currentClanId,
+				channel_private: currentChannelPrivate,
+				channel_id: currentChannelId
+			} as ApiChannelDescription;
+		}
+		return { channel_private: dmChannelPrivate, channel_id: dmChannelId, clan_id: '0' } as ApiChannelDescription;
+	}, [isClanView, currentClanId, currentChannelPrivate, currentChannelId, dmChannelPrivate, dmChannelId]);
+
 	const { sendMessage: sendChatMessage } = useChatSending({
-		channelOrDirect: (isClanView ? currentChannel : currentDmGroup) as ApiChannelDescription,
+		channelOrDirect,
 		mode: activeMode || ChannelStreamMode.STREAM_MODE_CHANNEL
 	});
 
 	const message = useAppSelector((state) =>
 		selectMessageByMessageId(
 			state,
-			isTopic ? currentTopicId : isFocusThreadBox ? currentThread?.channel_id : isClanView ? currentChannel?.id : currentDmId,
+			isTopic ? currentTopicId : isFocusThreadBox ? currentThread?.channel_id : isClanView ? currentChannelId : currentDmId,
 			messageId
 		)
 	);
 
-	const currentDm = useSelector(selectDmGroupCurrent(currentDmId || ''));
+	const currentDmChannelId = useAppSelector((state) => selectDmChannelIdById(state, (currentDmId || '') as string));
 	const modeResponsive = useSelector(selectModeResponsive);
 	const allMessagesEntities = useAppSelector((state) =>
-		selectMessageEntitiesByChannelId(state, (modeResponsive === ModeResponsive.MODE_CLAN ? currentChannel?.channel_id : currentDm?.id) || '')
+		selectMessageEntitiesByChannelId(state, (modeResponsive === ModeResponsive.MODE_CLAN ? currentChannelId : currentDmChannelId) || '')
 	);
-	const allMessageIds = useAppSelector((state) => selectMessageIdsByChannelId(state, (isClanView ? currentChannel?.id : currentDmId) as string));
+	const allMessageIds = useAppSelector((state) => selectMessageIdsByChannelId(state, (isClanView ? currentChannelId : currentDmId) as string));
 	const dispatch = useAppDispatch();
 
 	const handleItemClick = useCallback(() => {
 		dispatch(referencesActions.setIdReferenceMessageReaction(message.id));
 		dispatch(gifsStickerEmojiActions.setSubPanelActive(SubPanelName.EMOJI_REACTION_RIGHT));
 	}, [dispatch]);
-	const defaultCanvas = useAppSelector((state) => selectDefaultCanvasByChannelId(state, currentChannel?.channel_id ?? ''));
+	const defaultCanvas = useAppSelector((state) => selectDefaultCanvasByChannelId(state, currentChannelId ?? ''));
 	const messagePosition = allMessageIds.findIndex((id: string) => id === messageId);
 	const { userId } = useAuth();
 	const { posShowMenu, imageSrc } = useMessageContextMenu();
@@ -179,12 +197,12 @@ function MessageContextMenu({
 	}, [message?.content.t]);
 
 	const checkMessageInPinnedList = useMemo(() => {
-		return listPinMessages?.some((pinMessage) => pinMessage?.id === messageId);
+		return listPinMessages?.some((pinMessage) => pinMessage?.message_id === messageId);
 	}, [listPinMessages, messageId]);
 
 	const [canManageThread, canDeleteMessage, canSendMessage] = usePermissionChecker(
 		[EOverriddenPermission.manageThread, EOverriddenPermission.deleteMessage, EOverriddenPermission.sendMessage],
-		currentChannel?.id ?? ''
+		currentChannelId ?? ''
 	);
 	const hasPermissionCreateTopic =
 		(canSendMessage && activeMode === ChannelStreamMode.STREAM_MODE_CHANNEL) ||
@@ -206,10 +224,10 @@ function MessageContextMenu({
 		message?.code !== TypeMessage.UpcomingEvent;
 
 	const handleAddToNote = useCallback(() => {
-		if (!message || !currentChannel || !currentClanId) return;
+		if (!message || !currentChannelId || !currentClanId) return;
 
 		const createCanvasBody = (content?: string, id?: string) => ({
-			channel_id: currentChannel.channel_id,
+			channel_id: currentChannelId,
 			clan_id: currentClanId.toString(),
 			content,
 			is_default: true,
@@ -277,7 +295,7 @@ function MessageContextMenu({
 		}
 
 		dispatch(createEditCanvas(createCanvasBody(formattedString, defaultCanvas?.id)));
-	}, [dispatch, message, currentChannel, currentClanId, defaultCanvas, t]);
+	}, [dispatch, message, currentClanId, defaultCanvas, t]);
 
 	const appearanceTheme = useSelector(selectTheme);
 
@@ -292,18 +310,13 @@ function MessageContextMenu({
 		const isSameSenderWithPreviousMessage = currentMessage?.sender_id === previousMessage?.sender_id;
 
 		const isNextMessageWithinTimeLimit = nextMessage
-			? Date.parse(nextMessage?.create_time) - Date.parse(currentMessage?.create_time) < FOR_10_MINUTES
+			? Date.parse(nextMessage?.create_time) - Date.parse(currentMessage?.create_time) < FORWARD_MESSAGE_TIME
 			: false;
-
 		const isPreviousMessageWithinTimeLimit = previousMessage
-			? Date.parse(currentMessage?.create_time) - Date.parse(previousMessage?.create_time) < FOR_10_MINUTES
+			? Date.parse(currentMessage?.create_time) - Date.parse(previousMessage?.create_time) < FORWARD_MESSAGE_TIME
 			: false;
-
-		return isSameSenderWithPreviousMessage
-			? isSameSenderWithNextMessage && isNextMessageWithinTimeLimit && !isPreviousMessageWithinTimeLimit
-			: isSameSenderWithNextMessage && isNextMessageWithinTimeLimit;
+		return (isPreviousMessageWithinTimeLimit && isSameSenderWithPreviousMessage) || (isSameSenderWithNextMessage && isNextMessageWithinTimeLimit);
 	}, [allMessageIds, allMessagesEntities, messagePosition]);
-
 	const handleReplyMessage = useCallback(() => {
 		if (!message) {
 			return;
@@ -380,20 +393,20 @@ function MessageContextMenu({
 
 	const setIsShowCreateThread = useCallback(
 		(isShowCreateThread: boolean, channelId?: string) => {
-			dispatch(threadsActions.setIsShowCreateThread({ channelId: channelId ? channelId : (currentChannel?.id as string), isShowCreateThread }));
+			dispatch(threadsActions.setIsShowCreateThread({ channelId: channelId ? channelId : (currentChannelId as string), isShowCreateThread }));
 			dispatch(topicsActions.setIsShowCreateTopic(false));
 		},
-		[currentChannel?.id, dispatch]
+		[currentChannelId, dispatch]
 	);
 
 	const setIsShowCreateTopic = useCallback(
 		(isShowCreateTopic: boolean, channelId?: string) => {
 			dispatch(topicsActions.setIsShowCreateTopic(isShowCreateTopic));
 			dispatch(
-				threadsActions.setIsShowCreateThread({ channelId: channelId ? channelId : (currentChannel?.id as string), isShowCreateThread: false })
+				threadsActions.setIsShowCreateThread({ channelId: channelId ? channelId : (currentChannelId as string), isShowCreateThread: false })
 			);
 		},
-		[currentChannel?.id, dispatch]
+		[currentChannelId, dispatch]
 	);
 
 	const setValueThread = useCallback(
@@ -448,7 +461,8 @@ function MessageContextMenu({
 			dispatch(
 				channelMetaActions.setChannelLastSeenTimestamp({
 					channelId: message?.channel_id as string,
-					timestamp: message.create_time_seconds || Date.now()
+					timestamp: message.create_time_seconds || Date.now(),
+					messageId: message?.id
 				})
 			);
 		} catch (error) {
@@ -498,11 +512,11 @@ function MessageContextMenu({
 
 	const [enableEditMessageItem, enableReportMessageItem] = useMemo(() => {
 		if (!checkPos) return [false, false];
-		const enableEdit = isMyMessage;
+		const enableEdit = isMyMessage && !message?.content?.tp;
 		const enableReport = !isMyMessage;
 
 		return [enableEdit, enableReport];
-	}, [isMyMessage, checkPos]);
+	}, [isMyMessage, checkPos, message?.content?.tp]);
 
 	const pinMessageStatus = useMemo(() => {
 		if (!checkPos) return undefined;
@@ -524,7 +538,7 @@ function MessageContextMenu({
 	}, [checkPos, activeMode, canManageThread]);
 
 	const enableDelMessageItem = useMemo(() => {
-		if (!checkPos) return false;
+		if (!checkPos || message?.content?.tp) return false;
 		if (isMyMessage) {
 			return true;
 		}
@@ -535,7 +549,7 @@ function MessageContextMenu({
 		if (activeMode === ChannelStreamMode.STREAM_MODE_CHANNEL || activeMode === ChannelStreamMode.STREAM_MODE_THREAD) {
 			return canDeleteMessage;
 		}
-	}, [activeMode, type, canDeleteMessage, isMyMessage, checkPos, isOwnerGroupDM]);
+	}, [activeMode, type, canDeleteMessage, isMyMessage, checkPos, isOwnerGroupDM, message?.content?.tp]);
 
 	const checkElementIsImage = elementTarget instanceof HTMLImageElement;
 	const checkElementIsLink = elementTarget instanceof HTMLAnchorElement;
@@ -598,8 +612,8 @@ function MessageContextMenu({
 		[createDirectMessageWithUser, sendInviteMessage]
 	);
 
-	const quickMenuItems = useAppSelector((state) => selectQuickMenuByChannelId(state, currentChannel?.id || ''));
-
+	const quickMenuItems = useAppSelector((state) => selectQuickMenuByChannelId(state, currentChannelId || ''));
+	const isForwardedMessage = Boolean(message?.content?.fwd);
 	const items = useMemo<ContextMenuItem[]>(() => {
 		const builder = new MenuBuilder();
 
@@ -608,7 +622,7 @@ function MessageContextMenu({
 				'addReaction', // id
 				t('addReaction'), // label
 				handleItemClick,
-				<Icons.RightArrowRightClick />
+				<Icons.RightArrowRightClick defaultSize="w-4 h-4" />
 			);
 		});
 
@@ -642,9 +656,9 @@ function MessageContextMenu({
 									count: 1,
 									message_sender_id: message?.sender_id ?? '',
 									action_delete: false,
-									is_public: isPublicChannel(currentChannel),
+									is_public: isPublicChannel({ parent_id: currentChannelParentId, channel_private: currentChannelPrivate }),
 									clanId: message.clan_id ?? '',
-									channelId: isTopic ? currentChannel?.id || '' : (message?.channel_id ?? ''),
+									channelId: isTopic ? currentChannelId || '' : (message?.channel_id ?? ''),
 									isFocusTopicBox,
 									channelIdOnMessage: message?.channel_id
 								});
@@ -664,30 +678,26 @@ function MessageContextMenu({
 				);
 			}
 		);
+		if (!isForwardedMessage) {
+			builder.when(enableEditMessageItem, (builder) => {
+				builder.addMenuItem(
+					'editMessage',
+					t('editMessage'),
+					async () => {
+						try {
+							handleEditMessage();
+						} catch (error) {
+							console.error(t('errors.failedToEditMessage'), error);
+						}
+					},
+					<Icons.EditMessageRightClick defaultSize="w-4 h-4" />
+				);
+			});
+		}
 
-		builder.when(enableEditMessageItem, (builder) => {
-			builder.addMenuItem(
-				'editMessage',
-				t('editMessage'),
-				async () => {
-					try {
-						handleEditMessage();
-					} catch (error) {
-						console.error(t('errors.failedToEditMessage'), error);
-					}
-				},
-
-				<Icons.EditMessageRightClick defaultSize="w-4 h-4" />
-			);
-		});
-
-		builder.when(!isTopic && pinMessageStatus === true, (builder) => {
-			builder.addMenuItem('pinMessage', t('pinMessage'), openPinMessageModal, <Icons.PinMessageRightClick defaultSize="w-4 h-4" />);
-		});
 		builder.when(!isTopic && pinMessageStatus === false, (builder) => {
 			builder.addMenuItem('unPinMessage', t('unpinMessage'), () => handleUnPinMessage(), <Icons.PinMessageRightClick defaultSize="w-4 h-4" />);
 		});
-
 		builder.when(
 			checkPos &&
 				(canSendMessage || activeMode === ChannelStreamMode.STREAM_MODE_DM || activeMode === ChannelStreamMode.STREAM_MODE_GROUP || isTopic),
@@ -701,11 +711,25 @@ function MessageContextMenu({
 				);
 			}
 		);
-
+		builder.when(checkPos, (builder) => {
+			builder.addMenuItem(
+				'forwardMessage',
+				t('forwardMessage'),
+				() => handleForwardMessage(),
+				<Icons.ForwardRightClick defaultSize="w-4 h-4" />
+			);
+		});
+		builder.when(checkPos && isShowForwardAll, (builder) => {
+			builder.addMenuItem(
+				'forwardAll',
+				t('forwardAllMessage'),
+				() => handleForwardAllMessage(),
+				<Icons.ForwardAllRightClick defaultSize="w-4 h-4" />
+			);
+		});
 		builder.when(enableCreateThreadItem, (builder) => {
 			builder.addMenuItem('createThread', t('createThread'), () => handleCreateThread(), <Icons.ThreadIconRightClick defaultSize="w-4 h-4" />);
 		});
-
 		builder.when(checkPos, (builder) => {
 			builder.addMenuItem(
 				'copyText',
@@ -720,7 +744,40 @@ function MessageContextMenu({
 				<Icons.CopyTextRightClick />
 			);
 		});
+		builder.when(!isTopic && pinMessageStatus === true, (builder) => {
+			builder.addMenuItem('pinMessage', t('pinMessage'), openPinMessageModal, <Icons.PinMessageRightClick defaultSize="w-4 h-4" />);
+		});
 
+		message?.code !== TypeMessage.Topic &&
+			notAllowedType &&
+			!isTopic &&
+			canSendMessage &&
+			builder.when(checkPos && hasPermissionCreateTopic, (builder) => {
+				builder.addMenuItem('topicDiscussion', t('topicDiscussion'), handleCreateTopic, <Icons.TopicIcon defaultSize="w-4 h-4" />);
+			});
+		builder.when(checkPos, (builder) => {
+			builder.addMenuItem(
+				'markUnread',
+				t('markUnread'),
+				handleMarkUnread,
+				<svg height="16px" width="16px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+					<path d="M410.9,0H85.1C72.3,0,61.8,10.4,61.8,23.3V512L248,325.8L434.2,512V23.3C434.2,10.4,423.8,0,410.9,0z" fill="currentColor" />
+				</svg>
+			);
+		});
+		builder.when(checkPos, (builder) => {
+			builder.addMenuItem(
+				'addToInbox',
+				t('addToInbox'),
+				handleMarkMessageNoti,
+				<svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path
+						d="M9.15316 5.40838C10.4198 3.13613 11.0531 2 12 2C12.9469 2 13.5802 3.13612 14.8468 5.40837L15.1745 5.99623C15.5345 6.64193 15.7144 6.96479 15.9951 7.17781C16.2757 7.39083 16.6251 7.4699 17.3241 7.62805L17.9605 7.77203C20.4201 8.32856 21.65 8.60682 21.9426 9.54773C22.2352 10.4886 21.3968 11.4691 19.7199 13.4299L19.2861 13.9372C18.8096 14.4944 18.5713 14.773 18.4641 15.1177C18.357 15.4624 18.393 15.8341 18.465 16.5776L18.5306 17.2544C18.7841 19.8706 18.9109 21.1787 18.1449 21.7602C17.3788 22.3417 16.2273 21.8115 13.9243 20.7512L13.3285 20.4768C12.6741 20.1755 12.3469 20.0248 12 20.0248C11.6531 20.0248 11.3259 20.1755 10.6715 20.4768L10.0757 20.7512C7.77268 21.8115 6.62118 22.3417 5.85515 21.7602C5.08912 21.1787 5.21588 19.8706 5.4694 17.2544L5.53498 16.5776C5.60703 15.8341 5.64305 15.4624 5.53586 15.1177C5.42868 14.773 5.19043 14.4944 4.71392 13.9372L4.2801 13.4299C2.60325 11.4691 1.76482 10.4886 2.05742 9.54773C2.35002 8.60682 3.57986 8.32856 6.03954 7.77203L6.67589 7.62805C7.37485 7.4699 7.72433 7.39083 8.00494 7.17781C8.28555 6.96479 8.46553 6.64194 8.82547 5.99623L9.15316 5.40838Z"
+						fill="currentColor"
+					/>
+				</svg>
+			);
+		});
 		builder.when(checkPos && quickMenuItems?.length > 0, (builder) => {
 			builder.addMenuItem(
 				'slashCommands',
@@ -737,77 +794,6 @@ function MessageContextMenu({
 				</svg>
 			);
 		});
-
-		// builder.when(checkPos, (builder) => {
-		// 	builder.addMenuItem('apps', 'Apps', () => console.log('apps'), <Icons.RightArrowRightClick defaultSize="w-4 h-4" />);
-		// });
-
-		builder.when(checkPos, (builder) => {
-			builder.addMenuItem(
-				'addToInbox',
-				t('addToInbox'),
-				handleMarkMessageNoti,
-				<svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path
-						d="M9.15316 5.40838C10.4198 3.13613 11.0531 2 12 2C12.9469 2 13.5802 3.13612 14.8468 5.40837L15.1745 5.99623C15.5345 6.64193 15.7144 6.96479 15.9951 7.17781C16.2757 7.39083 16.6251 7.4699 17.3241 7.62805L17.9605 7.77203C20.4201 8.32856 21.65 8.60682 21.9426 9.54773C22.2352 10.4886 21.3968 11.4691 19.7199 13.4299L19.2861 13.9372C18.8096 14.4944 18.5713 14.773 18.4641 15.1177C18.357 15.4624 18.393 15.8341 18.465 16.5776L18.5306 17.2544C18.7841 19.8706 18.9109 21.1787 18.1449 21.7602C17.3788 22.3417 16.2273 21.8115 13.9243 20.7512L13.3285 20.4768C12.6741 20.1755 12.3469 20.0248 12 20.0248C11.6531 20.0248 11.3259 20.1755 10.6715 20.4768L10.0757 20.7512C7.77268 21.8115 6.62118 22.3417 5.85515 21.7602C5.08912 21.1787 5.21588 19.8706 5.4694 17.2544L5.53498 16.5776C5.60703 15.8341 5.64305 15.4624 5.53586 15.1177C5.42868 14.773 5.19043 14.4944 4.71392 13.9372L4.2801 13.4299C2.60325 11.4691 1.76482 10.4886 2.05742 9.54773C2.35002 8.60682 3.57986 8.32856 6.03954 7.77203L6.67589 7.62805C7.37485 7.4699 7.72433 7.39083 8.00494 7.17781C8.28555 6.96479 8.46553 6.64194 8.82547 5.99623L9.15316 5.40838Z"
-						fill="currentColor"
-					/>
-				</svg>
-			);
-		});
-
-		builder.when(checkPos, (builder) => {
-			builder.addMenuItem(
-				'markUnread',
-				t('markUnread'),
-				handleMarkUnread,
-				<svg height="16px" width="16px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-					<path d="M410.9,0H85.1C72.3,0,61.8,10.4,61.8,23.3V512L248,325.8L434.2,512V23.3C434.2,10.4,423.8,0,410.9,0z" fill="currentColor" />
-				</svg>
-			);
-		});
-		message?.code !== TypeMessage.Topic &&
-			notAllowedType &&
-			!isTopic &&
-			canSendMessage &&
-			builder.when(checkPos && hasPermissionCreateTopic, (builder) => {
-				builder.addMenuItem('topicDiscussion', t('topicDiscussion'), handleCreateTopic, <Icons.TopicIcon defaultSize="w-4 h-4" />);
-			});
-
-		builder.when(checkPos, (builder) => {
-			builder.addMenuItem(
-				'forwardMessage',
-				t('forwardMessage'),
-				() => handleForwardMessage(),
-				<Icons.ForwardRightClick defaultSize="w-4 h-4" />
-			);
-		});
-
-		isShowForwardAll &&
-			builder.when(checkPos, (builder) => {
-				builder.addMenuItem(
-					'forwardAll',
-					t('forwardAllMessage'),
-					() => handleForwardAllMessage(),
-					<Icons.ForwardRightClick defaultSize="w-4 h-4" />
-				);
-			});
-
-		builder.when(enableDelMessageItem, (builder) => {
-			builder.addMenuItem('deleteMessage', t('deleteMessage'), openDeleteMessageModal, <Icons.DeleteMessageRightClick defaultSize="w-4 h-4" />);
-		});
-
-		// builder.when(enableReportMessageItem, (builder) => {
-		// 	builder.addMenuItem(
-		// 		'reportMessage',
-		// 		'Report Message',
-		// 		() => {
-		// 			console.log('report message');
-		// 		},
-		// 		<Icons.ReportMessageRightClick defaultSize="w-4 h-4" />
-		// 	);
-		// });
-
 		builder.when(enableCopyLinkItem, (builder) => {
 			builder.addMenuItem('copyLink', t('copyLink'), async () => {
 				try {
@@ -829,6 +815,21 @@ function MessageContextMenu({
 				}
 			});
 		});
+
+		// builder.when(checkPos, (builder) => {
+		// 	builder.addMenuItem('apps', 'Apps', () => console.log('apps'), <Icons.RightArrowRightClick defaultSize="w-4 h-4" />);
+		// });
+
+		// builder.when(enableReportMessageItem, (builder) => {
+		// 	builder.addMenuItem(
+		// 		'reportMessage',
+		// 		'Report Message',
+		// 		() => {
+		// 			console.log('report message');
+		// 		},
+		// 		<Icons.ReportMessageRightClick defaultSize="w-4 h-4" />
+		// 	);
+		// });
 
 		builder.when(enableCopyImageItem, (builder) => {
 			builder.addMenuItem('copyImage', t('copyImage'), async () => {
@@ -854,6 +855,9 @@ function MessageContextMenu({
 					console.error(t('errors.failedToSaveImage'), error);
 				}
 			});
+		});
+		builder.when(enableDelMessageItem, (builder) => {
+			builder.addMenuItem('deleteMessage', t('deleteMessage'), openDeleteMessageModal, <Icons.DeleteMessageRightClick defaultSize="w-4 h-4" />);
 		});
 
 		return builder.build();
@@ -901,7 +905,7 @@ function MessageContextMenu({
 			message={message}
 			isTopic={isTopic}
 			onSlashCommandExecute={handleSlashCommandSelect}
-			currentChannelId={currentChannel?.id}
+			currentChannelId={currentChannelId as string}
 		/>
 	);
 }

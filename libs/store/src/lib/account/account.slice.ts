@@ -3,13 +3,13 @@ import type { IUserAccount, LoadingStatus } from '@mezon/utils';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 import { t } from 'i18next';
-import type { ApiLinkAccountConfirmRequest, ApiLinkAccountMezon, ApiUserStatusUpdate } from 'mezon-js/api.gen';
+import type { ApiAccountEmail, ApiLinkAccountConfirmRequest, ApiLinkAccountMezon, ApiUserStatusUpdate } from 'mezon-js/api.gen';
 import { toast } from 'react-toastify';
 import { authActions } from '../auth/auth.slice';
 import type { CacheMetadata } from '../cache-metadata';
 import { clearApiCallTracker, createApiKey, createCacheMetadata, markApiFirstCalled, shouldForceApiCall } from '../cache-metadata';
 import type { MezonValueContext } from '../helpers';
-import { ensureSession, getMezonCtx } from '../helpers';
+import { ensureSession, getMezonCtx, withRetry } from '../helpers';
 import type { RootState } from '../store';
 import { walletActions } from '../wallet/wallet.slice';
 export const ACCOUNT_FEATURE_KEY = 'account';
@@ -50,7 +50,11 @@ export const fetchUserProfileCached = async (getState: () => RootState, mezon: M
 		};
 	}
 
-	const response = await mezon.client.getAccount(mezon.session);
+	const response = await withRetry(() => mezon.client.getAccount(mezon.session), {
+		maxRetries: 3,
+		initialDelay: 1000,
+		scope: 'account'
+	});
 
 	markApiFirstCalled(apiKey);
 
@@ -80,6 +84,9 @@ export const getUserProfile = createAsyncThunk<IUserAccount & { fromCache?: bool
 		}
 
 		const { fromCache, time, ...profileData } = response;
+		if (response?.user?.id) {
+			thunkAPI.dispatch(walletActions.fetchWalletDetail({ userId: response?.user?.id }));
+		}
 		return { ...profileData, fromCache: false };
 	}
 );
@@ -103,31 +110,79 @@ export const deleteAccount = createAsyncThunk('account/deleteaccount', async (_,
 	}
 });
 
-export const addPhoneNumber = createAsyncThunk('account/addPhoneNumber', async (data: ApiLinkAccountMezon, thunkAPI) => {
-	try {
-		const mezon = await ensureSession(getMezonCtx(thunkAPI));
+export const addPhoneNumber = createAsyncThunk(
+	'account/addPhoneNumber',
+	async ({ data, isMobile = false }: { data: ApiLinkAccountMezon; isMobile?: boolean }, thunkAPI) => {
+		try {
+			const mezon = await ensureSession(getMezonCtx(thunkAPI));
+			const response = await mezon.client.linkMezon(mezon.session, data);
+			return response;
+		} catch (error) {
+			captureSentryError(error, 'account/addPhoneNumber');
+			if (isMobile) {
+				const err = error as any;
+				let messageData = '';
 
-		const response = await mezon.client.linkMezon(mezon.session, data);
-
-		return response;
-	} catch (error) {
-		captureSentryError(error, 'account/addPhoneNumber');
-		return thunkAPI.rejectWithValue(error);
+				if (typeof err?.json === 'function') {
+					const data = await err.json().catch(() => null);
+					messageData = data?.message || '';
+				}
+				return thunkAPI.rejectWithValue({ ...err, message: messageData });
+			} else {
+				return thunkAPI.rejectWithValue(error);
+			}
+		}
 	}
-});
+);
 
-export const verifyPhone = createAsyncThunk('account/verifyPhone', async (data: ApiLinkAccountConfirmRequest, thunkAPI) => {
-	try {
-		const mezon = await ensureSession(getMezonCtx(thunkAPI));
+export const linkEmail = createAsyncThunk(
+	'account/linkEmail',
+	async ({ data, isMobile = false }: { data: ApiAccountEmail; isMobile?: boolean }, thunkAPI) => {
+		try {
+			const mezon = await ensureSession(getMezonCtx(thunkAPI));
+			const response = await mezon.client.linkEmail(mezon.session, data);
+			return response;
+		} catch (error) {
+			captureSentryError(error, 'account/linkEmail');
+			if (isMobile) {
+				const err = error as any;
+				let messageData = '';
 
-		const response = await mezon.client.confirmLinkMezonOTP(mezon.session, data);
-
-		return response;
-	} catch (error) {
-		captureSentryError(error, 'account/verifyPhone');
-		toast.error(t('accountSetting:setPhoneModal.updatePhoneFail'));
+				if (typeof err?.json === 'function') {
+					const data = await err.json().catch(() => null);
+					messageData = data?.message || '';
+				}
+				return thunkAPI.rejectWithValue({ ...err, message: messageData });
+			} else {
+				return thunkAPI.rejectWithValue(error);
+			}
+		}
 	}
-});
+);
+
+export const verifyPhone = createAsyncThunk(
+	'account/verifyPhone',
+	async ({ data, isMobile = false }: { data: ApiLinkAccountConfirmRequest; isMobile?: boolean }, thunkAPI) => {
+		try {
+			const mezon = await ensureSession(getMezonCtx(thunkAPI));
+			const response = await mezon.client.confirmLinkMezonOTP(mezon.session, data);
+			return response;
+		} catch (error) {
+			captureSentryError(error, 'account/verifyPhone');
+			toast.error(t('accountSetting:setPhoneModal.updatePhoneFail'));
+			if (isMobile) {
+				const err = error as any;
+				let messageData = '';
+
+				if (typeof err?.json === 'function') {
+					const data = await err.json().catch(() => null);
+					messageData = data?.message || '';
+				}
+				return thunkAPI.rejectWithValue({ ...err, message: messageData });
+			}
+		}
+	}
+);
 
 export const updateAccountStatus = createAsyncThunk('userstatusapi/updateUserStatus', async (request: ApiUserStatusUpdate, thunkAPI) => {
 	try {
@@ -216,6 +271,11 @@ export const accountSlice = createSlice({
 			if (state?.userProfile) {
 				state.userProfile.password_setted = action.payload;
 			}
+		},
+		updateEmail(state, action: PayloadAction<string>) {
+			if (state?.userProfile) {
+				state.userProfile.email = action.payload;
+			}
 		}
 	},
 	extraReducers: (builder) => {
@@ -244,7 +304,7 @@ export const accountSlice = createSlice({
  */
 export const accountReducer = accountSlice.reducer;
 
-export const accountActions = { ...accountSlice.actions, getUserProfile, deleteAccount, addPhoneNumber, verifyPhone, updateAccountStatus };
+export const accountActions = { ...accountSlice.actions, getUserProfile, deleteAccount, addPhoneNumber, verifyPhone, updateAccountStatus, linkEmail };
 
 export const getAccountState = (rootState: { [ACCOUNT_FEATURE_KEY]: AccountState }): AccountState => rootState[ACCOUNT_FEATURE_KEY];
 
@@ -259,3 +319,5 @@ export const selectAccountCustomStatus = createSelector(getAccountState, (state:
 export const selectLogoCustom = createSelector(getAccountState, (state) => state?.userProfile?.logo);
 
 export const selectAvatarVersion = createSelector(getAccountState, (state) => state.avatarVersion);
+
+export const selectCurrentUsername = createSelector(getAccountState, (state: AccountState) => state.userProfile?.user?.username || '');

@@ -1,5 +1,6 @@
+import { useTheme } from '@mezon/mobile-ui';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { NativeEventEmitter, NativeModules, Platform, TextInput, View } from 'react-native';
+import { NativeEventEmitter, NativeModules, Platform, TextInput, TextStyle, View } from 'react-native';
 import { testProperties } from '../../../../../configs/testProperties';
 import { style } from './styles';
 
@@ -10,12 +11,14 @@ interface OTPInputProps {
 	isError?: boolean;
 	resetTrigger?: any;
 	isSms?: boolean;
+	styleTextOtp?: TextStyle;
 }
 
 const { SmsUserConsent } = NativeModules;
 
-const OTPInput: React.FC<OTPInputProps> = ({ onOtpChange, onOtpComplete, isError = false, resetTrigger, isSms = false }) => {
-	const styles = style();
+const OTPInput: React.FC<OTPInputProps> = ({ onOtpChange, onOtpComplete, isError = false, resetTrigger, isSms = false, styleTextOtp }) => {
+	const { themeValue } = useTheme();
+	const styles = style(themeValue);
 	const [otp, setOtp] = useState<string[]>(new Array(OTP_LENGTH).fill(''));
 	const inputRefs = useRef<(TextInput | null)[]>([]);
 	const smsSubscriptionsRef = useRef<any[]>([]);
@@ -99,12 +102,13 @@ const OTPInput: React.FC<OTPInputProps> = ({ onOtpChange, onOtpComplete, isError
 
 				if (value.length >= 1 && /^\d*$/.test(value)) {
 					const valueLatest = value[value.length - 1];
+					const hadValue = otp[index] !== '';
 					setOtp((prev) => {
 						const newOtp = [...prev];
 						newOtp[index] = valueLatest;
 						onOtpChange(newOtp);
 
-						if (valueLatest !== '' && index < OTP_LENGTH - 1) {
+						if (index < OTP_LENGTH - 1 && (hadValue || valueLatest !== '')) {
 							inputRefs.current[index + 1]?.focus();
 						}
 
@@ -119,12 +123,19 @@ const OTPInput: React.FC<OTPInputProps> = ({ onOtpChange, onOtpComplete, isError
 				console.error('handleOtpChange error', error);
 			}
 		},
-		[fillOtp, onOtpChange, onOtpComplete]
+		[fillOtp, onOtpChange, onOtpComplete, otp]
 	);
 
 	const handleKeyPress = (e: any, index: number) => {
 		if (e.nativeEvent.key === 'Backspace' && otp[index] === '' && index > 0) {
 			inputRefs?.current?.[index - 1]?.focus();
+			inputRefs.current[index - 1].setNativeProps({ text: '' });
+			setOtp((prev) => {
+				const newOtp = [...prev];
+				newOtp[index - 1] = '';
+				onOtpChange(newOtp);
+				return newOtp;
+			});
 		}
 	};
 
@@ -134,7 +145,7 @@ const OTPInput: React.FC<OTPInputProps> = ({ onOtpChange, onOtpComplete, isError
 				<TextInput
 					key={index}
 					ref={(ref) => (inputRefs.current[index] = ref)}
-					style={[styles.input, digit !== '' ? styles.inputFilled : styles.inputEmpty, isError && styles.inputError]}
+					style={[styles.input, digit !== '' ? [styles.inputFilled, styleTextOtp] : styles.inputEmpty, isError && styles.inputError]}
 					value={digit?.[0] || ''}
 					onChangeText={(value) => handleOtpChange(value, index)}
 					onKeyPress={(e) => handleKeyPress(e, index)}
@@ -142,6 +153,7 @@ const OTPInput: React.FC<OTPInputProps> = ({ onOtpChange, onOtpComplete, isError
 					maxLength={OTP_LENGTH}
 					autoFocus={index === 0}
 					selectTextOnFocus={true}
+					selection={digit !== '' ? { start: 1, end: 1 } : undefined}
 					autoComplete={isSms ? 'sms-otp' : undefined}
 					textContentType={isSms ? 'oneTimeCode' : undefined}
 					{...testProperties(`otp.input.${index}`)}

@@ -1,5 +1,5 @@
 import { ActionEmitEvent } from '@mezon/mobile-components';
-import { size, useTheme } from '@mezon/mobile-ui';
+import { useTheme } from '@mezon/mobile-ui';
 import { selectChannelById, selectDmGroupCurrent, useAppSelector } from '@mezon/store-mobile';
 import { useMezon } from '@mezon/transport';
 import { getMobileUploadedAttachments } from '@mezon/utils';
@@ -7,9 +7,11 @@ import LottieView from 'lottie-react-native';
 import { ChannelStreamMode } from 'mezon-js';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, DeviceEventEmitter, ImageStyle, Keyboard, Platform, Text, TouchableOpacity, View } from 'react-native';
+import type { ImageStyle } from 'react-native';
+import { DeviceEventEmitter, Keyboard, Platform, Text, TouchableOpacity, View } from 'react-native';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import RNFS from 'react-native-fs';
+import Toast from 'react-native-toast-message';
 import { useSelector } from 'react-redux';
 import RNFetchBlob from 'rn-fetch-blob';
 import { SOUND_WAVES_CIRCLE } from '../../../../../../../assets/lottie';
@@ -30,7 +32,7 @@ interface IRecordAudioMessageProps {
 export const BaseRecordAudioMessage = memo(({ channelId, mode, topicId = '' }: IRecordAudioMessageProps) => {
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
-	const { t } = useTranslation(['recordChatMessage']);
+	const { t } = useTranslation(['recordChatMessage', 'common']);
 	const [isDisplay, setIsDisplay] = useState<boolean>(false);
 	const recordingRef = useRef(null);
 	const recordingWaveRef = useRef(null);
@@ -76,7 +78,11 @@ export const BaseRecordAudioMessage = memo(({ channelId, mode, topicId = '' }: I
 			const granted = await requestMicrophonePermission();
 
 			if (!granted) {
-				Alert.alert('Permissions required', 'Please grant microphone permissions to use this feature.');
+				Toast.show({
+					type: 'error',
+					text1: t('common:permissionNotification.permissionRequired'),
+					text2: t('common:permissionNotification.microphoneRequiredDesc')
+				});
 				return false;
 			}
 			return true;
@@ -144,8 +150,6 @@ export const BaseRecordAudioMessage = memo(({ channelId, mode, topicId = '' }: I
 			const attachments = await getAudioFileInfo(recordingUrl);
 			const uploadedFiles = await getMobileUploadedAttachments({
 				attachments,
-				channelId: topicId || channelId,
-				clanId,
 				client,
 				session
 			});
@@ -225,24 +229,16 @@ export const BaseRecordAudioMessage = memo(({ channelId, mode, topicId = '' }: I
 		<>
 			<ModalConfirmRecord visible={isConfirmRecordModalVisible} onBack={handleBackRecord} onConfirm={handleQuitRecord} />
 			{/*TODO: Refactor this component*/}
-			<View style={{ alignItems: 'center', justifyContent: 'center', paddingHorizontal: size.s_40, paddingVertical: size.s_20 }}>
+			<View style={styles.container}>
 				{isPreviewRecord && recordUrl ? (
 					<RenderAudioChat audioURL={recordUrl} stylesContainerCustom={styles.containerAudioCustom} styleLottie={styles.customLottie} />
 				) : (
 					<RecordingAudioMessage audioRecorderPlayer={audioRecorderPlayer} ref={recordingWaveRef} />
 				)}
 
-				<View style={{ marginTop: size.s_20 }}>
+				<View style={styles.textSection}>
 					<Text style={styles.title}>{t('handsFreeMode')}</Text>
-					<View
-						style={{
-							flexDirection: 'row',
-							alignItems: 'center',
-							justifyContent: 'space-between',
-							marginVertical: size.s_20,
-							width: '80%'
-						}}
-					>
+					<View style={styles.buttonsRow}>
 						<TouchableOpacity onPress={handleRemoveRecord} style={styles.boxIcon}>
 							<MezonIconCDN icon={IconCDN.trashIcon} color={themeValue.white} />
 						</TouchableOpacity>

@@ -1,13 +1,11 @@
 import { useGetPriorityNameFromUserClan } from '@mezon/core';
-import { ActionEmitEvent } from '@mezon/mobile-components';
 import { size, useColorsRoleById, useTheme } from '@mezon/mobile-ui';
-import type { ChannelsEntity } from '@mezon/store-mobile';
 import { selectCurrentTopicInitMessage, selectFirstMessageOfCurrentTopic } from '@mezon/store-mobile';
 import { DEFAULT_MESSAGE_CREATOR_NAME_DISPLAY_COLOR, convertTimeString } from '@mezon/utils';
 import { safeJSONParse } from 'mezon-js';
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DeviceEventEmitter, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSelector } from 'react-redux';
 import MezonAvatar from '../../../../../../componentUI/MezonAvatar';
 import MezonIconCDN from '../../../../../../componentUI/MezonIconCDN';
@@ -49,14 +47,6 @@ const TopicHeader = memo(({ handleBack }: TopicHeaderProps) => {
 	const { priorityAvatar, namePriority } = useGetPriorityNameFromUserClan(memoizedValue?.senderId || '');
 	const userRolesClan = useColorsRoleById(memoizedValue?.senderId || '');
 
-	const onMention = useCallback(async (mentionedUser: string) => {
-		DeviceEventEmitter.emit(ActionEmitEvent.ON_MENTION_USER_MESSAGE_ITEM, mentionedUser);
-	}, []);
-
-	const onChannelMention = useCallback(async (channel: ChannelsEntity) => {
-		DeviceEventEmitter.emit(ActionEmitEvent.ON_CHANNEL_MENTION_MESSAGE_ITEM, channel);
-	}, []);
-
 	const colorSenderName = useMemo(() => {
 		return (
 			(userRolesClan?.highestPermissionRoleColor?.startsWith('#') ? userRolesClan.highestPermissionRoleColor : themeValue.text) ||
@@ -74,9 +64,9 @@ const TopicHeader = memo(({ handleBack }: TopicHeaderProps) => {
 					<Pressable>
 						<MezonIconCDN icon={IconCDN.discussionIcon} color={themeValue.text} height={size.s_20} width={size.s_20} />
 					</Pressable>
-					<Text style={styles.title}>Topic</Text>
+					<Text style={styles.title}>{t('actions.topicDiscussion')}</Text>
 				</View>
-				<View style={{ width: size.s_50 }} />
+				<View style={styles.spacer} />
 			</View>
 			{valueTopic && (
 				<View style={styles.userInfo}>
@@ -99,8 +89,6 @@ const TopicHeader = memo(({ handleBack }: TopicHeaderProps) => {
 						}}
 						translate={t}
 						isMessageReply={false}
-						onMention={onMention}
-						onChannelMention={onChannelMention}
 					/>
 					{memoizedValue?.attachments?.length > 0 && (
 						<MessageAttachment

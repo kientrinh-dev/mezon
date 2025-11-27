@@ -9,7 +9,7 @@ jobs:
   release:
     runs-on: mezon-build-linux
     name: Release Mezon App for Linux
-    environment: production
+    environment: prod
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,7 +30,10 @@ jobs:
 
       - name: Remove ENV
         run: |
+          rm -rf apps/desktop/src/assets/mac-icon.png
           rm -rf apps/chat/.env
+          cd apps/chat/src/assets/
+          find . -maxdepth 1 -type f -name "*.png" ! -name "button_openmezon.png" -delete
 
       - name: Create ENV
         uses: SpicyPizza/create-envfile@v2.0
@@ -63,10 +66,6 @@ jobs:
           envkey_NX_WEBRTC_ICESERVERS_CREDENTIAL: ${{ secrets.NX_WEBRTC_ICESERVERS_CREDENTIAL_PROD }}
           envkey_NX_CHAT_APP_STREAM_WS_URL: ${{ secrets.NX_CHAT_APP_STREAM_WS_URL }}
           envkey_NX_CHAT_APP_MEET_WS_URL: ${{ secrets.NX_CHAT_APP_MEET_WS_URL }}
-          envkey_NX_CHAT_APP_MEZON_TREASURY_URL: ${{ secrets.NX_CHAT_APP_MEZON_TREASURY_URL }}
-          envkey_NX_CHAT_APP_API_MEZONTREASURY_KEY: ${{ secrets.NX_CHAT_APP_API_MEZONTREASURY_KEY }}
-          envkey_NX_CHAT_APP_CONTRACT_ADDRESS: ${{ secrets.NX_CHAT_APP_CONTRACT_ADDRESS }}
-          envkey_NX_CHAT_APP_MEZON_TREASURY_URL_NETWORK: ${{ secrets.NX_CHAT_APP_MEZON_TREASURY_URL_NETWORK }}
           envkey_NX_CHAT_APP_OAUTH2_AUTHORIZE_URL: ${{ secrets.NX_CHAT_APP_OAUTH2_AUTHORIZE_URL }}
           envkey_NX_CHAT_APP_OAUTH2_CLIENT_ID: ${{ secrets.NX_CHAT_APP_OAUTH2_CLIENT_ID }}
           envkey_NX_CHAT_APP_OAUTH2_REDIRECT_URI: ${{ secrets.NX_CHAT_APP_OAUTH2_REDIRECT_URI }}
@@ -90,9 +89,9 @@ jobs:
           envkey_NX_CHAT_APP_API_GW_HOST: ${{ secrets.NX_CHAT_APP_API_GW_HOST }}
           envkey_NX_CHAT_APP_API_GW_PORT: ${{ secrets.NX_CHAT_APP_API_GW_PORT }}
           envkey_NX_DOMAIN_URL: https://mezon.ai
-          envkey_NX_CHAT_APP_MMN_API_URL: https://dong.mezon.ai/mmn-api/
-          envkey_NX_CHAT_APP_INDEXER_API_URL: https://dong.mezon.ai/indexer-api/
-          envkey_NX_CHAT_APP_ZK_API_URL: https://dong.mezon.ai/zk-api/
+          envkey_NX_CHAT_APP_MMN_API_URL: https://dong.mezon.ai/mmn-api
+          envkey_NX_CHAT_APP_INDEXER_API_URL: https://dong.mezon.ai/indexer-api
+          envkey_NX_CHAT_APP_ZK_API_URL: https://dong.mezon.ai/zk-api
 
       - name: Release Desktop
         run: |

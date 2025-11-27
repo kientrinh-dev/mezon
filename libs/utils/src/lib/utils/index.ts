@@ -20,7 +20,7 @@ import type React from 'react';
 import Resizer from 'react-image-file-resizer';
 import { electronBridge } from '../bridge';
 import { REQUEST_PERMISSION_CAMERA, REQUEST_PERMISSION_MICROPHONE } from '../bridge/electron/constants';
-import { CURRENCY, EVERYONE_ROLE_ID, ID_MENTION_HERE, TIME_COMBINE } from '../constant';
+import { CURRENCY, ID_MENTION_HERE } from '../constant';
 import { Platform } from '../hooks/platform';
 import type {
 	ChannelMembersEntity,
@@ -60,6 +60,7 @@ export * from './canvasLink';
 export * from './convertMessageToHtml';
 export * from './dateI18n';
 export * from './detectTokenMessage';
+export * from './embed-social';
 export * from './file';
 export * from './forceReflow';
 export * from './heavyAnimation';
@@ -72,6 +73,7 @@ export * from './resetScroll';
 export * from './schedulers';
 export * from './select';
 export * from './signals';
+export * from './timeFormatterI18n';
 export * from './toggleSelection';
 export * from './transform';
 export * from './windowEnvironment';
@@ -147,7 +149,7 @@ export const uniqueUsers = (
 	);
 
 	const allRoleUsers = rolesClan.reduce<RoleUserListRoleUser[]>((acc, role) => {
-		const isMentionedRole = mentions.some((mention) => mention.role_id === role.id && mention.role_id !== EVERYONE_ROLE_ID);
+		const isMentionedRole = mentions.some((mention) => mention.role_id === role.id);
 		if (isMentionedRole && role.role_user_list?.role_users) {
 			acc.push(...role.role_user_list.role_users);
 		}
@@ -175,10 +177,34 @@ export const uniqueUsers = (
 	return userIdsNotInChannel;
 };
 
-export const convertTimeMessage = (timestamp: number, languageCode = 'en') => {
-	const locale = getDateLocale(languageCode);
-	const textTime = formatDistanceToNowStrict(new Date(timestamp * 1000), { addSuffix: true, locale });
-	return textTime;
+export const convertTimeMessage = (timestampSec: number, languageCode = 'en', justNowThreshold = 1) => {
+	const target = new Date(Math.floor(timestampSec) * 1000);
+	const diffSec = Math.max(0, differenceInSeconds(Date.now(), target));
+
+	if (diffSec <= justNowThreshold) {
+		return languageCode.startsWith('vi') ? 'Vừa xong' : 'Just now';
+	}
+
+	return formatDistanceToNowStrict(target, {
+		addSuffix: true,
+		locale: getDateLocale(languageCode)
+	});
+};
+
+export const convertTimeDifference = (newerTimestamp: number, olderTimestamp: number, languageCode = 'en', justNowThreshold = 1) => {
+	const newer = new Date(Math.floor(newerTimestamp) * 1000);
+	const older = new Date(Math.floor(olderTimestamp) * 1000);
+
+	const diffSec = Math.abs(differenceInSeconds(newer, older));
+
+	if (diffSec <= justNowThreshold) {
+		return languageCode.startsWith('vi') ? 'Vừa xong' : 'Just now';
+	}
+
+	return formatDistanceToNowStrict(older, {
+		addSuffix: true,
+		locale: getDateLocale(languageCode)
+	});
 };
 
 export const isGreaterOneMonth = (timestamp: number) => {
@@ -297,14 +323,32 @@ export const getAvatarForPrioritize = (clanAvatar: string | undefined, userAvata
 };
 
 export function compareObjects(a: any, b: any, searchText: string, prioritizeProp: string, nameProp?: string) {
-	const normalizedSearchText = searchText.toUpperCase();
+	const normalizedSearchText = normalizeSearchString(searchText);
 
-	const aIndex = a[prioritizeProp]?.toUpperCase().indexOf(normalizedSearchText) ?? -1;
-	const bIndex = b[prioritizeProp]?.toUpperCase().indexOf(normalizedSearchText) ?? -1;
+	const aPrioritizeName = normalizeSearchString(a[prioritizeProp] ?? '');
+	const bPrioritizeName = normalizeSearchString(b[prioritizeProp] ?? '');
+
+	const aIsExactMatch = aPrioritizeName === normalizedSearchText;
+	const bIsExactMatch = bPrioritizeName === normalizedSearchText;
+
+	if (aIsExactMatch && !bIsExactMatch) return -1;
+	if (!aIsExactMatch && bIsExactMatch) return 1;
+
+	const aIndex = aPrioritizeName.indexOf(normalizedSearchText);
+	const bIndex = bPrioritizeName.indexOf(normalizedSearchText);
 
 	if (nameProp) {
-		const aNameIndex = a[nameProp]?.toUpperCase().indexOf(normalizedSearchText) ?? -1;
-		const bNameIndex = b[nameProp]?.toUpperCase().indexOf(normalizedSearchText) ?? -1;
+		const aName = normalizeSearchString(a[nameProp] ?? '');
+		const bName = normalizeSearchString(b[nameProp] ?? '');
+
+		const aNameIsExactMatch = aName === normalizedSearchText;
+		const bNameIsExactMatch = bName === normalizedSearchText;
+
+		if (aNameIsExactMatch && !bNameIsExactMatch) return -1;
+		if (!aNameIsExactMatch && bNameIsExactMatch) return 1;
+
+		const aNameIndex = aName.indexOf(normalizedSearchText);
+		const bNameIndex = bName.indexOf(normalizedSearchText);
 
 		if (aIndex === -1 && bIndex === -1) {
 			return aNameIndex - bNameIndex;
@@ -327,7 +371,7 @@ export function compareObjects(a: any, b: any, searchText: string, prioritizePro
 			if (bIndex === -1) return -1;
 			return aIndex - bIndex;
 		}
-		return (a[prioritizeProp]?.toUpperCase() ?? '').localeCompare(b[prioritizeProp]?.toUpperCase() ?? '');
+		return aPrioritizeName.localeCompare(bPrioritizeName);
 	}
 }
 
@@ -369,10 +413,6 @@ export const checkSameDayByCreateTimeMs = (unixTime1: number, unixTime2: number)
 	const date2 = fromUnixTime(unixTime2 / 1000);
 
 	return isSameDay(date1, date2);
-};
-
-export const checkContinuousMessagesByCreateTimeMs = (unixTime1: number, unixTime2: number) => {
-	return Math.abs(unixTime1 - unixTime2) <= TIME_COMBINE;
 };
 
 export const checkSameDayByCreateTime = (createTime1: string | Date, createTime2: string | Date) => {
@@ -695,10 +735,8 @@ export async function getWebUploadedAttachments(payload: {
 	attachments: ApiMessageAttachment[];
 	client: Client;
 	session: Session;
-	clanId: string;
-	channelId: string;
 }): Promise<ApiMessageAttachment[]> {
-	const { attachments, client, session, clanId, channelId } = payload;
+	const { attachments, client, session } = payload;
 	if (!attachments || attachments?.length === 0) {
 		return [];
 	}
@@ -725,7 +763,7 @@ export async function getWebUploadedAttachments(payload: {
 				createdFile.height = attachment.height || 0;
 				createdFile.thumbnail = attachment.thumbnail;
 
-				const result = await handleUploadFile(client, session, clanId, channelId, createdFile.name, createdFile, index);
+				const result = await handleUploadFile(client, session, createdFile.name, createdFile, index);
 
 				fileUploadForeman.releaseWorker();
 
@@ -758,10 +796,8 @@ export async function getMobileUploadedAttachments(payload: {
 	attachments: ApiMessageAttachment[];
 	client: Client;
 	session: Session;
-	clanId: string;
-	channelId: string;
 }): Promise<ApiMessageAttachment[]> {
-	const { attachments, client, session, clanId, channelId } = payload;
+	const { attachments, client, session } = payload;
 	if (!attachments || attachments?.length === 0) {
 		return [];
 	}
@@ -780,7 +816,7 @@ export async function getMobileUploadedAttachments(payload: {
 				width: att?.width,
 				fileData
 			};
-			return await handleUploadFileMobile(client, session, clanId, channelId, att?.filename || '', formattedFile);
+			return await handleUploadFileMobile(client, session, att?.filename || '', formattedFile);
 		});
 		return await Promise.all(uploadPromises);
 	}
@@ -893,7 +929,7 @@ type ImgproxyOptions = {
 
 export const createImgproxyUrl = (sourceImageUrl: string, options: ImgproxyOptions = { width: 100, height: 100, resizeType: 'fit' }) => {
 	if (!sourceImageUrl) return '';
-	if (!sourceImageUrl?.startsWith('https://cdn.mezon')) {
+	if (!sourceImageUrl?.startsWith('https://cdn.mezon') && !sourceImageUrl?.startsWith('https://profile.mezon')) {
 		return sourceImageUrl;
 	}
 	const { width, height, resizeType } = options;
@@ -1121,6 +1157,8 @@ export const getAttachmentDataForWindow = (
 ) => {
 	return imageList.map((image) => {
 		const uploader = currentChatUsersEntities?.[image.uploader as string];
+		const isVideo = image?.isVideo || image?.filetype?.startsWith('video') || image.filetype?.includes('mp4') || image?.filetype?.includes('mov');
+
 		return {
 			...image,
 			uploaderData: {
@@ -1129,12 +1167,9 @@ export const getAttachmentDataForWindow = (
 					`${window.location.origin}/assets/images/anonymous-avatar.png`) as string,
 				name: uploader?.clan_nick || uploader?.user?.display_name || uploader?.user?.username || 'Anonymous'
 			},
-			url: createImgproxyUrl(image.url || '', {
-				width: image.width ? (image.width > 1920 ? 1920 : image.width) : 0,
-				height: image.height ? (image.height > 1080 ? 1080 : image.height) : 0,
-				resizeType: 'fit'
-			}),
-			realUrl: image.url || ''
+			url: image.url,
+			realUrl: image.url || '',
+			isVideo
 		};
 	});
 };
@@ -1170,43 +1205,6 @@ export const isElementInViewport = (element: HTMLElement) => {
 		rect.right <= (window.innerWidth || document.documentElement.clientWidth)
 	);
 };
-
-export function isYouTubeLink(url: string): boolean {
-	return /(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|e\/|shorts\/)|youtu\.be\/)/.test(url);
-}
-
-export function getYouTubeEmbedUrl(url: string): string {
-	// check xss
-	const match = url.match(/(?:youtube\.com\/(?:watch\?v=|v\/|e\/|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-	return match ? `https://www.youtube.com/embed/${match[1]}` : '';
-}
-
-export function isYouTubeShorts(url: string) {
-	return /youtube\.com\/shorts\//.test(url);
-}
-
-export function getYouTubeEmbedSize(url: string, isSearchMessage?: boolean) {
-	if (isYouTubeShorts(url)) {
-		return { width: '169px', height: '300px' };
-	}
-	if (isSearchMessage) {
-		return { width: `${400 * 0.65}px`, height: `${225 * 0.65}px` };
-	}
-	return { width: '400px', height: '225px' };
-}
-
-export function isTikTokLink(url: string): boolean {
-	return /(?:tiktok\.com\/@[^/]+\/video\/\d+|vm\.tiktok\.com\/[a-zA-Z0-9]+|tiktok\.com\/t\/[a-zA-Z0-9]+)/.test(url);
-}
-
-export function getTikTokEmbedUrl(url: string): string {
-	const match = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
-	return match ? `https://www.tiktok.com/player/v1/${match[1]}` : '';
-}
-
-export function getTikTokEmbedSize() {
-	return { width: '253px', height: '450px' };
-}
 
 export const formatMoney = (number: number) => {
 	if (number === 0) {
@@ -1371,3 +1369,7 @@ export function subBigInt(a: string, b: string): string {
 	const bigB = BigInt(b);
 	return (bigA - bigB).toString();
 }
+
+export const generateAttachmentId = (attachment: ApiMessageAttachment, messageId: string): string => {
+	return `${messageId}_${attachment.url}`;
+};

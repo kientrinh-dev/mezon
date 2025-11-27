@@ -1,6 +1,14 @@
 import { ActionEmitEvent } from '@mezon/mobile-components';
 import { baseColor, size, useTheme } from '@mezon/mobile-ui';
-import { clansActions, selectAllUserClans, selectCurrentClan, selectCurrentClanId, useAppDispatch } from '@mezon/store-mobile';
+import { useAppSelector } from '@mezon/store';
+import {
+	clansActions,
+	selectAllUserClans,
+	selectCurrentClanCreatorId,
+	selectCurrentClanId,
+	selectCurrentClanName,
+	useAppDispatch
+} from '@mezon/store-mobile';
 import { useNavigation } from '@react-navigation/native';
 import type { MenuClanScreenProps } from 'apps/mobile/src/app/navigation/ScreenTypes';
 import { APP_SCREEN } from 'apps/mobile/src/app/navigation/ScreenTypes';
@@ -26,14 +34,15 @@ const TransferOwnershipScreen = ({ route }: TransferOwnershipScreenProps) => {
 	const styles = style(themeValue);
 	const { t } = useTranslation(['userProfile', 'clanOverviewSetting']);
 	const [isAcknowledged, setIsAcknowledged] = useState<boolean>(false);
-	const currentClan = useSelector(selectCurrentClan);
+	const currentClanCreatorId = useAppSelector(selectCurrentClanCreatorId);
+	const currentClanName = useSelector(selectCurrentClanName);
 	const currentClanId = useSelector(selectCurrentClanId);
 	const clanMembers = useSelector(selectAllUserClans);
 
 	const currentOwner = useMemo(() => {
-		if (!currentClan?.creator_id || !clanMembers?.length) return null;
-		return clanMembers.find((member) => member.user?.id === currentClan.creator_id);
-	}, [currentClan?.creator_id, clanMembers]);
+		if (!currentClanCreatorId || !clanMembers?.length) return null;
+		return clanMembers.find((member) => member.user?.id === currentClanCreatorId);
+	}, [currentClanCreatorId, clanMembers]);
 
 	const handleTransferOwnership = useCallback(
 		async (newOwnerId: string) => {
@@ -80,15 +89,15 @@ const TransferOwnershipScreen = ({ route }: TransferOwnershipScreenProps) => {
 
 	if (!currentOwner) {
 		return (
-			<View style={{ flex: 1, backgroundColor: themeValue.primary, justifyContent: 'center', alignItems: 'center' }}>
-				<Text style={{ color: themeValue.text }}>Loading...</Text>
+			<View style={styles.loadingContainer}>
+				<Text style={styles.loadingText}>Loading...</Text>
 			</View>
 		);
 	}
 
 	return (
 		<View style={styles.container}>
-			<KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'position'} style={{ flex: 1 }}>
+			<KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'position'} style={styles.keyboardAvoidingView}>
 				<View style={styles.transferVisual}>
 					<View style={styles.arrowContainer}>
 						<View style={styles.arrowDown} />
@@ -113,13 +122,13 @@ const TransferOwnershipScreen = ({ route }: TransferOwnershipScreenProps) => {
 					</View>
 				</View>
 
-				<Text style={styles.serverName}>{currentClan?.clan_name}</Text>
+				<Text style={styles.serverName}>{currentClanName}</Text>
 
 				<Text style={styles.warningText}>
 					<Trans
 						i18nKey={'userProfile:transferOwnershipModal.warning'}
 						values={{
-							clanName: currentClan?.clan_name,
+							clanName: currentClanName,
 							username: user?.user?.username || user?.['username']
 						}}
 						components={{

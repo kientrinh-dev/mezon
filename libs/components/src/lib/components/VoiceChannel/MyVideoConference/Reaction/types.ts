@@ -4,10 +4,6 @@ export interface ReactionChannelInfo {
 	channel_private: number;
 }
 
-export interface UseSendReactionParams {
-	currentChannel?: ReactionChannelInfo;
-}
-
 export enum ReactionType {
 	NONE = 0,
 	VIDEO = 1
@@ -17,6 +13,7 @@ export interface DisplayedEmoji {
 	id: string;
 	emoji: string;
 	emojiId: string;
+	creator_id?: string;
 	timestamp: number;
 	displayName?: string;
 	position?: {
@@ -43,6 +40,5 @@ export interface ActiveSoundReaction {
 }
 
 export interface ReactionCallHandlerProps {
-	currentChannel?: ReactionChannelInfo;
 	onSoundReaction?: (participantId: string, soundId: string) => void;
 }

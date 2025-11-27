@@ -27,9 +27,10 @@ import { createApiKey, createCacheMetadata, markApiFirstCalled, shouldForceApiCa
 import { categoriesActions, type FetchCategoriesPayload } from '../categories/categories.slice';
 import { userChannelsActions } from '../channelmembers/AllUsersChannelByAddChannel.slice';
 import { channelMembersActions } from '../channelmembers/channel.members';
+import { selectClansEntities } from '../clans/clans.slice';
 import type { MezonValueContext } from '../helpers';
 import { ensureSession, ensureSocket, fetchDataWithSocketFallback, getMezonCtx } from '../helpers';
-import { messagesActions, processQueuedLastSeenMessages, selectUnreadMessageIdByChannelId } from '../messages/messages.slice';
+import { messagesActions, processQueuedLastSeenMessages } from '../messages/messages.slice';
 import { selectEntiteschannelCategorySetting } from '../notificationSetting/notificationSettingCategory.slice';
 import { notificationSettingActions } from '../notificationSetting/notificationSettingChannel.slice';
 import { overriddenPoliciesActions } from '../policies/overriddenPolicies.slice';
@@ -40,7 +41,7 @@ import { selectListThreadId, threadsActions } from '../threads/threads.slice';
 import type { LIST_CHANNELS_USER_FEATURE_KEY, ListChannelsByUserState } from './channelUser.slice';
 import { listChannelsByUserActions, selectEntitiesChannelsByUser } from './channelUser.slice';
 import type { ChannelMetaEntity } from './channelmeta.slice';
-import { channelMetaActions, enableMute } from './channelmeta.slice';
+import { channelMetaActions, enableMute, selectChannelMetaById } from './channelmeta.slice';
 import { listChannelRenderAction, selectListChannelRenderByClanId } from './listChannelRender.slice';
 
 const LIST_CHANNEL_CACHED_TIME = 1000 * 60 * 5;
@@ -64,7 +65,8 @@ function extractChannelMeta(channel: ChannelsEntity): ChannelMetaEntity {
 		lastSentTimestamp: Number(channel.last_sent_message?.timestamp_seconds),
 		clanId: channel.clan_id ?? '',
 		isMute: channel.is_mute ?? false,
-		senderId: channel.last_sent_message?.sender_id ?? ''
+		senderId: channel.last_sent_message?.sender_id ?? '',
+		lastSeenMessageId: channel.last_seen_message?.id
 	};
 }
 
@@ -335,17 +337,19 @@ export const joinChannel = createAsyncThunk(
 			}
 
 			const channel = selectChannelById(getChannelsRootState(thunkAPI), channelId);
+			const channelMeta = selectChannelMetaById(thunkAPI.getState(), channelId);
 
 			if (!state.messages?.idMessageToJump?.id) {
-				const unreadMsgId = selectUnreadMessageIdByChannelId(thunkAPI.getState(), channelId as string);
-				const lastSeenMessageId = unreadMsgId || channel?.last_seen_message?.id;
+				const unreadMsgId = channelMeta?.lastSeenMessageId;
+				const isSeenUpToDate = (channelMeta?.lastSeenTimestamp || 0) >= (channelMeta?.lastSentTimestamp || 0);
+				const lastSeenMessageId = isSeenUpToDate ? undefined : unreadMsgId;
 				thunkAPI.dispatch(
 					messagesActions.fetchMessages({
 						clanId,
 						channelId,
 						isClearMessage,
 						noCache,
-						messageId: lastSeenMessageId,
+						messageId: lastSeenMessageId || undefined,
 						direction: lastSeenMessageId ? 2 : undefined,
 						isFetchingLatestMessages: !lastSeenMessageId
 					})
@@ -362,7 +366,16 @@ export const joinChannel = createAsyncThunk(
 						})
 					);
 				}
-				thunkAPI.dispatch(channelMembersActions.fetchChannelMembers({ clanId, channelId, channelType: ChannelType.CHANNEL_TYPE_CHANNEL }));
+				if (channel) {
+					if (channel?.channel_private || (channel?.parent_id !== '0' && channel?.parent_id !== '')) {
+						thunkAPI.dispatch(
+							channelMembersActions.fetchChannelMembers({ clanId, channelId, channelType: ChannelType.CHANNEL_TYPE_CHANNEL })
+						);
+					}
+					if (!channel?.channel_private) {
+						thunkAPI.dispatch(channelMembersActions.checkBanInChannel({ clanId, channelId }));
+					}
+				}
 			}
 			thunkAPI.dispatch(userChannelsActions.fetchUserChannels({ channelId }));
 			thunkAPI.dispatch(channelsActions.setModeResponsive({ clanId, mode: ModeResponsive.MODE_CLAN }));
@@ -482,6 +495,7 @@ export interface IUpdateChannelRequest {
 	channel_private?: number;
 	category_name?: string;
 	app_id: string;
+	channel_avatar?: string;
 }
 
 export const updateChannel = createAsyncThunk('channels/updateChannel', async (body: IUpdateChannelRequest, thunkAPI) => {
@@ -785,11 +799,13 @@ export const fetchChannels = createAsyncThunk(
 					};
 				}
 
+				const clanData = selectClansEntities(thunkAPI.getState() as RootState)[clanId];
 				const channels = response.channeldesc.map((channel) => ({
 					...mapChannelToEntity(channel),
-					last_seen_message: channel.last_seen_message ? channel.last_seen_message : { timestamp_seconds: 0 }
+					last_seen_message: channel.last_seen_message ? channel.last_seen_message : { timestamp_seconds: 0 },
+					clan_name: clanData.clan_name || ''
 				}));
-
+				thunkAPI.dispatch(listChannelsByUserActions.upsertMany(channels));
 				const [favorChannels, listCategory] = await Promise.all([
 					thunkAPI.dispatch(fetchListFavoriteChannel({ clanId, noCache: Boolean(noCache) })),
 					thunkAPI.dispatch(categoriesActions.fetchCategories({ clanId, noCache: Boolean(noCache) }))
@@ -1247,6 +1263,15 @@ export const channelsSlice = createSlice({
 			state.byClans[clanId].previousChannels = [{ clanId, channelId }, ...(state.byClans[clanId].previousChannels || []).slice(0, 4)];
 		},
 
+		removePreviousChannel: (state: ChannelsState, action: PayloadAction<{ clanId: string; channelId: string }>) => {
+			const { clanId, channelId } = action.payload;
+			if (!state.byClans[clanId]?.previousChannels) return;
+
+			state.byClans[clanId].previousChannels = state.byClans[clanId].previousChannels.filter(
+				(prevChannel) => prevChannel.channelId !== channelId
+			);
+		},
+
 		updateChannelBadgeCount: (
 			state: ChannelsState,
 			action: PayloadAction<{ clanId: string; channelId: string; count: number; isReset?: boolean }>
@@ -1456,6 +1481,8 @@ export const channelsSlice = createSlice({
 			if (currentPosition?.messageId === messageId && currentPosition?.offset === offset) {
 				return;
 			}
+
+			// removed noisy console log
 
 			state.scrollPosition[channelId] = { messageId, offset };
 		},
@@ -1724,6 +1751,18 @@ export const selectCurrentChannel = createSelector(
 		return channels[channelId] || userChannels[channelId] || null;
 	}
 );
+
+export const selectCurrentChannelType = createSelector(selectCurrentChannel, (channel) => channel?.type);
+export const selectCurrentChannelClanId = createSelector(selectCurrentChannel, (channel) => channel?.clan_id);
+export const selectCurrentChannelPrivate = createSelector(selectCurrentChannel, (channel) => channel?.channel_private);
+export const selectCurrentChannelParentId = createSelector(selectCurrentChannel, (channel) => channel?.parent_id);
+export const selectCurrentChannelCategoryId = createSelector(selectCurrentChannel, (channel) => channel?.category_id);
+export const selectCurrentChannelLabel = createSelector(selectCurrentChannel, (channel) => channel?.channel_label);
+export const selectCurrentChannelMeetingCode = createSelector(selectCurrentChannel, (channel) => channel?.meeting_code);
+export const selectCurrentChannelChannelId = createSelector(selectCurrentChannel, (channel) => channel?.channel_id);
+export const selectCurrentChannelCountMessUnread = createSelector(selectCurrentChannel, (channel) => channel?.count_mess_unread);
+export const selectCurrentChannelAgeRestricted = createSelector(selectCurrentChannel, (channel) => channel?.age_restricted);
+export const selectCurrentChannelCreatorId = createSelector(selectCurrentChannel, (channel) => channel?.creator_id);
 
 export const selectSelectedChannel = createSelector(selectChannelsEntities, selectSelectedChannelId, (clansEntities, clanId) =>
 	clanId ? clansEntities[clanId] : null

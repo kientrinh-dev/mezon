@@ -1,6 +1,6 @@
 import { usePermissionChecker } from '@mezon/core';
 import { ActionEmitEvent } from '@mezon/mobile-components';
-import { size, useTheme } from '@mezon/mobile-ui';
+import { useTheme } from '@mezon/mobile-ui';
 import { EPermission } from '@mezon/utils';
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -83,6 +83,15 @@ export function ClanSetting({ navigation }: MenuClanScreenProps<ClanSettingsScre
 			},
 			expandable: true,
 			icon: <MezonIconCDN icon={IconCDN.channelVoice} color={themeValue.text} />
+		},
+		{
+			title: t('menu.settings.enableCommunity'),
+			onPress: async () => {
+				navigation.navigate(APP_SCREEN.MENU_CLAN.ENABLE_COMMUNITY);
+			},
+			expandable: true,
+			isShow: hasManageClanPermission,
+			icon: <MezonIconCDN icon={IconCDN.communityIcon} color={themeValue.text} />
 		}
 	];
 
@@ -130,7 +139,7 @@ export function ClanSetting({ navigation }: MenuClanScreenProps<ClanSettingsScre
 	];
 
 	return (
-		<View style={{ flex: 1 }}>
+		<View style={styles.rootContainer}>
 			<StatusBarHeight />
 			<LinearGradient
 				start={{ x: 1, y: 0 }}
@@ -139,13 +148,13 @@ export function ClanSetting({ navigation }: MenuClanScreenProps<ClanSettingsScre
 				style={[StyleSheet.absoluteFillObject]}
 			/>
 			<View style={styles.headerWrapper}>
-				<Pressable style={{ width: size.s_60, paddingVertical: size.s_10 }} onPress={() => navigation.goBack()}>
+				<Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
 					<MezonIconCDN icon={IconCDN.closeSmallBold} color={themeValue.textStrong} />
 				</Pressable>
 				<Text style={styles.headerTitle}>{t('menuClanStack.clanSetting', { ns: 'screenStack' })}</Text>
-				<View style={{ width: size.s_60 }} />
+				<View style={styles.headerSpacer} />
 			</View>
-			<ScrollView contentContainerStyle={styles.container} style={{ flex: 1 }}>
+			<ScrollView contentContainerStyle={styles.container} style={styles.scrollContainer}>
 				<LogoClanSelector />
 				<MezonMenu menu={menu} />
 			</ScrollView>

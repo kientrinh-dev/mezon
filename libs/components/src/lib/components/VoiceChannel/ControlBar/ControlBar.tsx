@@ -1,6 +1,9 @@
 import { useLocalParticipant, useLocalParticipantPermissions, usePersistentUserChoices } from '@livekit/components-react';
 import {
+	selectCurrentChannelId,
 	selectGroupCallJoined,
+	selectNoiseSuppressionEnabled,
+	selectNoiseSuppressionLevel,
 	selectShowCamera,
 	selectShowMicrophone,
 	selectShowScreen,
@@ -20,15 +23,15 @@ import isElectron from 'is-electron';
 import type { LocalTrackPublication } from 'livekit-client';
 import { ScreenSharePresets, Track, VideoPresets } from 'livekit-client';
 import Tooltip from 'rc-tooltip';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useModal } from 'react-modal-hook';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { GifStickerEmojiPopup } from '../../GifsStickersEmojis';
 import SoundSquare from '../../GifsStickersEmojis/SoundSquare';
 import ScreenSelectionModal from '../../ScreenSelectionModal/ScreenSelectionModal';
-import type { ReactionChannelInfo } from '../MyVideoConference/Reaction/types';
 import { useSendReaction } from '../MyVideoConference/Reaction/useSendReaction';
+import { BackgroundEffectsMenu } from './BackgroundEffectMenu';
 import { MediaDeviceMenu } from './MediaDeviceMenu/MediaDeviceMenu';
 import { ScreenShareToggleButton } from './TrackToggle/ScreenShareToggleButton';
 import { TrackToggle } from './TrackToggle/TrackToggle';
@@ -38,7 +41,6 @@ interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
 	onLeaveRoom: (self?: boolean) => void;
 	onFullScreen: () => void;
 	isExternalCalling?: boolean;
-	currentChannel?: ReactionChannelInfo;
 	isShowMember?: boolean;
 	isGridView?: boolean;
 }
@@ -49,18 +51,26 @@ const ControlBar = ({
 	onLeaveRoom,
 	onFullScreen,
 	isExternalCalling,
-	currentChannel,
 	isShowMember = true,
 	isGridView = true
 }: ControlBarProps) => {
 	const dispatch = useAppDispatch();
 	const audioScreenTrackRef = useRef<LocalTrackPublication | null>(null);
 
+	const isSupport = useMemo(() => {
+		const sender = RTCRtpSender.prototype as any;
+
+		const supports =
+			(typeof sender.createEncodedStreams === 'function' || typeof sender.createEncodedVideoStreams === 'function') &&
+			typeof (window as any).VideoFrame === 'function';
+		return supports;
+	}, []);
+
 	const { hasCameraAccess, hasMicrophoneAccess } = useMediaPermissions();
 
 	const isGroupCall = useSelector(selectGroupCallJoined);
 
-	const { sendEmojiReaction, sendSoundReaction } = useSendReaction({ currentChannel });
+	const { sendEmojiReaction, sendSoundReaction } = useSendReaction();
 
 	const screenTrackRef = useRef<LocalTrackPublication | null>(null);
 	const isDesktop = isElectron();
@@ -71,12 +81,16 @@ const ControlBar = ({
 	const showScreen = useSelector(selectShowScreen);
 	const showCamera = useSelector(selectShowCamera);
 	const showMicrophone = useSelector(selectShowMicrophone);
+	const noiseSuppressionEnabled = useSelector(selectNoiseSuppressionEnabled);
+	const noiseSuppressionLevel = useSelector(selectNoiseSuppressionLevel);
 
 	const isFullScreen = useSelector(selectVoiceFullScreen);
 	const isShowSelectScreenModal = useSelector(selectShowSelectScreenModal);
 	const localPermissions = useLocalParticipantPermissions();
 	const localParticipant = useLocalParticipant();
 	const isOpenPopOut = useSelector(selectVoiceOpenPopOut);
+
+	const currentChannelId = useSelector(selectCurrentChannelId);
 
 	if (!localPermissions) {
 		visibleControls.camera = false;
@@ -308,7 +322,7 @@ const ControlBar = ({
 	useEffect(() => {
 		setShowEmojiPanel(false);
 		setShowSoundPanel(false);
-	}, [currentChannel?.channel_id]);
+	}, [currentChannelId]);
 
 	useEffect(() => {
 		if (!showEmojiPanel) return;
@@ -344,6 +358,19 @@ const ControlBar = ({
 			sendSoundReaction(soundId);
 		},
 		[sendSoundReaction]
+	);
+
+	const [showNoiseSuppressionTooltip, setShowNoiseSuppressionTooltip] = useState(false);
+
+	const toggleNoiseSuppression = useCallback(() => {
+		dispatch(voiceActions.setNoiseSuppressionEnabled(!noiseSuppressionEnabled));
+	}, [dispatch, noiseSuppressionEnabled]);
+
+	const handleNoiseSuppressionLevelChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			dispatch(voiceActions.setNoiseSuppressionLevel(Number(e.target.value)));
+		},
+		[dispatch]
 	);
 
 	return (
@@ -388,7 +415,6 @@ const ControlBar = ({
 							onVisibleChange={setShowSoundPanel}
 							overlay={
 								<SoundSquare
-									channel={currentChannel as any}
 									mode={ChannelStreamMode.STREAM_MODE_CHANNEL}
 									onClose={() => setShowSoundPanel(false)}
 									onSoundSelect={handleSoundSelect}
@@ -427,6 +453,41 @@ const ControlBar = ({
 						)}
 					</div>
 				)}
+				{visibleControls.microphone && isExternalCalling && (
+					<Tooltip
+						placement="top"
+						overlayClassName="w-64"
+						visible={showNoiseSuppressionTooltip && noiseSuppressionEnabled}
+						overlay={
+							<div className="p-2" onClick={(e) => e.stopPropagation()}>
+								<div className="flex justify-between items-center mb-2">
+									<span className="text-xs font-semibold">Noise Suppression</span>
+									<span className="text-xs text-gray-400">{noiseSuppressionLevel}%</span>
+								</div>
+								<input
+									type="range"
+									min="0"
+									max="100"
+									value={noiseSuppressionLevel}
+									onChange={handleNoiseSuppressionLevelChange}
+									className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+									disabled={!noiseSuppressionEnabled}
+								/>
+							</div>
+						}
+						onVisibleChange={setShowNoiseSuppressionTooltip}
+						destroyTooltipOnHide
+					>
+						<button
+							onClick={toggleNoiseSuppression}
+							className={`w-14 aspect-square max-md:w-10 max-md:p-2 !rounded-full flex justify-center items-center border-none dark:border-none transition-colors ${
+								isShowMember ? 'bg-zinc-500 dark:bg-zinc-900' : 'bg-zinc-700'
+							} ${noiseSuppressionEnabled ? 'hover:bg-green-600 dark:hover:bg-green-700' : 'hover:bg-zinc-600 dark:hover:bg-zinc-800'}`}
+						>
+							<Icons.NoiseSupressionIcon className={`w-5 h-5 ${noiseSuppressionEnabled ? 'text-green-400' : 'text-gray-400'}`} />
+						</button>
+					</Tooltip>
+				)}
 				{visibleControls.camera && (
 					<div className="relative rounded-full ">
 						<TrackToggle
@@ -443,6 +504,7 @@ const ControlBar = ({
 								onActiveDeviceChange={(_kind, deviceId) => saveVideoInputDeviceId(deviceId ?? 'default')}
 							/>
 						)}
+						{showCamera && isExternalCalling && isSupport && <BackgroundEffectsMenu participant={localParticipant.localParticipant} />}
 					</div>
 				)}
 				{visibleControls.screenShare &&

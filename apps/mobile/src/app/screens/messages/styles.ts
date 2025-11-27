@@ -8,13 +8,9 @@ export const style = (colors: Attributes, isTablet?: boolean) =>
 			flexDirection: 'row',
 			backgroundColor: colors.tertiary
 		},
-
-		containerServerlist: {
-			paddingHorizontal: size.s_10
-		},
-
 		container: {
-			flex: 1
+			flex: 1,
+			backgroundColor: colors.primary
 		},
 
 		leftContainer: {
@@ -181,7 +177,8 @@ export const style = (colors: Attributes, isTablet?: boolean) =>
 			backgroundColor: baseColor.orange,
 			width: size.s_40,
 			height: size.s_40,
-			borderRadius: size.s_50,
+			borderRadius: size.s_20,
+			overflow: 'hidden',
 			justifyContent: 'center',
 			alignItems: 'center'
 		},
@@ -208,11 +205,12 @@ export const style = (colors: Attributes, isTablet?: boolean) =>
 		},
 		avatarWrapper: {
 			borderRadius: size.s_50,
-			backgroundColor: colors.colorAvatarDefault,
 			height: size.s_40,
 			width: size.s_40
 		},
 		wrapperTextAvatar: {
+			backgroundColor: colors.colorAvatarDefault,
+			borderRadius: size.s_50,
 			width: size.s_40,
 			height: size.s_40,
 			justifyContent: 'center',
@@ -300,5 +298,22 @@ export const style = (colors: Attributes, isTablet?: boolean) =>
 		desActivity: {
 			fontSize: size.s_10,
 			color: colors.textDisabled
+		},
+		activityTextWrapper: {
+			flexShrink: 1
+		},
+		activeDMGroupBackground: {
+			backgroundColor: colors.secondaryLight
+		},
+		imageFullSize: {
+			width: '100%',
+			height: '100%'
+		},
+		flexOne: {
+			flex: 1
+		},
+		separator: {
+			height: '100%',
+			width: size.s_4
 		}
 	});

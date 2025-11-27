@@ -71,6 +71,7 @@ export { ReplyMessageBox } from './components/ReplyMessageBox';
 export { default as SearchMessageChannelRender } from './components/SearchMessageChannel/SearchMessageChannelRender';
 export { default as SearchModal } from './components/SearchModal';
 export { default as SettingAccount } from './components/SettingAccount';
+export { default as SettingActivity } from './components/SettingActivity';
 export { default as SettingAppearance } from './components/SettingAppearance';
 export { SettingLanguage } from './components/SettingLanguage';
 export { default as SettingNotifications } from './components/SettingNotifications';
@@ -109,8 +110,6 @@ export { default as MultiStepModalE2ee } from './components/ModalSendCode';
 export { default as SettingComunity } from './components/SettingComunity';
 export { WebRTCStreamProvider, useWebRTCStream } from './components/StreamContext/StreamContext';
 
-export * from './components/HtmlCanvas';
-
 export { MentionFloatButton } from './components/MentionFloatButton';
 export { AudioAttachment } from './components/ThumbnailAttachmentRender/ThumbnailAttachmentRender';
 
@@ -142,3 +141,4 @@ export { DmCallManager } from './components/DmCall/DmCallManager';
 export { default as InternetStatusPopover } from './components/InternetStatusPopover';
 export { default as ModalLayout } from './components/Modal';
 export { default as ModalEditGroup } from './components/ModalEditGroup';
+export { default as SidebarHistory } from './components/ModalListClans/SidebarHistory';

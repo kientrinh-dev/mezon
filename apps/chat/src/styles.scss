@@ -45,6 +45,39 @@
 	font-display: swap;
 }
 
+/* SVN-AVO Font Family */
+@font-face {
+	font-family: 'SVN-AVO';
+	src: url('./assets/fonts/SVN-AVO.woff2') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'SVN-AVO';
+	src: url('./assets/fonts/SVN-AVO ITALIC.woff2') format('woff2');
+	font-weight: normal;
+	font-style: italic;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'SVN-AVO';
+	src: url('./assets/fonts/SVN-AVO BOLD.woff2') format('woff2');
+	font-weight: bold;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'SVN-AVO';
+	src: url('./assets/fonts/SVN-AVO BOLD ITALIC.woff2') format('woff2');
+	font-weight: bold;
+	font-style: italic;
+	font-display: swap;
+}
+
 .contain-layout {
 	contain: layout;
 }
@@ -532,7 +565,7 @@ input:-webkit-autofill:active {
 	overflow-x: hidden;
 
 	pointer-events: auto;
-
+	scrollbar-width: auto;
 	transition: scrollbar-color 0.3s ease;
 
 	-webkit-overflow-scrolling: touch;
@@ -550,6 +583,11 @@ input:-webkit-autofill:active {
 		background-color: var(--thread-scroll);
 		box-shadow: 0 0 1px rgba(255, 255, 255, 0.01);
 	}
+}
+
+#main-layout.is-safari .thread-scroll {
+	@extend .messages-scroll;
+	scrollbar-color: var(--thread-scroll) transparent;
 }
 
 .mentions__suggestions__list::-webkit-scrollbar {
@@ -822,10 +860,6 @@ input:-webkit-autofill:active {
 		scale: 1;
 	}
 }
-
-// .custom-member-list {
-// 	-ms-overflow-style: none;
-// }
 
 .error-boundary {
 	overflow: hidden;

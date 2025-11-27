@@ -1,9 +1,10 @@
 import { ActionEmitEvent } from '@mezon/mobile-components';
 import { size, useTheme } from '@mezon/mobile-ui';
-import { categoriesActions, selectCategoryExpandStateByCategoryId, useAppDispatch, useAppSelector } from '@mezon/store-mobile';
-import { ICategoryChannel } from '@mezon/utils';
+import { FAVORITE_CATEGORY_ID, categoriesActions, selectCategoryExpandStateByCategoryId, useAppDispatch, useAppSelector } from '@mezon/store-mobile';
+import type { ICategoryChannel } from '@mezon/utils';
 import React, { memo, useCallback } from 'react';
-import { DeviceEventEmitter, Text, TouchableOpacity, View } from 'react-native';
+import { DeviceEventEmitter, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import MezonIconCDN from '../../../../../../componentUI/MezonIconCDN';
 import { IconCDN } from '../../../../../../constants/icon_cdn';
 import CategoryMenu from '../../CategoryMenu';
@@ -32,6 +33,10 @@ const ChannelListSection = memo(({ data }: IChannelListSectionProps) => {
 	);
 
 	const onLongPressHeader = useCallback(() => {
+		if (data?.category_id === FAVORITE_CATEGORY_ID) {
+			return;
+		}
+
 		const dataBottomSheet = {
 			heightFitContent: true,
 			children: <CategoryMenu category={data} />
@@ -45,6 +50,12 @@ const ChannelListSection = memo(({ data }: IChannelListSectionProps) => {
 
 	return (
 		<View style={styles.channelListSection}>
+			<LinearGradient
+				start={{ x: 1, y: 0 }}
+				end={{ x: 0, y: 0 }}
+				colors={[themeValue.secondary, themeValue?.primaryGradiant || themeValue.secondary]}
+				style={[StyleSheet.absoluteFillObject]}
+			/>
 			<TouchableOpacity
 				activeOpacity={0.8}
 				onPress={() => toggleCollapse(data)}
@@ -59,7 +70,9 @@ const ChannelListSection = memo(({ data }: IChannelListSectionProps) => {
 						color={themeValue.text}
 						customStyle={[!categoryExpandState && { transform: [{ rotate: '-90deg' }] }]}
 					/>
-					<Text style={styles.channelListHeaderItemTitle} numberOfLines={1}>{data?.category_name}</Text>
+					<Text style={styles.channelListHeaderItemTitle} numberOfLines={1}>
+						{data?.category_name}
+					</Text>
 				</View>
 			</TouchableOpacity>
 		</View>

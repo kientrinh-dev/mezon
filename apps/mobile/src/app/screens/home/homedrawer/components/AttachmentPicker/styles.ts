@@ -1,4 +1,5 @@
-import { Attributes, Metrics, size } from '@mezon/mobile-ui';
+import type { Attributes } from '@mezon/mobile-ui';
+import { baseColor, Metrics, size } from '@mezon/mobile-ui';
 import { StyleSheet } from 'react-native';
 
 export const style = (colors: Attributes) =>
@@ -9,15 +10,15 @@ export const style = (colors: Attributes) =>
 			minHeight: Metrics.screenHeight * 0.8
 		},
 		wrapperHeader: {
+			paddingHorizontal: size.s_16,
 			flexDirection: 'row',
 			justifyContent: 'space-between',
-			gap: size.s_10,
-			marginBottom: size.s_16
+			gap: size.s_10
 		},
 		buttonHeader: {
 			width: '30%',
 			gap: size.s_6,
-			paddingVertical: size.s_14,
+			paddingVertical: size.s_10,
 			borderRadius: size.s_20,
 			backgroundColor: colors.secondaryLight,
 			flexDirection: 'row',
@@ -27,8 +28,8 @@ export const style = (colors: Attributes) =>
 		buttonAlbum: {
 			width: '35%',
 			gap: size.s_6,
-			paddingVertical: size.s_14,
-			borderRadius: size.s_20,
+			paddingVertical: size.s_8,
+			borderRadius: size.s_10,
 			flexDirection: 'row',
 			alignItems: 'center',
 			justifyContent: 'center'
@@ -47,5 +48,26 @@ export const style = (colors: Attributes) =>
 			color: colors.textStrong,
 			fontSize: size.s_14,
 			fontWeight: '600'
+		},
+		wrapperButtonHd: {
+			width: '30%',
+			padding: size.s_6,
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'flex-end'
+		},
+		buttonHd: {
+			alignSelf: 'flex-end',
+			paddingHorizontal: size.s_18,
+			paddingVertical: size.s_8
+		},
+		iconCheckedHD: {
+			position: 'absolute',
+			bottom: size.s_4,
+			right: size.s_10,
+			borderRadius: size.s_20,
+			backgroundColor: baseColor.green,
+			padding: size.s_2,
+			zIndex: 2
 		}
 	});

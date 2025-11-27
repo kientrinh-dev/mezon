@@ -3,7 +3,8 @@ import {
 	selectAllChannelMembersClan,
 	selectClanMemberWithStatusIds,
 	selectCurrentChannelId,
-	selectCurrentClan,
+	selectCurrentClanCreatorId,
+	selectCurrentClanId,
 	selectMemberClanByUserId,
 	selectMemberCustomStatusByUserId,
 	selectStatusInVoice,
@@ -11,9 +12,10 @@ import {
 	useAppSelector
 } from '@mezon/store';
 import { Icons } from '@mezon/ui';
-import { createImgproxyUrl, generateE2eId, isLinuxDesktop, isWindowsDesktop, useSyncEffect, useWindowSize } from '@mezon/utils';
+import { createImgproxyUrl, generateE2eId, isLinuxDesktop, isWindowsDesktop, useWindowSize } from '@mezon/utils';
 import isElectron from 'is-electron';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { AvatarImage, useVirtualizer } from '../../components';
 import { useMemberContextMenu } from '../../contexts';
@@ -66,6 +68,7 @@ type MemberClanProps = {
 };
 
 const MemoizedMemberItem = memo((props: MemberClanProps) => {
+	const { t } = useTranslation('memberPage');
 	const { id, isOwner, temp } = props;
 	const user = useAppSelector((state) => selectMemberClanByUserId(state, id));
 	const userMeta = useMemberStatus(id);
@@ -83,16 +86,14 @@ const MemoizedMemberItem = memo((props: MemberClanProps) => {
 	) : (
 		<BaseMemberProfile
 			userStatus={
-				<>
-					{userVoiceStatus && userMeta.online ? (
-						<span className="flex items-center gap-1" data-e2e={generateE2eId('clan_page.secondary_side_bar.member.in_voice')}>
-							<Icons.Speaker className="text-green-500 !w-3 !h-3" />
-							In voice
-						</span>
-					) : (
-						userCustomStatus
-					)}
-				</>
+				userVoiceStatus && userMeta.online ? (
+					<span className="flex items-center gap-1" data-e2e={generateE2eId('clan_page.secondary_side_bar.member.in_voice')}>
+						<Icons.Speaker className="text-green-500 !w-3 !h-3" />
+						{t('inVoice')}
+					</span>
+				) : (
+					userCustomStatus
+				)
 			}
 			user={user}
 			userMeta={{
@@ -110,14 +111,16 @@ const MemoizedMemberItem = memo((props: MemberClanProps) => {
 });
 
 const ListMember = () => {
-	const currentClan = useSelector(selectCurrentClan);
+	const { t } = useTranslation('memberPage');
+	const currentClanId = useSelector(selectCurrentClanId);
+	const currentClanCreatorId = useSelector(selectCurrentClanCreatorId);
 
 	const [showFullList, setShowFullList] = useState(false);
-	useSyncEffect(() => {
+	useEffect(() => {
 		if (showFullList) {
 			setShowFullList(false);
 		}
-	}, [currentClan]);
+	}, [currentClanId]);
 
 	const currentChannelId = useSelector(selectCurrentChannelId);
 	const userChannels = useAppSelector((state) => selectAllChannelMembersClan(state, currentChannelId as string));
@@ -241,14 +244,14 @@ const ListMember = () => {
 							<div className="flex items-center px-4 h-full">
 								{typeof user === 'object' && 'onlineSeparate' in user ? (
 									<p className="text-theme-primary text-[14px] font-semibold flex items-center gap-[4px] font-title text-xs tracking-wide uppercase">
-										Online - {lisMembers.onlineCount}
+										{t('onlineCount', { count: lisMembers.onlineCount })}
 									</p>
 								) : typeof user === 'object' && 'offlineSeparate' in user ? (
 									<p className="text-theme-primary text-[14px] font-semibold flex items-center gap-[4px] font-title text-xs tracking-wide uppercase">
-										Offline - {lisMembers.offlineCount}
+										{t('offlineCount', { count: lisMembers.offlineCount })}
 									</p>
 								) : (
-									<MemoizedMemberItem id={user} temp={!showFullList} isOwner={currentClan?.creator_id === user} />
+									<MemoizedMemberItem id={user} temp={!showFullList} isOwner={currentClanCreatorId === user} />
 								)}
 							</div>
 						</div>

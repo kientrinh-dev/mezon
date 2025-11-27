@@ -101,7 +101,7 @@ export type IDefaultNotificationClan = ApiNotificationSetting;
 
 export type IDefaultNotificationCategory = ApiNotificationSetting & {
 	active?: number;
-	time_mute?: string;
+	time_mute?: string | null;
 };
 
 export type IDefaultNotification = ApiNotificationSetting & {
@@ -781,12 +781,16 @@ export type IMessageLine = {
 
 export interface UsersClanEntity extends IUsersClan {
 	id: string; // Primary ID
+	ban_list?: Record<string, { ban_time?: number; banner_id?: string }>;
 }
 
 export interface ChannelMembersEntity extends IChannelMember {
 	id: string; // Primary ID
 	name?: string;
 	clanNick?: string;
+	display_name?: string;
+	username?: string;
+	avatar_url?: string;
 }
 
 export type SortChannel = {
@@ -810,6 +814,12 @@ export type RemoveClanUsers = {
 };
 
 export type RemoveChannelUsers = {
+	channelId: string;
+	userIds: string[];
+};
+
+export type BanClanUsers = {
+	clanId: string;
 	channelId: string;
 	userIds: string[];
 };
@@ -1047,6 +1057,7 @@ export enum EUserSettings {
 	FRIEND_REQUESTS = 'Friend Requests',
 	APP_SETTINGS = 'APP SETTINGS',
 	APPEARANCE = 'Appearance',
+	ACTIVITY = 'Activity',
 	ACCESSIBILITY = 'Accessibility',
 	VOICE_VIDEO = 'Voice & Video',
 	TEXT_IMAGE = 'Text & Image',
@@ -1177,7 +1188,9 @@ export enum TypeMessage {
 	AuditLog = 10,
 	SendToken = 11,
 	Ephemeral = 12,
-	UpcomingEvent = 13
+	UpcomingEvent = 13,
+	UpdateEphemeralMsg = 14,
+	DeleteEphemeralMsg = 15
 }
 
 export enum ServerSettingsMenuValue {
@@ -1282,56 +1295,56 @@ export const serverSettingsMenuList = [
 ];
 
 export enum ActionLog {
-	ALL_ACTION_AUDIT = 'All Actions',
-	UPDATE_CLAN_ACTION_AUDIT = 'Update Clan',
-	CREATE_CHANNEL_ACTION_AUDIT = 'Create Channel',
-	UPDATE_CHANNEL_ACTION_AUDIT = 'Update Channel',
-	UPDATE_CHANNEL_PRIVATE_ACTION_AUDIT = 'Update Channel private',
-	DELETE_CHANNE_ACTION_AUDIT = 'Delete Channel',
-	CREATE_CHANNEL_PERMISSION_ACTION_AUDIT = 'Create Channel Permission',
-	UPDATE_CHANNEL_PERMISSION_ACTION_AUDIT = 'Update Channel Permission',
-	DELETE_CHANNEL_PERMISSION_ACTION_AUDIT = 'Delete Channel Permission',
-	KICK_MEMBER_ACTION_AUDIT = 'Kick Member',
-	PRUNE_MEMBER_ACTION_AUDIT = 'Prune Member',
-	BAN_MEMBER_ACTION_AUDIT = 'Ban Member',
-	UNBAN_MEMBER_ACTION_AUDIT = 'Unban Member',
-	UPDATE_MEMBER_ACTION_AUDIT = 'Update Member',
-	UPDATE_ROLES_MEMBER_ACTION_AUDIT = 'Update Roles Member',
-	MOVE_MEMBER_ACTION_AUDIT = 'Move Member',
-	DISCONNECT_MEMBER_ACTION_AUDIT = 'Disconnect Member',
-	ADD_BOT_ACTION_AUDIT = 'Add Bot',
-	CREATE_THREAD_ACTION_AUDIT = 'Create Thread',
-	UPDATE_THREAD_ACTION_AUDIT = 'Update Thread',
-	DELETE_THREAD_ACTION_AUDIT = 'Delete Thread',
-	CREATE_ROLE_ACTION_AUDIT = 'Create Role',
-	UPDATE_ROLE_ACTION_AUDIT = 'Update Role',
-	DELETE_ROLE_ACTION_AUDIT = 'Delete Role',
-	CREATE_WEBHOOK_ACTION_AUDIT = 'Create Webhook',
-	UPDATE_WEBHOOK_ACTION_AUDIT = 'Update Webhook',
-	DELETE_WEBHOOK_ACTION_AUDIT = 'Delete Webhook',
-	CREATE_EMOJI_ACTION_AUDIT = 'Create Emoji',
-	UPDATE_EMOJI_ACTION_AUDIT = 'Update Emoji',
-	DELETE_EMOJI_ACTION_AUDIT = 'Delete Emoji',
-	CREATE_STICKER_ACTION_AUDIT = 'Create Sticker',
-	UPDATE_STICKER_ACTION_AUDIT = 'Update Sticker',
-	DELETE_STICKER_ACTION_AUDIT = 'Delete Sticker',
-	CREATE_EVENT_ACTION_AUDIT = 'Create Event',
-	UPDATE_EVENT_ACTION_AUDIT = 'Update Event',
-	DELETE_EVENT_ACTION_AUDIT = 'Delete Event',
-	CREATE_CANVAS_ACTION_AUDIT = 'Create Canvas',
-	UPDATE_CANVAS_ACTION_AUDIT = 'Update Canvas',
-	DELETE_CANVAS_ACTION_AUDIT = 'Delete Canvas',
-	CREATE_CATEGORY_ACTION_AUDIT = 'Create Category',
-	UPDATE_CATEGORY_ACTION_AUDIT = 'Update Category',
-	DELETE_CATEGORY_ACTION_AUDIT = 'Delete Category',
-	ADD_MEMBER_CHANNEL_ACTION_AUDIT = 'Add Member Channel',
-	REMOVE_MEMBER_CHANNEL_ACTION_AUDIT = 'Remove Member Channel',
-	ADD_ROLE_CHANNEL_ACTION_AUDIT = 'Add Role Channel',
-	REMOVE_ROLE_CHANNEL_ACTION_AUDIT = 'Remove Role Channel',
-	ADD_MEMBER_THREAD_ACTION_AUDIT = 'Add Member Thread',
-	REMOVE_MEMBER_THREAD_ACTION_AUDIT = 'Remove Member Thread',
-	ADD_ROLE_THREAD_ACTION_AUDIT = 'Add Role Thread',
-	REMOVE_ROLE_THREAD_ACTION_AUDIT = 'Remove Role Thread'
+	ALL_ACTION_AUDIT = 'ALL_ACTION_AUDIT',
+	UPDATE_CLAN_ACTION_AUDIT = 'UPDATE_CLAN_ACTION_AUDIT',
+	CREATE_CHANNEL_ACTION_AUDIT = 'CREATE_CHANNEL_ACTION_AUDIT',
+	UPDATE_CHANNEL_ACTION_AUDIT = 'UPDATE_CHANNEL_ACTION_AUDIT',
+	UPDATE_CHANNEL_PRIVATE_ACTION_AUDIT = 'UPDATE_CHANNEL_PRIVATE_ACTION_AUDIT',
+	DELETE_CHANNE_ACTION_AUDIT = 'DELETE_CHANNE_ACTION_AUDIT',
+	CREATE_CHANNEL_PERMISSION_ACTION_AUDIT = 'CREATE_CHANNEL_PERMISSION_ACTION_AUDIT',
+	UPDATE_CHANNEL_PERMISSION_ACTION_AUDIT = 'UPDATE_CHANNEL_PERMISSION_ACTION_AUDIT',
+	DELETE_CHANNEL_PERMISSION_ACTION_AUDIT = 'DELETE_CHANNEL_PERMISSION_ACTION_AUDIT',
+	KICK_MEMBER_ACTION_AUDIT = 'KICK_MEMBER_ACTION_AUDIT',
+	PRUNE_MEMBER_ACTION_AUDIT = 'PRUNE_MEMBER_ACTION_AUDIT',
+	BAN_MEMBER_ACTION_AUDIT = 'BAN_MEMBER_ACTION_AUDIT',
+	UNBAN_MEMBER_ACTION_AUDIT = 'UNBAN_MEMBER_ACTION_AUDIT',
+	UPDATE_MEMBER_ACTION_AUDIT = 'UPDATE_MEMBER_ACTION_AUDIT',
+	UPDATE_ROLES_MEMBER_ACTION_AUDIT = 'UPDATE_ROLES_MEMBER_ACTION_AUDIT',
+	MOVE_MEMBER_ACTION_AUDIT = 'MOVE_MEMBER_ACTION_AUDIT',
+	DISCONNECT_MEMBER_ACTION_AUDIT = 'DISCONNECT_MEMBER_ACTION_AUDIT',
+	ADD_BOT_ACTION_AUDIT = 'ADD_BOT_ACTION_AUDIT',
+	CREATE_THREAD_ACTION_AUDIT = 'CREATE_THREAD_ACTION_AUDIT',
+	UPDATE_THREAD_ACTION_AUDIT = 'UPDATE_THREAD_ACTION_AUDIT',
+	DELETE_THREAD_ACTION_AUDIT = 'DELETE_THREAD_ACTION_AUDIT',
+	CREATE_ROLE_ACTION_AUDIT = 'CREATE_ROLE_ACTION_AUDIT',
+	UPDATE_ROLE_ACTION_AUDIT = 'UPDATE_ROLE_ACTION_AUDIT',
+	DELETE_ROLE_ACTION_AUDIT = 'DELETE_ROLE_ACTION_AUDIT',
+	CREATE_WEBHOOK_ACTION_AUDIT = 'CREATE_WEBHOOK_ACTION_AUDIT',
+	UPDATE_WEBHOOK_ACTION_AUDIT = 'UPDATE_WEBHOOK_ACTION_AUDIT',
+	DELETE_WEBHOOK_ACTION_AUDIT = 'DELETE_WEBHOOK_ACTION_AUDIT',
+	CREATE_EMOJI_ACTION_AUDIT = 'CREATE_EMOJI_ACTION_AUDIT',
+	UPDATE_EMOJI_ACTION_AUDIT = 'UPDATE_EMOJI_ACTION_AUDIT',
+	DELETE_EMOJI_ACTION_AUDIT = 'DELETE_EMOJI_ACTION_AUDIT',
+	CREATE_STICKER_ACTION_AUDIT = 'CREATE_STICKER_ACTION_AUDIT',
+	UPDATE_STICKER_ACTION_AUDIT = 'UPDATE_STICKER_ACTION_AUDIT',
+	DELETE_STICKER_ACTION_AUDIT = 'DELETE_STICKER_ACTION_AUDIT',
+	CREATE_EVENT_ACTION_AUDIT = 'CREATE_EVENT_ACTION_AUDIT',
+	UPDATE_EVENT_ACTION_AUDIT = 'UPDATE_EVENT_ACTION_AUDIT',
+	DELETE_EVENT_ACTION_AUDIT = 'DELETE_EVENT_ACTION_AUDIT',
+	CREATE_CANVAS_ACTION_AUDIT = 'CREATE_CANVAS_ACTION_AUDIT',
+	UPDATE_CANVAS_ACTION_AUDIT = 'UPDATE_CANVAS_ACTION_AUDIT',
+	DELETE_CANVAS_ACTION_AUDIT = 'DELETE_CANVAS_ACTION_AUDIT',
+	CREATE_CATEGORY_ACTION_AUDIT = 'CREATE_CATEGORY_ACTION_AUDIT',
+	UPDATE_CATEGORY_ACTION_AUDIT = 'UPDATE_CATEGORY_ACTION_AUDIT',
+	DELETE_CATEGORY_ACTION_AUDIT = 'DELETE_CATEGORY_ACTION_AUDIT',
+	ADD_MEMBER_CHANNEL_ACTION_AUDIT = 'ADD_MEMBER_CHANNEL_ACTION_AUDIT',
+	REMOVE_MEMBER_CHANNEL_ACTION_AUDIT = 'REMOVE_MEMBER_CHANNEL_ACTION_AUDIT',
+	ADD_ROLE_CHANNEL_ACTION_AUDIT = 'ADD_ROLE_CHANNEL_ACTION_AUDIT',
+	REMOVE_ROLE_CHANNEL_ACTION_AUDIT = 'REMOVE_ROLE_CHANNEL_ACTION_AUDIT',
+	ADD_MEMBER_THREAD_ACTION_AUDIT = 'ADD_MEMBER_THREAD_ACTION_AUDIT',
+	REMOVE_MEMBER_THREAD_ACTION_AUDIT = 'REMOVE_MEMBER_THREAD_ACTION_AUDIT',
+	ADD_ROLE_THREAD_ACTION_AUDIT = 'ADD_ROLE_THREAD_ACTION_AUDIT',
+	REMOVE_ROLE_THREAD_ACTION_AUDIT = 'REMOVE_ROLE_THREAD_ACTION_AUDIT'
 }
 
 export enum UserAuditLog {
@@ -1411,7 +1424,8 @@ export type MentionReactInputProps = {
 		mentionEveryone?: boolean,
 		displayName?: string,
 		clanNick?: string,
-		ephemeralReceiverId?: string
+		ephemeralReceiverId?: string,
+		usersNotExistingInThread?: string[]
 	) => void;
 	readonly onTyping?: () => void;
 	readonly listMentions?: MentionDataProps[] | undefined;
@@ -1426,6 +1440,14 @@ export type MentionReactInputProps = {
 	hasPermissionEdit?: boolean;
 	voiceLongPress?: ILongPressType;
 	isRecording?: boolean;
+	readonly onEditEphemeral?: (
+		messageId: string,
+		content: IMessageSendPayload,
+		mentions?: Array<ApiMessageMention>,
+		attachments?: Array<ApiMessageAttachment>,
+		ephemeralReceiverId?: string,
+		senderId?: string
+	) => void;
 };
 
 export type IOtherCall = {
@@ -1456,6 +1478,7 @@ export interface IAttachmentEntity extends ApiChannelAttachment {
 	id: string;
 	channelId?: string;
 	clanId?: string;
+	isVideo?: boolean;
 }
 
 export interface IAttachmentEntityWithUploader extends IAttachmentEntity {
@@ -1464,6 +1487,7 @@ export interface IAttachmentEntityWithUploader extends IAttachmentEntity {
 		name: string;
 	};
 	realUrl: string;
+	isVideo?: boolean;
 }
 
 export interface IImageWindowProps {
@@ -1517,7 +1541,7 @@ export type ImageSourceObject = {
 export type HistoryItem = {
 	valueTextInput: string;
 	content: string;
-	mentionRaw?: any[];
+	mentionRaw?: MentionItem[];
 };
 
 export enum SymbolsAndIdsLengthOfMentionValue {

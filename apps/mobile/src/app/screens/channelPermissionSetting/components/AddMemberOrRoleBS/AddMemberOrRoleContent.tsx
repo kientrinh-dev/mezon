@@ -1,8 +1,9 @@
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { debounce } from '@mezon/mobile-components';
-import { baseColor, size, useTheme, verticalScale } from '@mezon/mobile-ui';
+import { baseColor, useTheme } from '@mezon/mobile-ui';
 import {
 	channelUsersActions,
+	rolesClanActions,
 	selectAllChannelMembers,
 	selectAllRolesClan,
 	selectAllUserClans,
@@ -21,12 +22,14 @@ import MezonInput from '../../../../componentUI/MezonInput';
 import { IconCDN } from '../../../../constants/icon_cdn';
 import { normalizeString } from '../../../../utils/helpers';
 import { EOverridePermissionType, ERequestStatus } from '../../types/channelPermission.enum';
-import { IAddMemberOrRoleContentProps } from '../../types/channelPermission.type';
+import type { IAddMemberOrRoleContentProps } from '../../types/channelPermission.type';
 import { MemberItem } from '../MemberItem';
 import { RoleItem } from '../RoleItem';
+import { styles as stylesFn } from './AddMemberOrRoleContent.styles';
 
 export const AddMemberOrRoleContent = memo(({ channel, onDismiss }: IAddMemberOrRoleContentProps) => {
 	const { themeValue } = useTheme();
+	const styles = stylesFn(themeValue);
 	const [searchText, setSearchText] = useState('');
 	const debouncedSetSearchText = debounce((text) => setSearchText(text), 300);
 	const currentClanId = useSelector(selectCurrentClanId);
@@ -127,7 +130,7 @@ export const AddMemberOrRoleContent = memo(({ channel, onDismiss }: IAddMemberOr
 		const response = await Promise.all(promise);
 		const isError = response?.some((data) => data?.meta?.requestStatus === ERequestStatus.Rejected);
 		Toast.show({
-			type: 'success',
+			type: isError ? 'error' : 'success',
 			props: {
 				text2: isError ? t('channelPermission.toast.failed') : t('channelPermission.toast.success'),
 				leadingIcon: isError ? (
@@ -137,6 +140,9 @@ export const AddMemberOrRoleContent = memo(({ channel, onDismiss }: IAddMemberOr
 				)
 			}
 		});
+		if (!isError) {
+			dispatch(rolesClanActions.addRoleByChannel({ channelId: channel.id, roleIds: selectedRoleIdList, clanId: currentClanId }));
+		}
 		onDismiss && onDismiss();
 	};
 
@@ -145,17 +151,8 @@ export const AddMemberOrRoleContent = memo(({ channel, onDismiss }: IAddMemberOr
 			const { type, headerTitle, isShowHeaderTitle } = item;
 			if (!type && headerTitle && isShowHeaderTitle) {
 				return (
-					<View style={{ paddingTop: size.s_12, paddingLeft: size.s_12 }}>
-						<Text
-							style={{
-								fontSize: verticalScale(18),
-								marginLeft: 0,
-								marginRight: 0,
-								color: themeValue.text
-							}}
-						>
-							{headerTitle}:
-						</Text>
+					<View style={styles.sectionHeader}>
+						<Text style={styles.sectionHeaderText}>{headerTitle}:</Text>
 					</View>
 				);
 			}
@@ -189,59 +186,25 @@ export const AddMemberOrRoleContent = memo(({ channel, onDismiss }: IAddMemberOr
 	);
 
 	return (
-		<View style={{ paddingHorizontal: size.s_14, flex: 1 }}>
-			<View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-				<View style={{ alignItems: 'center' }}>
-					<Text
-						style={{
-							fontSize: verticalScale(18),
-							marginLeft: 0,
-							marginRight: 0,
-							fontWeight: 'bold',
-							color: themeValue.white
-						}}
-					>
-						{t('channelPermission.bottomSheet.addMembersOrRoles')}
-					</Text>
-					<Text
-						style={{
-							marginLeft: 0,
-							marginRight: 0,
-							color: themeValue.text
-						}}
-					>
-						#{channel?.channel_label}
-					</Text>
+		<View style={styles.container}>
+			<View style={styles.headerContainer}>
+				<View style={styles.headerCenter}>
+					<Text style={styles.headerTitle}>{t('channelPermission.bottomSheet.addMembersOrRoles')}</Text>
+					<Text style={styles.headerSubtitle}>#{channel?.channel_label}</Text>
 				</View>
-				<TouchableOpacity
-					onPress={addMemberOrRole}
-					style={{
-						position: 'absolute',
-						top: 0,
-						right: 0
-					}}
-					disabled={disableAddButton}
-				>
-					<View style={{ padding: size.s_10 }}>
-						<Text
-							style={{
-								fontSize: verticalScale(18),
-								marginLeft: 0,
-								marginRight: 0,
-								fontWeight: 'bold',
-								color: disableAddButton ? '#676b73' : baseColor.blurple
-							}}
-						>
+				<TouchableOpacity onPress={addMemberOrRole} style={styles.addButton} disabled={disableAddButton}>
+					<View style={styles.addButtonInner}>
+						<Text style={[styles.addButtonText, { color: disableAddButton ? '#676b73' : baseColor.blurple }]}>
 							{t('channelPermission.bottomSheet.add')}
 						</Text>
 					</View>
 				</TouchableOpacity>
 			</View>
 
-			<View style={{ paddingVertical: size.s_16 }}>
-				<MezonInput onTextChange={debouncedSetSearchText} placeHolder={'Search Roles & Members'} />
+			<View style={styles.searchWrapper}>
+				<MezonInput onTextChange={debouncedSetSearchText} placeHolder={t('addMembersRoles.searchPlaceholder')} />
 			</View>
-			<View style={{ flex: 1, paddingBottom: size.s_10 }}>
+			<View style={styles.listWrapper}>
 				<BottomSheetFlatList
 					data={filteredSearch}
 					keyboardShouldPersistTaps={'handled'}

@@ -12,12 +12,14 @@ import {
 	selectIsElectronUpdateAvailable,
 	selectIsInCall,
 	selectIsJoin,
+	selectMemberCustomStatusById,
 	selectShowModalCustomStatus,
 	selectShowModalSendToken,
 	selectStatusMenu,
 	selectVoiceJoined,
 	selectWalletDetail,
 	useAppDispatch,
+	useAppSelector,
 	userClanProfileActions
 } from '@mezon/store';
 import { useMezon } from '@mezon/transport';
@@ -26,7 +28,7 @@ import {
 	CURRENCY,
 	ESummaryInfo,
 	EUserStatus,
-	ONE_MINUTE,
+	ONE_MINUTE_MS,
 	TypeMessage,
 	compareBigInt,
 	createImgproxyUrl,
@@ -66,6 +68,7 @@ function FooterProfile({ name, status, avatar, userId, isDM }: FooterProfileProp
 	const statusMenu = useSelector(selectStatusMenu);
 	const userWallet = useSelector(selectWalletDetail);
 	const myProfile = useAuth();
+	const userMemberStatus = useAppSelector((state) => selectMemberCustomStatusById(state, myProfile.userId as string));
 	const { t } = useTranslation(['setting', 'token']);
 	const { mmnRef } = useMezon();
 
@@ -168,7 +171,7 @@ function FooterProfile({ name, status, avatar, userId, isDM }: FooterProfileProp
 
 		setIsButtonDisabled(true);
 		try {
-			await dispatch(giveCoffeeActions.sendToken(tokenEvent)).unwrap();
+			await dispatch(giveCoffeeActions.sendToken({ tokenEvent })).unwrap();
 			dispatch(giveCoffeeActions.setSendTokenEvent({ tokenEvent, status: TOKEN_SUCCESS_STATUS }));
 			if (id) {
 				await sendNotificationMessage(id, token, note ?? '', username, avatar, display_name);
@@ -218,7 +221,7 @@ function FooterProfile({ name, status, avatar, userId, isDM }: FooterProfileProp
 			});
 			const timer = setTimeout(() => {
 				handleClosePopup();
-			}, ONE_MINUTE);
+			}, ONE_MINUTE_MS);
 
 			return () => clearTimeout(timer);
 		}
@@ -265,8 +268,15 @@ function FooterProfile({ name, status, avatar, userId, isDM }: FooterProfileProp
 		}
 	};
 	const [openSetCustomStatus, closeSetCustomStatus] = useModal(() => {
-		return <ModalCustomStatus status={userCustomStatus} name={name} onClose={handleCloseModalCustomStatus} />;
-	}, [userCustomStatus]);
+		return (
+			<ModalCustomStatus
+				status={userCustomStatus}
+				name={name}
+				onClose={handleCloseModalCustomStatus}
+				time_reset={userMemberStatus?.time_reset}
+			/>
+		);
+	}, [userCustomStatus, userMemberStatus?.time_reset]);
 
 	const [openModalSendToken, closeModalSendToken] = useModal(() => {
 		return (

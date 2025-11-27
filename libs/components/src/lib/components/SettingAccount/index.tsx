@@ -61,7 +61,10 @@ const SettingAccount = ({ onSettingProfile, menuIsOpen }: SettingAccountProps) =
 				isLoading={isLoadingUpdatePassword}
 				initialEmail={email}
 				onSubmit={async (data) => {
-					await dispatch(authActions.registrationPassword(data));
+					const result = await dispatch(authActions.registrationPassword(data));
+					if (result?.payload) {
+						closeSetPasswordModal();
+					}
 				}}
 				hasPassword={!!userProfile?.password_setted}
 			/>
@@ -79,12 +82,6 @@ const SettingAccount = ({ onSettingProfile, menuIsOpen }: SettingAccountProps) =
 	const handleOpenSetPassword = () => {
 		openSetPassWordModal();
 	};
-
-	useEffect(() => {
-		if (isLoadingUpdatePassword !== 'loading') {
-			closeSetPasswordModal();
-		}
-	}, [isLoadingUpdatePassword]);
 
 	return (
 		<div
@@ -106,7 +103,7 @@ const SettingAccount = ({ onSettingProfile, menuIsOpen }: SettingAccountProps) =
 						<div className="font-semibold text-lg">{userProfile?.user?.display_name}</div>
 					</div>
 					<div className="flex gap-2">
-						<div onClick={openQR} className=" flex items-center justify-center p-2 bg-white mt-8 h-fit rounded-md">
+						<div onClick={openQR} className=" flex items-center justify-center p-2 bg-white mt-8 h-fit rounded-md cursor-pointer">
 							<svg
 								width="24px"
 								height="24px"
@@ -170,7 +167,7 @@ const SettingAccount = ({ onSettingProfile, menuIsOpen }: SettingAccountProps) =
 					<div className="flex justify-between items-center">
 						<div>
 							<h4 className="uppercase font-bold text-xs mb-1">{t('password')}</h4>
-							<p>{t('password')}</p>
+							<p>{userProfile?.password_setted ? '*********' : t('password')}</p>
 						</div>
 						<div
 							className=" h-fit rounded-lg px-6 py-1 cursor-pointer border-theme-primary bg-theme-input text-theme-primary-hover bg-secondary-button-hover "
@@ -186,7 +183,7 @@ const SettingAccount = ({ onSettingProfile, menuIsOpen }: SettingAccountProps) =
 					<div className="flex justify-between items-center">
 						<div>
 							<h4 className="uppercase font-bold text-xs mb-1">{t('phoneNumber')}</h4>
-							<p>{t('phoneNumber')}</p>
+							<p>{userProfile?.user?.phone_number ? `********${userProfile?.user?.phone_number.slice(-4)}` : t('phoneNumber')}</p>
 						</div>
 						<div
 							className=" h-fit rounded-lg px-6 py-1 cursor-pointer border-theme-primary bg-theme-input text-theme-primary-hover bg-secondary-button-hover "

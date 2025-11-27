@@ -11,6 +11,7 @@ import {
 import { convertTimeString, sleep } from '@mezon/utils';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Platform, Text, TouchableOpacity, View } from 'react-native';
 import Share from 'react-native-share';
 import { useSelector } from 'react-redux';
@@ -33,9 +34,10 @@ export const RenderHeaderModal = React.memo(({ imageSelected, onImageSaved, onLo
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
 	const uploader = useAppSelector((state) => selectMemberClanByUserId(state, imageSelected?.uploader || ''));
-	const { downloadImage, saveImageToCameraRoll, getImageAsBase64OrFile } = useImage();
+	const { downloadImage, saveMediaToCameraRoll, getImageAsBase64OrFile } = useImage();
 	const currentDirectId = useSelector(selectDmGroupCurrentId);
 	const navigation = useNavigation<any>();
+	const { t } = useTranslation(['common']);
 
 	const onClose = () => {
 		DeviceEventEmitter.emit(ActionEmitEvent.ON_TRIGGER_MODAL, { isDismiss: true });
@@ -50,7 +52,7 @@ export const RenderHeaderModal = React.memo(({ imageSelected, onImageSaved, onLo
 			const filetypeParts = filetype?.split?.('/');
 			const filePath = await downloadImage(url, filetypeParts[1]);
 			if (filePath) {
-				await saveImageToCameraRoll('file://' + filePath, filetypeParts[0], false);
+				await saveMediaToCameraRoll('file://' + filePath, filetypeParts[0], false);
 				onImageSaved();
 			}
 		} catch (error) {
@@ -136,26 +138,13 @@ export const RenderHeaderModal = React.memo(({ imageSelected, onImageSaved, onLo
 	};
 
 	return (
-		<View
-			style={{
-				position: 'absolute',
-				paddingTop: Platform.OS === 'ios' ? size.s_40 : size.s_30,
-				left: 0,
-				zIndex: 1,
-				justifyContent: 'space-between',
-				flexDirection: 'row',
-				backgroundColor: 'rgba(0, 0, 0, 0.4)',
-				width: '100%',
-				padding: size.s_10,
-				alignItems: 'center'
-			}}
-		>
-			<View style={{ flexDirection: 'row', alignItems: 'center', gap: size.s_10 }}>
+		<View style={[styles.headerContainer, { paddingTop: Platform.OS === 'ios' ? size.s_40 : size.s_30 }]}>
+			<View style={styles.headerLeftSection}>
 				<TouchableOpacity onPress={onClose}>
 					<MezonIconCDN icon={IconCDN.arrowLargeLeftIcon} color={'white'} />
 				</TouchableOpacity>
 				{!!uploader && (
-					<View style={{ flexDirection: 'row', alignItems: 'center', gap: size.s_6 }}>
+					<View style={styles.uploaderSection}>
 						<View style={styles.wrapperAvatar}>
 							<MezonClanAvatar
 								image={currentDirectId ? uploader?.user?.avatar_url : uploader?.clan_avatar || uploader?.user?.avatar_url}
@@ -168,7 +157,7 @@ export const RenderHeaderModal = React.memo(({ imageSelected, onImageSaved, onLo
 									: uploader?.clan_nick || uploader?.user?.display_name || uploader?.user?.username) || 'Anonymous'}
 							</Text>
 							<Text style={styles.dateMessageBox}>
-								{imageSelected?.create_time ? convertTimeString(imageSelected?.create_time) : ''}
+								{imageSelected?.create_time ? convertTimeString(imageSelected?.create_time, t) : ''}
 							</Text>
 						</View>
 					</View>

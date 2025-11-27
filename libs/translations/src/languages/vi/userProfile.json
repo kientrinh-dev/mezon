@@ -15,10 +15,11 @@
 		}
 	},
 	"kickUserClanModal": {
-		"kickFromServer": "Đuổi {{username}} khỏi clan",
-		"description": "Bạn có chắc chắn muốn đuổi {{username}} khỏi clan? Họ có thể tham gia lại bằng lời mời mới.",
-		"reasonKick": "Lí do khai trừ",
-		"buttonName": "Đuổi"
+		"title": "Khai trừ thành viên",
+		"kickFromServer": "Khai trừ {{username}} ra khỏi clan",
+		"description": "Bạn có chắc chắn muốn khai trừ {{username}} ra khỏi clan? Họ có thể tham gia lại bằng lời mời mới.",
+		"reasonKick": "Lý do khai trừ",
+		"buttonName": "Khai trừ"
 	},
 	"transferOwnershipModal": {
 		"warning": "Điều này sẽ chuyển quyền sở hữu của <highlightClan>{{clanName}}</highlightClan> cho <highlightUser>{{username}}</highlightUser>. Hành động này không thể hoàn tác!",
@@ -97,6 +98,10 @@
 			"idle": "Tạm vắng",
 			"doNotDisturb": "Không làm phiền",
 			"invisible": "Ẩn"
+		},
+		"statusOptionsDescriptions": {
+			"doNotDisturb": "Bạn sẽ không nhận được thông báo trên máy tính",
+			"invisible": "Bạn sẽ hiển thị trạng thái ngoại tuyến"
 		},
 		"statusDuration": {
 			"for30Minutes": "30 phút",
@@ -190,5 +195,31 @@
 	},
 	"channelVoiceSettings": "Cài đặt kênh thoại",
 	"muteVoice": "Tắt tiếng",
-	"kickVoice": "Xóa khỏi kênh thoạị"
+	"kickVoice": "Xóa khỏi kênh thoại",
+	"voiceInfo": {
+		"inVoice": "Trong kênh thoại",
+		"joinVoice": "Tham gia thoại"
+	},
+	"ban": {
+		"title": "Cấm người dùng",
+		"unbanTitle": "Hủy cấm người dùng",
+		"content": "Cấm người dùng \"{{userName}}\"?",
+		"banButton": "Cấm",
+		"unBanButton": "Hủy cấm",
+		"reasonBan": "Lý do cấm",
+		"unBanDescription": "Bạn có muốn hủy cấm người dùng \"{{userName}}\"?",
+		"time": {
+			"title": "Khoảng thời gian",
+			"tenMinutes": "10 phút",
+			"thirtyMinutes": "30 phút",
+			"oneHour": "1 giờ",
+			"sixHours": "6 giờ",
+			"twelveHours": "12 giờ",
+			"oneDay": "1 ngày",
+			"threeDays": "3 ngày"
+		},
+		"banList": "Danh sách cấm",
+		"search": "Tìm người dùng bị cấm",
+		"banListEmpty": "Không tìm thấy người dùng bị cấm nào"
+	}
 }

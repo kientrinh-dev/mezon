@@ -1,5 +1,5 @@
 import { ActionEmitEvent, ENotificationActive, ENotificationChannelId } from '@mezon/mobile-components';
-import { size, useTheme } from '@mezon/mobile-ui';
+import { useTheme } from '@mezon/mobile-ui';
 import {
 	defaultNotificationCategoryActions,
 	selectCurrentClanId,
@@ -7,15 +7,19 @@ import {
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store-mobile';
-import { FOR_15_MINUTES, FOR_1_HOUR, FOR_24_HOURS, FOR_3_HOURS, FOR_8_HOURS, ICategoryChannel } from '@mezon/utils';
-import { RouteProp, useNavigation } from '@react-navigation/native';
+import type { ICategoryChannel } from '@mezon/utils';
+import { EMuteState, FOR_15_MINUTES_SEC, FOR_1_HOUR_SEC, FOR_24_HOURS_SEC, FOR_3_HOURS_SEC, FOR_8_HOURS_SEC } from '@mezon/utils';
+import type { RouteProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Platform, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useSelector } from 'react-redux';
 import MezonIconCDN from '../../componentUI/MezonIconCDN';
-import MezonMenu, { IMezonMenuSectionProps } from '../../componentUI/MezonMenu';
+import type { IMezonMenuSectionProps } from '../../componentUI/MezonMenu';
+import MezonMenu from '../../componentUI/MezonMenu';
 import { IconCDN } from '../../constants/icon_cdn';
 import CategoryNotificationSetting from '../CategoryNotificationSetting';
 import { style } from './styles';
@@ -44,31 +48,31 @@ const MuteCategoryDetailModal = ({ route }: MuteThreadDetailModalProps) => {
 						{
 							title: t('notifySettingThreadModal.muteDuration.forFifteenMinutes'),
 							onPress: () => {
-								handleScheduleMute(FOR_15_MINUTES);
+								handleScheduleMute(FOR_15_MINUTES_SEC);
 							}
 						},
 						{
 							title: t('notifySettingThreadModal.muteDuration.forOneHour'),
 							onPress: () => {
-								handleScheduleMute(FOR_1_HOUR);
+								handleScheduleMute(FOR_1_HOUR_SEC);
 							}
 						},
 						{
 							title: t('notifySettingThreadModal.muteDuration.forThreeHours'),
 							onPress: () => {
-								handleScheduleMute(FOR_3_HOURS);
+								handleScheduleMute(FOR_3_HOURS_SEC);
 							}
 						},
 						{
 							title: t('notifySettingThreadModal.muteDuration.forEightHours'),
 							onPress: () => {
-								handleScheduleMute(FOR_8_HOURS);
+								handleScheduleMute(FOR_8_HOURS_SEC);
 							}
 						},
 						{
 							title: t('notifySettingThreadModal.muteDuration.forTwentyFourHours'),
 							onPress: () => {
-								handleScheduleMute(FOR_24_HOURS);
+								handleScheduleMute(FOR_24_HOURS_SEC);
 							}
 						},
 						{
@@ -93,10 +97,8 @@ const MuteCategoryDetailModal = ({ route }: MuteThreadDetailModalProps) => {
 			headerShown: true,
 			headerTitle: () => (
 				<View>
-					<Text style={{ color: themeValue.textStrong, fontSize: size.label, fontWeight: '700' }}>
-						{t('notifySettingThreadModal.muteThisConversation')}
-					</Text>
-					<Text numberOfLines={1} style={{ color: themeValue.text, fontSize: size.medium, fontWeight: '400', width: '100%' }}>
+					<Text style={styles.headerTitle}>{t('notifySettingThreadModal.muteThisConversation')}</Text>
+					<Text numberOfLines={1} style={styles.headerSubtitle}>
 						{currentCategory.category_name}
 					</Text>
 				</View>
@@ -132,13 +134,7 @@ const MuteCategoryDetailModal = ({ route }: MuteThreadDetailModalProps) => {
 					const formattedDate = format(timeMute, 'dd/MM, HH:mm');
 					setTimeMuted(formattedDate);
 					idTimeOut = setTimeout(() => {
-						const body = {
-							channel_id: currentCategory?.id || '',
-							notification_type: defaultCategoryNotificationSetting?.notification_setting_type || 0,
-							clan_id: currentClanId || '',
-							active: ENotificationActive.ON
-						};
-						dispatch(defaultNotificationCategoryActions.setMuteCategory(body));
+						muteOrUnMuteChannel();
 						clearTimeout(idTimeOut);
 					}, timeDifference);
 				}
@@ -146,12 +142,12 @@ const MuteCategoryDetailModal = ({ route }: MuteThreadDetailModalProps) => {
 		}
 	}, [defaultCategoryNotificationSetting, dispatch, currentCategory?.id, currentClanId]);
 
-	const muteOrUnMuteChannel = (active: ENotificationActive) => {
+	const muteOrUnMuteChannel = () => {
 		const body = {
-			category_id: currentCategory?.id,
-			notification_type: defaultCategoryNotificationSetting?.notification_setting_type,
+			id: currentCategory?.id,
+			mute_time: 0,
 			clan_id: currentClanId || '',
-			active: active
+			active: EMuteState.UN_MUTE
 		};
 		dispatch(defaultNotificationCategoryActions.setMuteCategory(body));
 		navigateToThreadDetail();
@@ -161,29 +157,25 @@ const MuteCategoryDetailModal = ({ route }: MuteThreadDetailModalProps) => {
 		navigation.goBack();
 	};
 
-	const handleScheduleMute = (duration: number) => {
-		if (duration !== Infinity) {
-			const now = new Date();
-			const unmuteTime = new Date(now.getTime() + duration);
-			const unmuteTimeISO = unmuteTime.toISOString();
-
+	const handleScheduleMute = async (duration: number) => {
+		try {
 			const body = {
-				category_id: currentCategory?.id,
-				notification_type: defaultCategoryNotificationSetting?.notification_setting_type,
+				id: currentCategory?.id,
 				clan_id: currentClanId || '',
-				time_mute: unmuteTimeISO
+				time_mute: duration !== Infinity ? duration : null,
+				active: EMuteState.MUTED
 			};
-			dispatch(defaultNotificationCategoryActions.setDefaultNotificationCategory(body));
-		} else {
-			const body = {
-				category_id: currentCategory?.id,
-				notification_type: defaultCategoryNotificationSetting?.notification_setting_type,
-				clan_id: currentClanId || '',
-				active: ENotificationActive.OFF
-			};
-			dispatch(defaultNotificationCategoryActions.setMuteCategory(body));
+			const response = await dispatch(defaultNotificationCategoryActions.setMuteCategory(body));
+			if (response?.meta?.requestStatus === 'rejected') {
+				throw new Error(response?.meta?.requestStatus);
+			}
+		} catch (error) {
+			console.error('Error setting mute category:', error);
+			Toast.show({
+				type: 'error',
+				text1: t('notifySettingThreadModal.muteError')
+			});
 		}
-		navigateToThreadDetail();
 	};
 
 	return (
@@ -193,12 +185,7 @@ const MuteCategoryDetailModal = ({ route }: MuteThreadDetailModalProps) => {
 				<MezonMenu menu={menu} />
 			) : (
 				<View style={styles.optionsBox}>
-					<TouchableOpacity
-						onPress={() => {
-							muteOrUnMuteChannel(ENotificationActive.ON);
-						}}
-						style={styles.wrapperUnmuteBox}
-					>
+					<TouchableOpacity onPress={muteOrUnMuteChannel} style={styles.wrapperUnmuteBox}>
 						<MezonIconCDN icon={IconCDN.bellSlashIcon} width={20} height={20} customStyle={{ marginRight: 20 }} color={themeValue.text} />
 						<Text style={styles.option}>{t('bottomSheet.unMute')}</Text>
 					</TouchableOpacity>

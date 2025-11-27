@@ -1,30 +1,49 @@
-import { useClans, usePermissionChecker } from '@mezon/core';
+import { usePermissionChecker } from '@mezon/core';
 import { useTheme } from '@mezon/mobile-ui';
+import { clansActions, selectCurrentClan } from '@mezon/store';
+import { useAppDispatch } from '@mezon/store-mobile';
 import { EPermission, MAX_FILE_SIZE_1MB } from '@mezon/utils';
 import { memo, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Text, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { useSelector } from 'react-redux';
+import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import MezonImagePicker from '../../../componentUI/MezonImagePicker';
+import { IconCDN } from '../../../constants/icon_cdn';
 import { style } from './style';
 
 const LogoClanSelector = () => {
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
-	const { currentClan, updateClan } = useClans();
+	const currentClan = useSelector(selectCurrentClan);
+	const dispatch = useAppDispatch();
 	const { t } = useTranslation(['clanSetting']);
-	const [hasAdminPermission, hasManageClanPermission, clanOwnerPermission] = usePermissionChecker([
-		EPermission.administrator,
-		EPermission.manageClan,
-		EPermission.clanOwner
-	]);
-	const isHavePermission = useMemo(() => {
-		return hasAdminPermission || hasManageClanPermission || clanOwnerPermission;
-	}, [clanOwnerPermission, hasAdminPermission, hasManageClanPermission]);
+	const [hasAdminPermission, clanOwnerPermission] = usePermissionChecker([EPermission.administrator, EPermission.clanOwner]);
+
+	const isHavePermission = useMemo(() => hasAdminPermission || clanOwnerPermission, [clanOwnerPermission, hasAdminPermission]);
+
+	const updateClanLogo = useCallback(
+		(logo: string) =>
+			dispatch(
+				clansActions.updateClan({
+					clan_id: currentClan?.clan_id ?? '',
+					request: {
+						banner: currentClan?.banner ?? '',
+						clan_name: currentClan?.clan_name ?? '',
+						creator_id: currentClan?.creator_id ?? '',
+						is_onboarding: currentClan?.is_onboarding,
+						logo,
+						welcome_channel_id: currentClan?.welcome_channel_id ?? ''
+					}
+				})
+			),
+		[currentClan, dispatch]
+	);
 
 	const handleLoad = useCallback(
 		async (url?: string) => {
-			if (!hasAdminPermission && !clanOwnerPermission) {
+			if (!isHavePermission) {
 				Toast.show({
 					type: 'error',
 					text1: t('menu.settings.permissionDenied')
@@ -32,21 +51,22 @@ const LogoClanSelector = () => {
 				return;
 			}
 			if (url) {
-				await updateClan({
-					clan_id: currentClan?.clan_id ?? '',
-					request: {
-						banner: currentClan?.banner ?? '',
-						clan_name: currentClan?.clan_name ?? '',
-						creator_id: currentClan?.creator_id ?? '',
-						is_onboarding: currentClan?.is_onboarding,
-						logo: url || (currentClan?.logo ?? ''),
-						welcome_channel_id: currentClan?.welcome_channel_id ?? ''
-					}
-				});
+				await updateClanLogo(url);
 			}
 		},
-		[currentClan?.banner, currentClan?.clan_id, currentClan?.clan_name, currentClan?.creator_id, currentClan?.logo, updateClan]
+		[isHavePermission, t, updateClanLogo]
 	);
+
+	const handleRemoveClanAvatar = useCallback(async () => {
+		if (!isHavePermission) {
+			Toast.show({
+				type: 'error',
+				text1: t('menu.settings.permissionDenied')
+			});
+			return;
+		}
+		await updateClanLogo('');
+	}, [isHavePermission, t, updateClanLogo]);
 
 	return (
 		<View style={styles.logoSection}>
@@ -59,8 +79,12 @@ const LogoClanSelector = () => {
 					disabled={!isHavePermission}
 					imageSizeLimit={MAX_FILE_SIZE_1MB}
 				/>
+				{isHavePermission && currentClan?.logo && (
+					<TouchableOpacity disabled={!isHavePermission} style={styles.removeButton} onPress={handleRemoveClanAvatar}>
+						<MezonIconCDN icon={IconCDN.circleXIcon} color={themeValue.text} />
+					</TouchableOpacity>
+				)}
 			</View>
-
 			<Text style={styles.clanName}>{currentClan?.clan_name}</Text>
 		</View>
 	);

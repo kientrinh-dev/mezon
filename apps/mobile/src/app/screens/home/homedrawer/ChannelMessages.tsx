@@ -1,8 +1,6 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import { ELoadMoreDirection } from '@mezon/chat-scroll';
 import { ActionEmitEvent } from '@mezon/mobile-components';
-import { size, useTheme } from '@mezon/mobile-ui';
+import { useTheme } from '@mezon/mobile-ui';
 import {
 	channelsActions,
 	getStore,
@@ -13,24 +11,22 @@ import {
 	selectIdMessageToJump,
 	selectIsLoadingJumpMessage,
 	selectIsMessageIdExist,
-	selectIsViewingOlderMessagesByChannelId,
 	selectLastMessageByChannelId,
 	selectMessageIsLoading,
 	selectMessagesByChannel,
 	useAppDispatch,
 	useAppSelector
 } from '@mezon/store-mobile';
-import { Direction_Mode } from '@mezon/utils';
+import { Direction_Mode, sleep } from '@mezon/utils';
 import { useNavigation } from '@react-navigation/native';
-import { ChannelStreamMode } from 'mezon-js';
+import type { ChannelStreamMode } from 'mezon-js';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DeviceEventEmitter, Keyboard, TouchableOpacity, View } from 'react-native';
+import { DeviceEventEmitter, Keyboard, View } from 'react-native';
 import { useSelector } from 'react-redux';
-import MezonIconCDN from '../../../componentUI/MezonIconCDN';
 import MessageNewLine from '../../../components/MessageNewLine/MessageNewLine';
 import { TopAlert } from '../../../components/NotificationPermissionAlert';
-import { IconCDN } from '../../../constants/icon_cdn';
 import MessageItem from './MessageItem';
+import ButtonJumpToPresent from './components/ButtonJumpToPresent';
 import ChannelMessageList, { ViewLoadMore } from './components/ChannelMessageList';
 import { ChannelMessageLoading } from './components/ChannelMessageLoading';
 import { MessageUserTyping } from './components/MessageUserTyping';
@@ -39,12 +35,14 @@ import { style } from './styles';
 type ChannelMessagesProps = {
 	channelId: string;
 	lastSeenMessageId?: string;
+	lastSentMessageId?: string;
 	topicId?: string;
 	clanId: string;
 	mode: ChannelStreamMode;
 	isDM?: boolean;
 	isPublic?: boolean;
 	topicChannelId?: string;
+	isBanned?: boolean;
 };
 
 const getEntitiesArray = (state: any) => {
@@ -53,7 +51,7 @@ const getEntitiesArray = (state: any) => {
 };
 
 const ChannelMessages = React.memo(
-	({ channelId, lastSeenMessageId, topicId, clanId, mode, isDM, isPublic, topicChannelId }: ChannelMessagesProps) => {
+	({ channelId, lastSeenMessageId, lastSentMessageId, topicId, clanId, mode, isDM, isPublic, topicChannelId, isBanned }: ChannelMessagesProps) => {
 		const dispatch = useAppDispatch();
 		const { themeValue } = useTheme();
 		const styles = style(themeValue);
@@ -61,33 +59,39 @@ const ChannelMessages = React.memo(
 		const messages = useMemo(() => getEntitiesArray(selectMessagesByChannelMemoized), [selectMessagesByChannelMemoized]);
 		const isLoadMore = useRef({});
 		const [isDisableLoadMore, setIsDisableLoadMore] = useState<boolean | string>(false);
-		const isViewingOldMessage = useAppSelector((state) =>
-			selectIsViewingOlderMessagesByChannelId(state, topicChannelId ? (topicChannelId ?? '') : (channelId ?? ''))
-		);
 		const idMessageToJump = useSelector(selectIdMessageToJump);
 		const isLoadingJumpMessage = useSelector(selectIsLoadingJumpMessage);
 		const flatListRef = useRef(null);
 		const timeOutRef = useRef(null);
+		const readyToLoadMore = useRef(false);
+		const timeOutLoadMoreRef = useRef(null);
 		const [isShowJumpToPresent, setIsShowJumpToPresent] = useState(false);
 		const navigation = useNavigation<any>();
 		const lastMessage = useAppSelector((state) => selectLastMessageByChannelId(state, channelId));
 		const lastMessageId = useMemo(() => lastMessage?.id, [lastMessage]);
 		const userId = useSelector(selectAllAccount)?.user?.id;
-		const hasJumpedToLastSeen = useRef(false);
 		const [haveScrollToBottom, setHaveScrollToBottom] = useState<boolean>(false);
 
 		useEffect(() => {
 			const event = DeviceEventEmitter.addListener(ActionEmitEvent.SCROLL_TO_BOTTOM_CHAT, () => {
-				if (!isViewingOldMessage) {
-					flatListRef?.current?.scrollToOffset?.({ animated: true, offset: 0 });
-				}
+				setIsShowJumpToPresent(false);
+				flatListRef?.current?.scrollToOffset?.({ animated: true, offset: 0 });
 			});
 
 			return () => {
 				if (timeOutRef?.current) clearTimeout(timeOutRef.current);
 				event.remove();
 			};
-		}, [isViewingOldMessage]);
+		}, []);
+
+		useEffect(() => {
+			timeOutLoadMoreRef.current = setTimeout(() => {
+				readyToLoadMore.current = true;
+			}, 1000);
+			return () => {
+				clearTimeout(timeOutLoadMoreRef.current);
+			};
+		}, []);
 
 		useEffect(() => {
 			return () => {
@@ -102,45 +106,7 @@ const ChannelMessages = React.memo(
 					})
 				);
 			};
-		}, [channelId, clanId, dispatch, lastMessageId, lastSeenMessageId]);
-
-		useEffect(() => {
-			if (!lastSeenMessageId || !messages?.length || hasJumpedToLastSeen.current) {
-				return;
-			}
-
-			let timeoutId: NodeJS.Timeout;
-
-			const checkMessageExistence = () => {
-				timeoutId = setTimeout(() => {
-					const store = getStore();
-					const isMessageExist = selectIsMessageIdExist(store.getState() as any, channelId, lastSeenMessageId);
-
-					if (isMessageExist) {
-						const indexToJump = messages?.findIndex?.((message: { id: string }) => message.id === lastSeenMessageId);
-						if (
-							indexToJump !== -1 &&
-							flatListRef?.current &&
-							indexToJump > 0 &&
-							messages?.length - 1 >= indexToJump &&
-							indexToJump >= 3
-						) {
-							flatListRef?.current?.scrollToIndex?.({
-								animated: true,
-								index: indexToJump - 3
-							});
-							hasJumpedToLastSeen.current = true;
-						}
-					}
-				}, 200);
-			};
-
-			checkMessageExistence();
-
-			return () => {
-				if (timeoutId) clearTimeout(timeoutId);
-			};
-		}, [channelId, lastSeenMessageId, messages]);
+		}, [channelId, clanId, dispatch, lastMessageId]);
 
 		useEffect(() => {
 			let timeout;
@@ -219,7 +185,7 @@ const ChannelMessages = React.memo(
 
 		const onLoadMore = useCallback(
 			async (direction: ELoadMoreDirection) => {
-				if (messages?.length < 10 || idMessageToJump?.id) return;
+				if (messages?.length < 10) return;
 				try {
 					if (direction === ELoadMoreDirection.top) {
 						const canLoadMore = await isCanLoadMore(ELoadMoreDirection.top);
@@ -239,6 +205,7 @@ const ChannelMessages = React.memo(
 								topicId: topicId || ''
 							})
 						);
+						await sleep(500);
 						isLoadMore.current[direction] = false;
 						setIsDisableLoadMore(false);
 						return;
@@ -261,7 +228,7 @@ const ChannelMessages = React.memo(
 					console.error('Error in onLoadMore:', error);
 				}
 			},
-			[messages?.length, idMessageToJump?.id, dispatch, clanId, topicChannelId, channelId, topicId, isCanLoadMore]
+			[messages?.length, dispatch, clanId, topicChannelId, channelId, topicId, isCanLoadMore]
 		);
 
 		const renderItem = useCallback(
@@ -285,12 +252,13 @@ const ChannelMessages = React.memo(
 							channelId={channelId}
 							topicChannelId={topicChannelId}
 							isHighlight={idMessageToJump?.id?.toString() === item?.id?.toString()}
+							preventAction={isBanned}
 						/>
 						{shouldShowUnreadBreak && <MessageNewLine key={`unread-${previousMessageId}`} />}
 					</>
 				);
 			},
-			[channelId, haveScrollToBottom, idMessageToJump?.id, lastMessageId, lastSeenMessageId, messages, mode, topicChannelId, userId]
+			[channelId, haveScrollToBottom, idMessageToJump?.id, isBanned, lastMessageId, lastSeenMessageId, messages, mode, topicChannelId, userId]
 		);
 
 		const handleJumpToPresent = useCallback(async () => {
@@ -308,6 +276,7 @@ const ChannelMessages = React.memo(
 			dispatch(messagesActions.setIdMessageToJump(null));
 			timeOutRef.current = setTimeout(() => {
 				isLoadMore.current[ELoadMoreDirection.bottom] = false;
+				setIsShowJumpToPresent(false);
 				flatListRef?.current?.scrollToOffset?.({ animated: true, offset: 0 });
 			}, 300);
 		}, [clanId, channelId, dispatch, topicChannelId]);
@@ -326,7 +295,12 @@ const ChannelMessages = React.memo(
 		const handleScroll = useCallback(
 			async ({ nativeEvent }) => {
 				handleSetShowJumpLast(nativeEvent);
-				if (nativeEvent.contentOffset.y <= 0 && !isLoadMore?.current?.[ELoadMoreDirection.bottom] && !isDisableLoadMore) {
+				if (
+					readyToLoadMore?.current &&
+					nativeEvent.contentOffset.y <= 0 &&
+					!isLoadMore?.current?.[ELoadMoreDirection.bottom] &&
+					!isDisableLoadMore
+				) {
 					setHaveScrollToBottom(true);
 					const canLoadMore = await isCanLoadMore(ELoadMoreDirection.bottom);
 					if (!canLoadMore) {
@@ -351,6 +325,7 @@ const ChannelMessages = React.memo(
 						messages={messages}
 						handleScroll={handleScroll}
 						renderItem={renderItem}
+						lastSeenMessageId={lastSeenMessageId}
 						onLoadMore={onLoadMore}
 						isLoadMoreBottom={isLoadMore?.current?.[ELoadMoreDirection.bottom]}
 					/>
@@ -358,15 +333,14 @@ const ChannelMessages = React.memo(
 					<View />
 				)}
 				{isLoadMore.current?.[ELoadMoreDirection.bottom] && <ViewLoadMore />}
-				<View
-					style={{
-						height: size.s_8
-					}}
-				/>
-				{isShowJumpToPresent && !isLoadMore.current?.[ELoadMoreDirection.bottom] && (
-					<TouchableOpacity style={styles.btnScrollDown} onPress={handleJumpToPresent} activeOpacity={0.8}>
-						<MezonIconCDN icon={IconCDN.arrowLargeDownIcon} color={themeValue.textStrong} height={size.s_18} width={size.s_18} />
-					</TouchableOpacity>
+				<View style={styles.spacerHeight8} />
+				{isShowJumpToPresent && (
+					<ButtonJumpToPresent
+						handleJumpToPresent={handleJumpToPresent}
+						lastSeenMessageId={lastSeenMessageId}
+						lastSentMessageId={lastSentMessageId}
+						hasNewLine={lastSentMessageId !== lastSeenMessageId && !haveScrollToBottom}
+					/>
 				)}
 
 				<MessageUserTyping channelId={channelId} isDM={isDM} isPublic={isPublic} mode={mode} />

@@ -68,6 +68,8 @@ export interface DataChannelAndCate {
 }
 
 export const FAVORITE_CATEGORY_ID = 'favorCate';
+export const FAVORITE_CATEGORY_NAME = 'favoriteChannel';
+export const PUBLIC_CHANNELS_NAME = 'PUBLIC CHANNELS';
 
 export const listChannelRenderSlice = createSlice({
 	name: CHANNEL_LIST_RENDER,
@@ -99,11 +101,12 @@ export const listChannelRenderSlice = createSlice({
 					listChannelRender.push(channel);
 				});
 			});
+
 			const favorCate: ICategoryChannel = {
 				channels: listChannelFavor,
 				id: FAVORITE_CATEGORY_ID,
 				category_id: FAVORITE_CATEGORY_ID,
-				category_name: 'Favorite Channel', // TODO: This should be i18n translated
+				category_name: FAVORITE_CATEGORY_NAME, // This will be translated at component level
 				clan_id: clanId,
 				creator_id: '0',
 				category_order: 1,
@@ -180,6 +183,15 @@ export const listChannelRenderSlice = createSlice({
 						? dataUpdate.channel_private || (state.listChannelRender[clanId][indexUpdate] as IChannel).channel_private
 						: 0
 				};
+				const existing = state.listChannelRender[clanId][indexUpdate] as IChannel;
+				if (state.listChannelRender?.[clanId]?.[indexUpdate]) {
+					const safeAvatar =
+						typeof dataUpdate?.channel_avatar === 'string' && dataUpdate?.channel_avatar?.trim() !== ''
+							? dataUpdate?.channel_avatar
+							: (existing?.channel_avatar ?? '');
+
+					(state.listChannelRender[clanId][indexUpdate] as IChannel).channel_avatar = safeAvatar;
+				}
 				if (state.listChannelRender[clanId][indexUpdate].category_id === FAVORITE_CATEGORY_ID) {
 					const indexNextUpdate = state.listChannelRender[clanId].findIndex(
 						(channel) => channel.id === channelId && channel.category_id !== FAVORITE_CATEGORY_ID
@@ -194,6 +206,13 @@ export const listChannelRenderSlice = createSlice({
 							? dataUpdate.channel_private || (state.listChannelRender[clanId][indexNextUpdate] as IChannel).channel_private
 							: 0
 					};
+					const existingNext = state.listChannelRender[clanId][indexNextUpdate] as IChannel;
+					const avatarNext =
+						typeof dataUpdate?.channel_avatar === 'string' && dataUpdate?.channel_avatar?.trim() !== ''
+							? dataUpdate?.channel_avatar
+							: (existingNext?.channel_avatar ?? '');
+
+					(state.listChannelRender[clanId][indexNextUpdate] as IChannel).channel_avatar = avatarNext;
 				}
 			}
 		},
@@ -629,16 +648,17 @@ function sortChannels(channels: IChannel[], categoryId: string): IChannel[] {
 	for (let i = 0; i < numOfParent; i++) {
 		const channel = channels[i];
 		if (channel.category_id === categoryId) {
-			sortedChannels.push(channel);
+			const newChannel = { ...channel };
+			sortedChannels.push(newChannel);
 			for (; indexThread < numOfChannel; indexThread++) {
 				const thread = channels[indexThread];
 				const parentId = thread.parent_id || '';
 				if (thread.parent_id === channel.id) {
 					sortedChannels.push(thread);
-					if (channel.threadIds) {
-						channel.threadIds = [...channel.threadIds, thread.id];
+					if (newChannel.threadIds) {
+						newChannel.threadIds = [...newChannel.threadIds, thread.id];
 					} else {
-						channel.threadIds = [thread.id];
+						newChannel.threadIds = [thread.id];
 					}
 				} else if (channel.id < parentId) {
 					indexThread--;

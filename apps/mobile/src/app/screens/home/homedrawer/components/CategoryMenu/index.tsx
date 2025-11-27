@@ -1,4 +1,3 @@
-import { useBottomSheetModal } from '@gorhom/bottom-sheet';
 import { useMarkAsRead, usePermissionChecker } from '@mezon/core';
 import { ActionEmitEvent } from '@mezon/mobile-components';
 import { baseColor, useTheme } from '@mezon/mobile-ui';
@@ -10,11 +9,11 @@ import {
 	fetchSystemMessageByClanId,
 	selectClanSystemMessage,
 	selectCurrentChannelId,
-	selectCurrentClan,
+	selectCurrentClanLogo,
+	selectCurrentClanName,
 	useAppDispatch
 } from '@mezon/store-mobile';
 import { EPermission, ICategoryChannel, sleep } from '@mezon/utils';
-import Clipboard from '@react-native-clipboard/clipboard';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -46,12 +45,12 @@ export default function CategoryMenu({ category }: ICategoryMenuProps) {
 	const { t } = useTranslation(['categoryMenu']);
 	const { themeValue } = useTheme();
 	const styles = style(themeValue);
-	const currentClan = useSelector(selectCurrentClan);
+	const currentClanLogo = useSelector(selectCurrentClanLogo);
+	const currentClanName = useSelector(selectCurrentClanName);
 	const currentChanelId = useSelector(selectCurrentChannelId);
 	const [isCanManageChannel, isCanManageClan] = usePermissionChecker([EPermission.manageChannel, EPermission.manageClan], currentChanelId ?? '');
 	const navigation = useNavigation<AppStackScreenProps<StackMenuClanScreen>['navigation']>();
 	const { handleMarkAsReadCategory, statusMarkAsReadCategory } = useMarkAsRead();
-	const { dismiss } = useBottomSheetModal();
 	const dispatch = useAppDispatch();
 	const currentSystemMessage = useSelector(selectClanSystemMessage);
 
@@ -202,35 +201,15 @@ export default function CategoryMenu({ category }: ICategoryMenuProps) {
 		}
 	];
 
-	const devMenu: IMezonMenuItemProps[] = [
-		{
-			title: t('menu.devMode.copyServerID'),
-			icon: <MezonIconCDN icon={IconCDN.idIcon} color={themeValue.textStrong} />,
-			onPress: () => {
-				Clipboard.setString(category?.category_id);
-				Toast.show({
-					type: 'info',
-					text1: t('notify.serverIDCopied')
-				});
-			}
-		}
-	];
-
 	const menu: IMezonMenuSectionProps[] = [
 		{
 			items: watchMenu
 		},
-		// {
-		// 	items: inviteMenu
-		// },
 		{
 			items: notificationMenu
 		},
 		{
 			items: organizationMenu
-		},
-		{
-			items: devMenu
 		}
 	];
 
@@ -238,7 +217,7 @@ export default function CategoryMenu({ category }: ICategoryMenuProps) {
 		<View style={styles.container}>
 			<View style={styles.header}>
 				<View style={styles.avatarWrapper}>
-					<MezonClanAvatar defaultColor={baseColor.blurple} alt={currentClan?.clan_name} image={currentClan?.logo} />
+					<MezonClanAvatar defaultColor={baseColor.blurple} alt={currentClanName} image={currentClanLogo} />
 				</View>
 				<Text style={styles.serverName}>{category?.category_name}</Text>
 			</View>

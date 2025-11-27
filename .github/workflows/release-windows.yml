@@ -9,7 +9,7 @@ jobs:
   release:
     runs-on: mezon-build-windows
     name: Release Mezon App for Windows
-    environment: production
+    environment: prod
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -26,6 +26,7 @@ jobs:
 
       - name: Change prod environment
         run: |
+          Get-ChildItem -Path apps/chat/src/assets/*.png | Where-Object {$_.Name -ne "button_openmezon.png"} | Remove-Item
           del apps/desktop/src/assets/linux-icon.icns
           del apps/desktop/src/assets/mac-icon.png
           del apps/chat/.env
@@ -61,10 +62,6 @@ jobs:
           envkey_NX_WEBRTC_ICESERVERS_CREDENTIAL: ${{ secrets.NX_WEBRTC_ICESERVERS_CREDENTIAL_PROD }}
           envkey_NX_CHAT_APP_STREAM_WS_URL: ${{ secrets.NX_CHAT_APP_STREAM_WS_URL }}
           envkey_NX_CHAT_APP_MEET_WS_URL: ${{ secrets.NX_CHAT_APP_MEET_WS_URL }}
-          envkey_NX_CHAT_APP_MEZON_TREASURY_URL: ${{ secrets.NX_CHAT_APP_MEZON_TREASURY_URL }}
-          envkey_NX_CHAT_APP_API_MEZONTREASURY_KEY: ${{ secrets.NX_CHAT_APP_API_MEZONTREASURY_KEY }}
-          envkey_NX_CHAT_APP_CONTRACT_ADDRESS: ${{ secrets.NX_CHAT_APP_CONTRACT_ADDRESS }}
-          envkey_NX_CHAT_APP_MEZON_TREASURY_URL_NETWORK: ${{ secrets.NX_CHAT_APP_MEZON_TREASURY_URL_NETWORK }}
           envkey_NX_CHAT_APP_OAUTH2_AUTHORIZE_URL: ${{ secrets.NX_CHAT_APP_OAUTH2_AUTHORIZE_URL }}
           envkey_NX_CHAT_APP_OAUTH2_CLIENT_ID: ${{ secrets.NX_CHAT_APP_OAUTH2_CLIENT_ID }}
           envkey_NX_CHAT_APP_OAUTH2_REDIRECT_URI: ${{ secrets.NX_CHAT_APP_OAUTH2_REDIRECT_URI }}
@@ -88,16 +85,16 @@ jobs:
           envkey_NX_CHAT_APP_API_GW_HOST: ${{ secrets.NX_CHAT_APP_API_GW_HOST }}
           envkey_NX_CHAT_APP_API_GW_PORT: ${{ secrets.NX_CHAT_APP_API_GW_PORT }}
           envkey_NX_DOMAIN_URL: https://mezon.ai
-          envkey_NX_CHAT_APP_MMN_API_URL: https://dong.mezon.ai/mmn-api/
-          envkey_NX_CHAT_APP_INDEXER_API_URL: https://dong.mezon.ai/indexer-api/
-          envkey_NX_CHAT_APP_ZK_API_URL: https://dong.mezon.ai/zk-api/
+          envkey_NX_CHAT_APP_MMN_API_URL: https://dong.mezon.ai/mmn-api
+          envkey_NX_CHAT_APP_INDEXER_API_URL: https://dong.mezon.ai/indexer-api
+          envkey_NX_CHAT_APP_ZK_API_URL: https://dong.mezon.ai/zk-api
 
       - name: Release Desktop
         run: |
           yarn release:desktop
 
-      - name: Push to MinIO
-        run: |
-          powershell "& 'c:\Program Files\Git\bin\bash.exe' -c 'mc cp ./dist/executables/latest.yml mezon/mezon/release/latest.yml'"
-          powershell "& 'c:\Program Files\Git\bin\bash.exe' -c 'mc cp ./dist/executables/mezon-*-win-x64.exe mezon/mezon/release/'"
-          powershell "& 'c:\Program Files\Git\bin\bash.exe' -c 'mc cp ./dist/executables/mezon-*-win-x64-portable.exe mezon/mezon/release/'"
+      # - name: Push to MinIO
+      #   run: |
+      #     powershell "& 'c:\Program Files\Git\bin\bash.exe' -c 'mc cp ./dist/executables/latest.yml mezon/mezon/release/latest.yml'"
+      #     powershell "& 'c:\Program Files\Git\bin\bash.exe' -c 'mc cp ./dist/executables/mezon-*-win-x64.exe mezon/mezon/release/'"
+      #     powershell "& 'c:\Program Files\Git\bin\bash.exe' -c 'mc cp ./dist/executables/mezon-*-win-x64-portable.exe mezon/mezon/release/'"

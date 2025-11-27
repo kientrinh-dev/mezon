@@ -30,26 +30,26 @@ function StreamingRoom({ onPressMinimizeRoom, isAnimationComplete }: { onPressMi
 	const isTabletLandscape = useTabletLandscape();
 	const [isVisibleControl, setIsVisibleControl] = useState(true);
 	const [layout, setLayout] = useState(() => {
-		const window = Dimensions.get('window');
+		const { width, height } = Dimensions.get('screen');
 		return {
-			width: window.width,
-			height: window.height,
-			isLandscape: window.width > window.height
+			width,
+			height
 		};
 	});
 
 	useEffect(() => {
-		const subscription = Dimensions.addEventListener('change', ({ window }) => {
+		const subscription = Dimensions.addEventListener('change', () => {
+			const { width, height } = Dimensions.get('screen');
 			setLayout({
-				width: window.width,
-				height: window.height,
-				isLandscape: window.width > window.height
+				width,
+				height
 			});
 		});
-		return () => subscription?.remove();
-	}, []);
 
-	const { width, height, isLandscape } = layout;
+		return () => {
+			subscription && subscription.remove();
+		};
+	}, []);
 
 	const userId = useMemo(() => {
 		return load(STORAGE_MY_USER_ID);
@@ -88,11 +88,12 @@ function StreamingRoom({ onPressMinimizeRoom, isAnimationComplete }: { onPressMi
 
 	return (
 		<View
-			style={{
-				width: isAnimationComplete ? width : size.s_100 * 2,
-				height: isAnimationComplete ? height : size.s_100,
-				backgroundColor: themeValue?.primary
-			}}
+			style={[
+				isAnimationComplete
+					? { ...styles.streamingRoomWrapperExpanded, width: layout.width, height: layout.height }
+					: styles.streamingRoomWrapper,
+				{ backgroundColor: themeValue?.primary }
+			]}
 		>
 			{isAnimationComplete && <StatusBarHeight />}
 			{isAnimationComplete ? (
@@ -111,16 +112,10 @@ function StreamingRoom({ onPressMinimizeRoom, isAnimationComplete }: { onPressMi
 							</View>
 						</View>
 
-						<View
-							style={{
-								...styles.userStreamingRoomContainer,
-								width: '100%',
-								height: '60%'
-							}}
-						>
-							<StreamingScreenComponent />
+						<View style={[styles.userStreamingRoomContainer, styles.userStreamingFullSize]}>
+							<StreamingScreenComponent isAnimationComplete={true} />
 						</View>
-						<View style={[isLandscape && { marginTop: -size.s_28 }]}>
+						<View style={[layout.width > layout.height && { marginTop: -size.s_28 }]}>
 							<UserStreamingRoom streamChannelMember={streamChannelMember} />
 						</View>
 
@@ -134,7 +129,7 @@ function StreamingRoom({ onPressMinimizeRoom, isAnimationComplete }: { onPressMi
 
 										<TouchableOpacity
 											onPress={handleEndCall}
-											style={{ ...styles.menuIcon, backgroundColor: baseColor.redStrong }}
+											style={[styles.menuIconEndCall, { backgroundColor: baseColor.redStrong }]}
 										>
 											<MezonIconCDN icon={IconCDN.phoneCallIcon} />
 										</TouchableOpacity>
@@ -146,14 +141,8 @@ function StreamingRoom({ onPressMinimizeRoom, isAnimationComplete }: { onPressMi
 				</TouchableWithoutFeedback>
 			) : (
 				<View style={styles.container}>
-					<View
-						style={{
-							...styles.userStreamingRoomContainer,
-							width: '100%',
-							height: '100%'
-						}}
-					>
-						<StreamingScreenComponent />
+					<View style={[styles.userStreamingRoomContainer, styles.userStreamingMiniSize]}>
+						<StreamingScreenComponent isAnimationComplete={false} />
 					</View>
 				</View>
 			)}

@@ -1,7 +1,8 @@
 /* eslint-disable no-empty */
 import { size, useTheme } from '@mezon/mobile-ui';
-import { getAuthState } from '@mezon/store-mobile';
+import { authActions, getAuthState, useAppDispatch } from '@mezon/store-mobile';
 import { sleep } from '@mezon/utils';
+import { safeJSONParse } from 'mezon-js';
 import { useEffect, useMemo, useState } from 'react';
 import { Dimensions, Modal, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { Wave } from 'react-native-animated-spinkit';
@@ -14,6 +15,7 @@ import { style } from './styles';
 
 const ChannelAppScreen = ({ navigation, route }: { navigation: any; route: any }) => {
 	const { themeValue, themeBasic } = useTheme();
+	const dispatch = useAppDispatch();
 	const paramsRoute = route?.params;
 	const styles = style(themeValue);
 	const authState = useSelector(getAuthState);
@@ -137,7 +139,15 @@ const ChannelAppScreen = ({ navigation, route }: { navigation: any; route: any }
   `;
 
 	const onMessage = (event: any) => {
-		console.error('Received message from WebView:', event?.nativeEvent?.data);
+		try {
+			const messageData = event?.nativeEvent?.data;
+			const parsedMessage = safeJSONParse(messageData);
+			if (parsedMessage?.type === 'mezon:session-refreshed' && parsedMessage?.data?.session) {
+				dispatch(authActions.updateSession(parsedMessage.data.session));
+			}
+		} catch (error) {
+			console.error('Non-JSON message received:', event?.nativeEvent?.data);
+		}
 	};
 
 	const onClose = () => {
@@ -148,18 +158,7 @@ const ChannelAppScreen = ({ navigation, route }: { navigation: any; route: any }
 		<Modal style={styles.container} visible={true} supportedOrientations={['portrait', 'landscape']}>
 			{orientation === 'Portrait' && Platform.OS === 'ios' && <StatusBarHeight />}
 			{loading && (
-				<View
-					style={{
-						alignItems: 'center',
-						justifyContent: 'center',
-						position: 'absolute',
-						height: '100%',
-						zIndex: 1,
-						width: '100%',
-						backgroundColor: themeValue.primary,
-						flex: 1
-					}}
-				>
+				<View style={styles.loadingContainer}>
 					<Wave color={themeValue.text} />
 					<Text style={styles.textLoading}>Loading data, please wait a moment!</Text>
 				</View>

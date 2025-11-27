@@ -22,14 +22,15 @@
 		"resend": "Gửi lại",
 		"buzz": "Buzz!!",
 		"markMessage": "Đánh dấu tin nhắn",
+		"quickMenu": "Menu nhanh",
 		"allAlbums": "Tất cả album",
 		"linkOptions": "Tùy chọn liên kết",
 		"openLink": "Mở liên kết",
 		"copyLink": "Sao chép liên kết",
 		"shareLink": "Chia sẻ liên kết",
 		"copyLinkSuccess": "Đã sao chép liên kết vào clipboard",
-		"copyImage": "Sao chép Ảnh",
-		"shareImage": "Chia sẻ Ảnh"
+		"copyImage": "Sao chép ảnh",
+		"shareImage": "Chia sẻ ảnh"
 	},
 	"chatBox": {
 		"replyingTo": "Đang trả lời",
@@ -56,7 +57,8 @@
 		"shareImageSuccess": "Chia sẻ ảnh thành công"
 	},
 	"directMessage": {
-		"you": "Bạn"
+		"you": "Bạn",
+		"groupCreated": "Nhóm đã được tạo"
 	},
 	"edited": "(đã chỉnh sửa)",
 	"newMessage": {
@@ -70,7 +72,7 @@
 	"reactions": {
 		"noActionTitle": "Chưa có biểu cảm",
 		"noActionDescription": "Một thế giới vắng bóng cảm xúc.",
-		"removeActions": "Xóa biểu cảm"
+		"removeActions": "Xóa"
 	},
 	"messageDeleteReply": "Tin nhắn gốc đã bị xóa",
 	"forwardMessagesSuccessfully": "Chuyển tiếp tin nhắn thành công!",
@@ -91,6 +93,7 @@
 	"tapToSeeAttachment": "Nhấn để xem tệp đính kèm",
 	"findThePerfectReaction": "Tìm biểu cảm hoàn hảo",
 	"findThePerfectGif": "Tìm ảnh động hoàn hảo",
+	"findThePerfectSound": "Tìm nhãn âm thanh hoàn hảo",
 	"findThePerfectSticker": "Tìm nhãn dán hoàn hảo",
 	"searchResult": "Kết quả tìm kiếm",
 	"pinMessage": "Ghim tin nhắn",
@@ -110,6 +113,7 @@
 	},
 	"newMessages": "TIN NHẮN MỚI",
 	"noSendMessagePermission": "Bạn không có quyền gửi tin nhắn",
+	"isBanned": "Bạn đã bị cấm trò chuyện",
 	"blockedUserMessage": "Bạn không thể trả lời cuộc trò chuyện này",
 	"messageInputPlaceHolder": "Nhập tin nhắn...",
 	"shareLocationModal": {
@@ -183,8 +187,21 @@
 		"enableWallet": "Kích hoạt Ví",
 		"cancel": "Hủy"
 	},
-	"creator": "Người tạo",
-	"viewTopic": "Xem thảo luận ngắn",
 	"reply": "{{number}} tin nhắn",
-	"replies": "Tin nhắn"
+	"numberReplies": "{{number}} tin nhắn",
+	"replies": "Tin nhắn",
+	"forwarded": "Đã chuyển tiếp",
+	"onlyVisibleToRecipient": "Chỉ hiển thị cho người nhận",
+	"attachments": {
+		"image": "Hình ảnh",
+		"video": "Video",
+		"audio": "Tin nhắn thoại",
+		"file": "Tệp",
+		"location": "Vị trí hiện tại",
+		"sticker": "Nhãn dán",
+		"gif": "GIF",
+		"link": "Liên kết",
+		"attachment": "Tệp đính kèm"
+	},
+	"bannedChannel": "Bạn đã bị cấm trong kênh {{channelName}}."
 }

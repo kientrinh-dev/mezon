@@ -1,6 +1,6 @@
 import type { ThreadError } from '../types';
 
-export const TIME_COMBINE = 120;
+export const TIME_COMBINE_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
 export const TIME_OFFSET = 3;
 export const LIMIT_MESSAGE = 50;
 export const LIMIT_CLAN_ITEM = 50;
@@ -13,24 +13,38 @@ export const DEBOUNCE_TYPING_TIME = 700;
 export const TIME_OF_SHOWING_FIRST_POPUP = 1000 * 60 * 5;
 export const KEY_KEYBOARD = { BACKSPACE: 8, TAB: 9, ENTER: 13, ESC: 27, UP: 38, DOWN: 40, RIGHT: 39, LEFT: 27 };
 export const GROUP_CHAT_MAXIMUM_MEMBERS = 10;
-export const EVERYONE_ROLE_ID = '1825450696619593728';
 export const EVERYONE_ROLE_TITLE = 'Everyone';
 export const TITLE_MENTION_HERE = '@here';
 export const RECENT_EMOJI_CATEGORY = 'Recent';
 export const DONE_ONBOARDING_STATUS = 3;
-export const FOR_15_MINUTES = 15 * 60 * 1000;
-export const FOR_10_MINUTES = 10 * 60 * 1000;
-export const FOR_1_HOUR = 60 * 60 * 1000;
-export const FOR_3_HOURS = 3 * 60 * 60 * 1000;
-export const FOR_8_HOURS = 8 * 60 * 60 * 1000;
-export const FOR_24_HOURS = 24 * 60 * 60 * 1000;
+export const FOR_15_MINUTES_SEC = 15 * 60;
+export const FOR_10_MINUTES_SEC = 10 * 60;
+export const FORWARD_MESSAGE_TIME = 10 * 60 * 1000;
+export const FOR_1_HOUR_SEC = 60 * 60;
+export const FOR_3_HOURS_SEC = 3 * 60 * 60;
+export const FOR_8_HOURS_SEC = 8 * 60 * 60;
+export const FOR_24_HOURS_SEC = 24 * 60 * 60;
+export const ONE_MILISECONDS = 1000;
 export const MAX_LENGTH_MESSAGE_BUZZ = 160;
-export const ONE_MINUTE = 60000;
+export const ONE_MINUTE_MS = 60000;
 export const GUEST_NAME = 'guest';
 export const FOR_SALE_CATE = 'forsale';
 
-export const MUTE = 0;
-export const ACTIVE = 1;
+export const PREDEFINED_EMOJI_CATEGORIES = [
+	'forsale',
+	'Recent',
+	'Frequently',
+	'People',
+	'Nature',
+	'Food',
+	'Activities',
+	'Travel',
+	'Objects',
+	'Symbols',
+	'Flags',
+	'Custom'
+];
+
 export const DEFAULT_ID = '0';
 export const LIMIT = 50;
 
@@ -85,7 +99,7 @@ export const EMOJI_GIVE_COFFEE = {
 };
 export const SYSTEM_NAME = 'System';
 export const SYSTEM_SENDER_ID = '0';
-export const HEIGHT_PANEL_PROFILE = 520;
+export const HEIGHT_PANEL_PROFILE = 600;
 export const WIDTH_PANEL_PROFILE = 300;
 export const HEIGHT_PANEL_PROFILE_DM = 314;
 export const ACTIVITY_PANEL_HEIGHT = 73;
@@ -168,7 +182,7 @@ export enum EMuteState {
 }
 
 export const STICKER_WAVE = {
-	URL: 'https://cdn.mezon.ai/stickers/hello.gif',
+	URL: 'https://cdn.mezon.ai/stickers/hellomezon.gif',
 	NAME: 'hello'
 };
 

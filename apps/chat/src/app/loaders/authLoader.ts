@@ -1,10 +1,11 @@
-import type { AppDispatch, ISession } from '@mezon/store';
+import type { AppDispatch } from '@mezon/store';
 import {
 	accountActions,
 	authActions,
 	clansActions,
 	directActions,
 	emojiRecentActions,
+	emojiSuggestionActions,
 	friendsActions,
 	getStore,
 	listChannelsByUserActions,
@@ -12,11 +13,10 @@ import {
 	selectCurrentClanId,
 	selectSession,
 	selectVoiceOpenPopOut,
-	selectZkProofs,
 	usersClanActions,
 	walletActions
 } from '@mezon/store';
-import type { IUserAccount, IWithError } from '@mezon/utils';
+import type { IWithError } from '@mezon/utils';
 import type { CustomLoaderFunction } from './appLoader';
 import { waitForSocketConnection } from './socketUtils';
 
@@ -110,7 +110,6 @@ const refreshSession = async ({ dispatch, initialPath }: { dispatch: AppDispatch
 	let isRedirectLogin = false;
 	const store = getStore();
 	const sessionUser = selectSession(store?.getState());
-	const zkProofs = selectZkProofs(store?.getState());
 
 	if (!sessionUser?.token) {
 		return { isLogin: !isRedirectLogin } as IAuthLoaderData;
@@ -135,20 +134,6 @@ const refreshSession = async ({ dispatch, initialPath }: { dispatch: AppDispatch
 			} else {
 				const profileResponse = await dispatch(accountActions.getUserProfile());
 				if (!(profileResponse as unknown as IWithError).error) {
-					const userId = (profileResponse.payload as IUserAccount)?.user?.id;
-					if (zkProofs && userId) {
-						await dispatch(
-							walletActions.fetchZkProofs({
-								userId,
-								jwt: (response.payload as ISession)?.token
-							})
-						);
-						await dispatch(
-							walletActions.fetchWalletDetail({
-								userId
-							})
-						);
-					}
 					return { isLogin: true } as IAuthLoaderData;
 				}
 				throw new Error('Session expired');
@@ -198,6 +183,7 @@ export const authLoader: CustomLoaderFunction = async ({ dispatch, initialPath }
 	dispatch(friendsActions.fetchListFriends({}));
 	dispatch(directActions.fetchDirectMessage({}));
 	dispatch(emojiRecentActions.fetchEmojiRecent({}));
+	dispatch(emojiSuggestionActions.fetchEmoji({ clanId: '0' }));
 	// check network not connect
 	if (!navigator.onLine) {
 		const splashScreen = document.getElementById('splash-screen');

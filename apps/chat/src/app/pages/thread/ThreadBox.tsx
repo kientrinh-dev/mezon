@@ -5,8 +5,7 @@ import {
 	MentionReactInput,
 	PrivateThread,
 	ThreadNameTextField,
-	UserMentionList,
-	processMention
+	UserMentionList
 } from '@mezon/components';
 import { useChannelMembers, useDragAndDrop, useMessageValue, useReference, useThreadMessage, useThreads } from '@mezon/core';
 import {
@@ -16,11 +15,11 @@ import {
 	messagesActions,
 	referencesActions,
 	selectAllChannelMembers,
-	selectAllRolesClan,
 	selectCloseMenu,
 	selectComposeInputByChannelId,
-	selectCurrentChannel,
+	selectCurrentChannelCategoryId,
 	selectCurrentChannelId,
+	selectCurrentChannelParentId,
 	selectCurrentClanId,
 	selectMemberClanByUserId,
 	selectOpenThreadMessageState,
@@ -29,36 +28,16 @@ import {
 	selectThreadCurrentChannel,
 	threadsActions,
 	useAppDispatch,
-	useAppSelector
+	useAppSelector,
+	type ChannelsEntity
 } from '@mezon/store';
 import { Icons } from '@mezon/ui';
-import type {
-	ChannelMembersEntity,
-	HistoryItem,
-	IEmojiOnMessage,
-	IHashtagOnMessage,
-	IMarkdownOnMessage,
-	IMessageSendPayload,
-	RequestInput,
-	ThreadValue
-} from '@mezon/utils';
-import {
-	CREATING_THREAD,
-	MAX_FILE_ATTACHMENTS,
-	UploadLimitReason,
-	ValidateSpecialCharacters,
-	adjustPos,
-	filterEmptyArrays,
-	generateE2eId,
-	parseHtmlAsFormattedText,
-	processFile,
-	processMarkdownEntities
-} from '@mezon/utils';
+import type { IMessageSendPayload, ThreadValue } from '@mezon/utils';
+import { CREATING_THREAD, MAX_FILE_ATTACHMENTS, UploadLimitReason, ValidateSpecialCharacters, generateE2eId, processFile } from '@mezon/utils';
 import isElectron from 'is-electron';
 import { ChannelStreamMode, ChannelType } from 'mezon-js';
 import type { ApiChannelDescription, ApiMessageAttachment, ApiMessageMention, ApiMessageRef } from 'mezon-js/api.gen';
-import type { KeyboardEvent } from 'react';
-import React, { Fragment, useCallback, useMemo, useState } from 'react';
+import React, { Fragment, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -70,7 +49,8 @@ const ThreadBox = () => {
 	const { t } = useTranslation('channelTopbar');
 	const dispatch = useAppDispatch();
 	const currentChannelId = useSelector(selectCurrentChannelId);
-	const currentChannel = useSelector(selectCurrentChannel);
+	const currentChannelParentId = useSelector(selectCurrentChannelParentId);
+	const currentChannelCategoryId = useSelector(selectCurrentChannelCategoryId);
 	const currentClanId = useSelector(selectCurrentClanId);
 	const sessionUser = useSelector(selectSession);
 	const currentClanUser = useAppSelector((state) => selectMemberClanByUserId(state, sessionUser?.user_id as string));
@@ -79,21 +59,18 @@ const ThreadBox = () => {
 	const { removeAttachmentByIndex, checkAttachment, attachmentFilteredByChannelId } = useReference(currentInputChannelId);
 	const { setOverUploadingState } = useDragAndDrop();
 	const { messageThreadError, isPrivate, nameValueThread, valueThread, setNameValueThread } = useThreads();
-	const [undoHistory, setUndoHistory] = useState<HistoryItem[]>([]);
-	const [redoHistory, setRedoHistory] = useState<HistoryItem[]>([]);
 	const openThreadMessageState = useSelector(selectOpenThreadMessageState);
 	const { setRequestInput } = useMessageValue();
 	const request = useAppSelector((state) => selectComposeInputByChannelId(state, `${currentChannelId}true`));
-	const rolesClan = useSelector(selectAllRolesClan);
-	const { membersOfChild } = useChannelMembers({ channelId: currentChannelId, mode: ChannelStreamMode.STREAM_MODE_CHANNEL ?? 0 });
+	const { addMemberToThread } = useChannelMembers({
+		channelId: currentChannelId,
+		mode: ChannelStreamMode.STREAM_MODE_CHANNEL ?? 0
+	});
 	const membersOfParent = useAppSelector((state) =>
 		threadCurrentChannel?.parent_id ? selectAllChannelMembers(state, threadCurrentChannel?.parent_id as string) : null
 	);
 	const closeMenu = useSelector(selectCloseMenu);
 	const statusMenu = useSelector(selectStatusMenu);
-	const { mentionList, hashtagList, emojiList } = useMemo(() => {
-		return processMention(request?.mentionRaw, rolesClan, membersOfChild as ChannelMembersEntity[], membersOfParent as ChannelMembersEntity[]);
-	}, [request?.mentionRaw, rolesClan, membersOfChild, membersOfParent]);
 	const attachmentData = useMemo(() => {
 		if (attachmentFilteredByChannelId === null) {
 			return [];
@@ -114,7 +91,7 @@ const ThreadBox = () => {
 
 	const createThread = useCallback(
 		async (value: ThreadValue, messageContent?: IMessageSendPayload) => {
-			const idParent = currentChannel?.parent_id !== '0' ? currentChannel?.parent_id : (currentChannelId as string);
+			const idParent = currentChannelParentId !== '0' ? currentChannelParentId : (currentChannelId as string);
 
 			if (!value.nameValueThread || !value.nameValueThread.trim()) {
 				return;
@@ -146,7 +123,7 @@ const ThreadBox = () => {
 				channel_label: value.nameValueThread,
 				channel_private: value.isPrivate,
 				parent_id: idParent,
-				category_id: currentChannel?.category_id,
+				category_id: currentChannelCategoryId,
 				type: ChannelType.CHANNEL_TYPE_THREAD,
 				lastSeenTimestamp: timestamp,
 				lastSentTimestamp: timestamp
@@ -155,7 +132,7 @@ const ThreadBox = () => {
 			const thread = await dispatch(createNewChannel(body));
 			return thread.payload;
 		},
-		[checkAttachment, currentChannel?.category_id, currentChannel?.parent_id, currentChannelId, currentClanId, dispatch, t]
+		[checkAttachment, currentChannelCategoryId, currentChannelParentId, currentChannelId, currentClanId, dispatch, t]
 	);
 
 	const handleSend = useCallback(
@@ -164,7 +141,13 @@ const ThreadBox = () => {
 			mentions?: Array<ApiMessageMention>,
 			attachments?: Array<ApiMessageAttachment>,
 			references?: Array<ApiMessageRef>,
-			value?: ThreadValue
+			value?: ThreadValue,
+			anonymousMessage?: boolean,
+			mentionEveryone?: boolean,
+			displayName?: string,
+			clanNick?: string,
+			ephemeralReceiverId?: string,
+			usersNotExistingInThread?: string[]
 		) => {
 			if (sessionUser) {
 				if (value?.nameValueThread && !threadCurrentChannel) {
@@ -178,6 +161,11 @@ const ThreadBox = () => {
 								isPublic: false
 							})
 						);
+
+						if (usersNotExistingInThread && usersNotExistingInThread.length > 0) {
+							await addMemberToThread(thread as ChannelsEntity, usersNotExistingInThread);
+						}
+
 						await sendMessageThread(content, mentions, attachments, references, thread);
 						await dispatch(
 							messagesActions.fetchMessages({
@@ -196,6 +184,9 @@ const ThreadBox = () => {
 						setNameValueThread('');
 					}
 				} else {
+					if (usersNotExistingInThread && usersNotExistingInThread.length > 0) {
+						await addMemberToThread(threadCurrentChannel as ChannelsEntity, usersNotExistingInThread);
+					}
 					await sendMessageThread(content, mentions, attachments, references, threadCurrentChannel);
 				}
 			} else {
@@ -212,7 +203,8 @@ const ThreadBox = () => {
 			setRequestInput,
 			currentInputChannelId,
 			request,
-			setNameValueThread
+			setNameValueThread,
+			addMemberToThread
 		]
 	);
 	const handleSendWithLimitCheck = useCallback(
@@ -221,17 +213,35 @@ const ThreadBox = () => {
 			mentions?: Array<ApiMessageMention>,
 			attachments?: Array<ApiMessageAttachment>,
 			references?: Array<ApiMessageRef>,
-			value?: ThreadValue
+			value?: ThreadValue,
+			anonymousMessage?: boolean,
+			mentionEveryone?: boolean,
+			displayName?: string,
+			clanNick?: string,
+			ephemeralReceiverId?: string,
+			usersNotExistingInThread?: string[]
 		): Promise<boolean> => {
 			if (!threadCurrentChannel && valueThread) {
 				if (valueThread.content?.t && valueThread.content.t.length > CONSTANT.LIMIT_CHARACTER_REACTION_INPUT_LENGTH) {
 					toast.error(t('createThread.toast.messageTooLong'));
 					return false;
 				}
-				await handleSend(valueThread.content, valueThread.mentions || [], attachmentData, valueThread?.references, {
-					nameValueThread: nameValueThread ?? valueThread?.content.t,
-					isPrivate
-				});
+				await handleSend(
+					valueThread.content,
+					valueThread.mentions || [],
+					attachmentData,
+					valueThread?.references,
+					{
+						nameValueThread: nameValueThread ?? valueThread?.content.t,
+						isPrivate
+					},
+					anonymousMessage,
+					mentionEveryone,
+					displayName,
+					clanNick,
+					ephemeralReceiverId,
+					usersNotExistingInThread
+				);
 				return true;
 			}
 
@@ -239,7 +249,19 @@ const ThreadBox = () => {
 				toast.error(t('createThread.toast.messageTooLong'));
 				return false;
 			}
-			await handleSend(content, mentions, attachments, references, value);
+			await handleSend(
+				content,
+				mentions,
+				attachments,
+				references,
+				value,
+				anonymousMessage,
+				mentionEveryone,
+				displayName,
+				clanNick,
+				ephemeralReceiverId,
+				usersNotExistingInThread
+			);
 			return true;
 		},
 		[handleSend, t, threadCurrentChannel, valueThread, attachmentData, nameValueThread, isPrivate]
@@ -290,108 +312,6 @@ const ThreadBox = () => {
 		[currentChannelId, dispatch]
 	);
 
-	const onKeyDown = async (event: KeyboardEvent<HTMLTextAreaElement> | KeyboardEvent<HTMLInputElement>): Promise<void> => {
-		const { key, ctrlKey, shiftKey, metaKey } = event;
-		const isComposing = event.nativeEvent.isComposing;
-
-		if ((ctrlKey || metaKey) && (key === 'z' || key === 'Z')) {
-			event.preventDefault();
-			if (undoHistory.length > 0) {
-				const { valueTextInput, content, mentionRaw } = undoHistory[undoHistory.length - 1];
-
-				setRedoHistory((prevRedoHistory) => [
-					{ valueTextInput: request.valueTextInput, content: request.content, mentionRaw: request.mentionRaw },
-					...prevRedoHistory
-				]);
-
-				setUndoHistory((prevUndoHistory) => prevUndoHistory.slice(0, prevUndoHistory.length - 1));
-
-				setRequestInput(
-					{
-						...request,
-						valueTextInput,
-						content,
-						mentionRaw
-					},
-					true
-				);
-			}
-		} else if ((ctrlKey || metaKey) && (key === 'y' || key === 'Y')) {
-			event.preventDefault();
-			if (redoHistory.length > 0) {
-				const { valueTextInput, content, mentionRaw } = redoHistory[0];
-
-				setUndoHistory((prevUndoHistory) => [
-					...prevUndoHistory,
-					{ valueTextInput: request.valueTextInput, content: request.content, mentionRaw: request?.mentionRaw }
-				]);
-
-				setRedoHistory((prevRedoHistory) => prevRedoHistory.slice(1));
-
-				setRequestInput(
-					{
-						...request,
-						valueTextInput,
-						content,
-						mentionRaw
-					},
-					true
-				);
-			}
-		}
-
-		switch (key) {
-			case 'Enter': {
-				if (shiftKey || isComposing) {
-					return;
-				} else {
-					if (!threadCurrentChannel && valueThread) {
-						event.preventDefault();
-						await handleSend(valueThread.content, valueThread.mentions || [], attachmentData, valueThread?.references, {
-							nameValueThread: nameValueThread ?? valueThread?.content.t,
-							isPrivate
-						});
-						return;
-					}
-
-					const hasToken = request?.mentionRaw && request?.mentionRaw?.length > 0;
-
-					const emptyRequest: RequestInput = {
-						content: '',
-						valueTextInput: '',
-						mentionRaw: []
-					};
-					const checkedRequest = request ? request : emptyRequest;
-					if (checkedRequest.content.length > CONSTANT.LIMIT_CHARACTER_REACTION_INPUT_LENGTH) {
-						toast.error(t('createThread.toast.messageLimitExceeded', { limit: CONSTANT.LIMIT_CHARACTER_REACTION_INPUT_LENGTH }));
-						event.preventDefault();
-						return;
-					}
-					const { text, entities } = parseHtmlAsFormattedText(hasToken ? checkedRequest.content : checkedRequest.content.trim());
-
-					const mk: IMarkdownOnMessage[] = processMarkdownEntities(text, entities);
-					const { adjustedHashtagPos, adjustedEmojiPos } = adjustPos(mk, mentionList, hashtagList, emojiList, text);
-					const payload = {
-						t: text,
-						hg: adjustedHashtagPos as IHashtagOnMessage[],
-						ej: adjustedEmojiPos as IEmojiOnMessage[],
-						mk
-					};
-					event.preventDefault();
-
-					await handleSend(filterEmptyArrays(payload), request?.mentionRaw || [], attachmentData, valueThread?.references, {
-						nameValueThread: nameValueThread ?? valueThread?.content.t,
-						isPrivate
-					});
-					return;
-				}
-			}
-			default: {
-				return;
-			}
-		}
-	};
-
 	return (
 		<div
 			className="flex flex-col flex-1 justify-end border-l border-color-primary bg-theme-chat pt-4"
@@ -427,7 +347,6 @@ const ThreadBox = () => {
 						)}
 						<ThreadNameTextField
 							onChange={handleChangeNameThread}
-							onKeyDown={onKeyDown}
 							value={nameValueThread ?? ''}
 							label={t('createThread.threadName')}
 							placeholder={
@@ -487,10 +406,11 @@ const ThreadBox = () => {
 								onSend={handleSendWithLimitCheck}
 								onTyping={handleTypingDebounced}
 								listMentions={UserMentionList({
-									channelID: currentChannel?.channel_id as string,
+									channelID: currentChannelId as string,
 									channelMode: ChannelStreamMode.STREAM_MODE_CHANNEL
 								})}
 								isThread={true}
+								isThreadbox={true}
 							/>
 						</div>
 					) : (
@@ -510,7 +430,7 @@ const ThreadBox = () => {
 										onSend={handleSend}
 										onTyping={handleTypingDebounced}
 										listMentions={UserMentionList({
-											channelID: currentChannel?.channel_id as string,
+											channelID: currentChannelId as string,
 											channelMode: ChannelStreamMode.STREAM_MODE_CHANNEL
 										})}
 										isThreadbox

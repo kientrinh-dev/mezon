@@ -97,6 +97,7 @@ errorListenerMiddleware.startListening({
 					hasDispatchedRefreshOnce = true;
 					try {
 						await listenerApi.dispatch(authActions.refreshSession());
+						hasDispatchedRefreshOnce = false;
 					} finally {
 						isRefreshing = false;
 					}
@@ -109,6 +110,11 @@ errorListenerMiddleware.startListening({
 		const error = normalizeError(action);
 
 		if (!error) {
+			return;
+		}
+
+		const errorMessage = error?.message || action?.error?.message || '';
+		if (typeof errorMessage === 'string' && errorMessage.includes('Request cancelled')) {
 			return;
 		}
 
@@ -163,6 +169,17 @@ errorListenerMiddleware.startListening({
 						clanCount: LIMIT_CLAN_ITEM
 					})
 				);
+				return;
+			}
+
+			const isAuthTokenError =
+				toast.message &&
+				typeof toast.message === 'string' &&
+				(toast.message.toLowerCase().includes('auth token') ||
+					toast.message.toLowerCase().includes('malformed') ||
+					toast.message.toLowerCase().includes('token expired'));
+
+			if (isAuthTokenError) {
 				return;
 			}
 
