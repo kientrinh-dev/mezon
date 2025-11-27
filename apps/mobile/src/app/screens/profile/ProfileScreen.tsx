@@ -27,6 +27,7 @@ import { AddStatusUserModal } from '../../components/AddStatusUserModal';
 import { CustomStatusUser } from '../../components/CustomStatusUser';
 import ImageNative from '../../components/ImageNative';
 import { SendTokenUser } from '../../components/SendTokenUser';
+import { testProperties } from '../../configs/testProperties';
 import { IconCDN } from '../../constants/icon_cdn';
 import { useMixImageColor } from '../../hooks/useMixImageColor';
 import useTabletLandscape from '../../hooks/useTabletLandscape';
@@ -239,7 +240,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 								<MezonIconCDN icon={IconCDN.plusLargeIcon} height={size.s_12} width={size.s_12} color={themeValue.primary} />
 							</TouchableOpacity>
 						)}
-						<TouchableOpacity activeOpacity={1} onPress={() => showUpdateCustomStatus()}>
+						<TouchableOpacity activeOpacity={1} onPress={() => showUpdateCustomStatus()} {...testProperties('profile.touch.addStatus')}>
 							<Text numberOfLines={1} style={styles.textStatus}>
 								{userCustomStatus ? userCustomStatus : t('addStatus')}
 							</Text>
@@ -269,7 +270,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 				</View>
 			)}
 
-			<ScrollView style={styles.contentWrapper} contentContainerStyle={styles.scrollContentContainer}>
+			<ScrollView style={styles.contentWrapper} contentContainerStyle={styles.scrollContentContainer} {...testProperties('profile.scrollView')}>
 				<View style={styles.contentContainer}>
 					<TouchableOpacity onPress={showUserStatusBottomSheet} style={styles.touchStatusMargin}>
 						<View style={styles.viewInfo}>
@@ -355,7 +356,11 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 					</View>
 				</View>
 
-				<TouchableOpacity style={[styles.contentContainer, styles.imgList]} onPress={() => navigateToFriendScreen()}>
+				<TouchableOpacity
+					style={[styles.contentContainer, styles.imgList]}
+					onPress={() => navigateToFriendScreen()}
+					{...testProperties('profile.touch.yourFriend')}
+				>
 					<Text style={styles.textTitle}>{t('yourFriend')}</Text>
 
 					<MezonAvatar avatarUrl="" username="" height={size.s_30} width={size.s_30} stacks={firstFriendImageList} />

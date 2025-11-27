@@ -5,6 +5,7 @@ import { StyleProp, Text, TextStyle, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Images from '../../../assets/Images';
 import ImageNative from '../../components/ImageNative';
+import { testProperties } from '../../configs/testProperties';
 import { IconCDN } from '../../constants/icon_cdn';
 import { style } from './styles';
 
@@ -53,7 +54,10 @@ export default memo(function MezonClanAvatar({
 		);
 	}
 	return (
-		<View style={[styles.fakeBox, { backgroundColor: defaultColor || themeValue.colorAvatarDefault }]}>
+		<View
+			style={[styles.fakeBox, { backgroundColor: defaultColor || themeValue.colorAvatarDefault }]}
+			{...testProperties('mezonClanAvatar.fakeBox')}
+		>
 			{!noDefaultText ? (
 				<FastImage source={alt === 'Anonymous' ? IconCDN.anonymousAvatar : Images.ANONYMOUS_AVATAR} style={styles.defaultImageStyle} />
 			) : null}

@@ -13,6 +13,7 @@ import MezonIconCDN from '../../componentUI/MezonIconCDN';
 import { EFriendItemAction } from '../../components/FriendItem';
 import { FriendListByAlphabet } from '../../components/FriendListByAlphabet';
 import { UserInformationBottomSheet } from '../../components/UserInformationBottomSheet';
+import { testProperties } from '../../configs/testProperties';
 import { IconCDN } from '../../constants/icon_cdn';
 import { APP_SCREEN } from '../../navigation/ScreenTypes';
 import { normalizeString } from '../../utils/helpers';
@@ -164,6 +165,7 @@ export const FriendScreen = React.memo(({ navigation }: { navigation: any }) => 
 					placeholderTextColor={themeValue.textDisabled}
 					style={styles.searchInput}
 					onChangeText={(text) => typingSearchDebounce(text)}
+					{...testProperties('friend.input.search')}
 				/>
 			</View>
 
@@ -174,16 +176,20 @@ export const FriendScreen = React.memo(({ navigation }: { navigation: any }) => 
 			) : null}
 
 			{!searchText?.trim()?.length || filteredFriendList?.length === 0 ? (
-				<Pressable style={styles.requestFriendWrapper} onPress={() => navigateToRequestFriendScreen()}>
+				<Pressable
+					style={styles.requestFriendWrapper}
+					onPress={() => navigateToRequestFriendScreen()}
+					{...testProperties('friend.button.requestFriend')}
+				>
 					<MezonIconCDN icon={IconCDN.paperPlaneIcon} width={25} color={themeValue.text} />
 					<View style={styles.fill}>
 						<Text style={styles.defaultText}>{t('friends:friendRequest.title')}</Text>
 						<View style={styles.requestContentWrapper}>
-							<Text style={styles.defaultText}>
+							<Text style={styles.defaultText} {...testProperties('friend.text.requestReceived')}>
 								{friendRequestCount.received} {t('friends:friendRequest.received')}
 							</Text>
 							<Text style={styles.defaultText}>•</Text>
-							<Text style={styles.defaultText}>
+							<Text style={styles.defaultText} {...testProperties('friend.text.requestSent')}>
 								{friendRequestCount.sent} {t('friends:friendRequest.sent')}
 							</Text>
 						</View>

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { KeyboardType, StyleProp, TextStyle, ViewStyle } from 'react-native';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ErrorInput } from '../../components/ErrorInput';
+import { testProperties } from '../../configs/testProperties';
 import { IconCDN } from '../../constants/icon_cdn';
 import { validInput } from '../../utils/validate';
 import MezonIconCDN from '../MezonIconCDN';
@@ -111,7 +112,11 @@ export default function MezonInput({
 
 	return (
 		<View style={styles.container}>
-			{label && <Text style={[styles.label, titleUppercase ? styles.titleUppercase : {}, titleStyle]}>{label}</Text>}
+			{label && (
+				<Text style={[styles.label, titleUppercase ? styles.titleUppercase : {}, titleStyle]} {...testProperties('mezonInput.label')}>
+					{label}
+				</Text>
+			)}
 			<View style={[styles.fakeInput, textarea && { paddingTop: 10 }, renderBorder(), inputWrapperStyle]}>
 				<View style={styles.inputBox}>
 					{prefixIcon}
@@ -132,11 +137,12 @@ export default function MezonInput({
 						editable={!disabled}
 						defaultValue={defaultValue}
 						keyboardType={keyboardType}
+						{...testProperties('mezonInput.input')}
 					/>
 					{postfixIcon}
 
 					{!textarea && value?.length > 0 && !disabled && (
-						<TouchableOpacity onPress={handleClearBtn} style={styles.clearBtn}>
+						<TouchableOpacity onPress={handleClearBtn} style={styles.clearBtn} {...testProperties('mezonInput.clearBtn')}>
 							<MezonIconCDN icon={IconCDN.circleXIcon} height={size.s_18} width={size.s_18} color={themeValue.white} />
 						</TouchableOpacity>
 					)}

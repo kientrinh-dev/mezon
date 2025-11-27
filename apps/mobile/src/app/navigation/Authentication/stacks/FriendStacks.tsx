@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, Text } from 'react-native';
+import { testProperties } from '../../../configs/testProperties';
 import { FriendScreen } from '../../../screens/friend';
 import { AddFriendScreen } from '../../../screens/friend/AddFriend';
 import { RequestFriendScreen } from '../../../screens/friend/RequestFriend';
@@ -13,7 +14,11 @@ import { styles } from './styles';
 const AddFriendButton = ({ navigation }: { navigation: any }) => {
 	const { t } = useTranslation(['screen']);
 	return (
-		<Pressable onPress={() => navigation.navigate(APP_SCREEN.FRIENDS.STACK, { screen: APP_SCREEN.FRIENDS.ADD_FRIEND })} style={styles.addFriendButton}>
+		<Pressable
+			onPress={() => navigation.navigate(APP_SCREEN.FRIENDS.STACK, { screen: APP_SCREEN.FRIENDS.ADD_FRIEND })}
+			style={styles.addFriendButton}
+			{...testProperties('friend.button.addFriends')}	
+		>
 			<Text style={styles.addFriendText}>{t('headerRight.addFriends')}</Text>
 		</Pressable>
 	);

@@ -1,6 +1,7 @@
 import { useTheme } from '@mezon/mobile-ui';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { NativeEventEmitter, NativeModules, Platform, TextInput, TextStyle, View } from 'react-native';
+import { testProperties } from '../../../../../configs/testProperties';
 import { style } from './styles';
 
 const OTP_LENGTH = 6;
@@ -155,6 +156,7 @@ const OTPInput: React.FC<OTPInputProps> = ({ onOtpChange, onOtpComplete, isError
 					selection={digit !== '' ? { start: 1, end: 1 } : undefined}
 					autoComplete={isSms ? 'sms-otp' : undefined}
 					textContentType={isSms ? 'oneTimeCode' : undefined}
+					{...testProperties(`otp.input.${index}`)}
 				/>
 			))}
 		</View>

@@ -3,6 +3,7 @@ import { useTheme } from '@mezon/mobile-ui';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Text, TouchableOpacity, View } from 'react-native';
+import { testProperties } from '../../configs/testProperties';
 import useTabletLandscape from '../../hooks/useTabletLandscape';
 import { style } from './styles';
 
@@ -34,16 +35,22 @@ export default function MezonConfirm({ children, title, confirmText, content, is
 		<View style={styles.main}>
 			<View style={styles.container}>
 				<View style={styles.header}>
-					<Text style={styles.title}>{title}</Text>
+					<Text style={styles.title} {...testProperties('confirm.title')}>
+						{title}
+					</Text>
 				</View>
 
 				{children ? children : <Text style={styles.contentText}>{content || ''}</Text>}
 
 				<View style={styles.btnWrapper}>
-					<TouchableOpacity style={[styles.btn, styles.btnDefault, isDanger && styles.btnDanger]} onPress={() => handleConfirm()}>
+					<TouchableOpacity
+						style={[styles.btn, styles.btnDefault, isDanger && styles.btnDanger]}
+						onPress={() => handleConfirm()}
+						{...testProperties('confirm.button')}
+					>
 						<Text style={[styles.btnText, styles.btnTextWhite]}>{confirmText}</Text>
 					</TouchableOpacity>
-					<TouchableOpacity style={styles.btn} onPress={() => handleClose()}>
+					<TouchableOpacity style={styles.btn} onPress={() => handleClose()} {...testProperties('confirm.button.cancel')}>
 						<Text style={styles.btnText}>{t('buzz.cancel')}</Text>
 					</TouchableOpacity>
 				</View>

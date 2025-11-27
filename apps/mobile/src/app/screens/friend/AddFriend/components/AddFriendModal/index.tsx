@@ -9,9 +9,10 @@ import { DeviceEventEmitter, Platform, Pressable, StatusBar, Text, TextInput, Vi
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Toast from 'react-native-toast-message';
 import { useDispatch, useSelector } from 'react-redux';
+import StatusBarHeight from '../../../../../components/StatusBarHeight/StatusBarHeight';
 import MezonButton from '../../../../../componentUI/MezonButton';
 import MezonIconCDN from '../../../../../componentUI/MezonIconCDN';
-import StatusBarHeight from '../../../../../components/StatusBarHeight/StatusBarHeight';
+import { testProperties } from '../../../../../configs/testProperties';
 import { IconCDN } from '../../../../../constants/icon_cdn';
 import { style } from './styles';
 
@@ -149,6 +150,7 @@ export const AddFriendModal = React.memo(() => {
 							style={styles.searchInput}
 							onChangeText={handleTextChange}
 							autoCapitalize="none"
+							{...testProperties('addFriend.input.username')}
 						/>
 					</View>
 					<View style={styles.byTheWayText}>
