@@ -455,6 +455,7 @@ const BottomBlock = ({
 								type="checkbox"
 								checked={isAgeRestricted === 1}
 								onChange={handleCheckboxAgeRestricted}
+								data-e2e={generateE2eId('clan_page.channel_list.settings.overview.age_restricted.toggle')}
 							/>
 						</div>
 						<div className="text-theme-primary">{t('overview.ageRestricted.description')}</div>
