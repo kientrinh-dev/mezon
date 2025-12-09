@@ -408,7 +408,11 @@ export const DATA_E2E_IDENTIFIER = {
 				item: ''
 			},
 			settings: {
-				overview: ''
+				overview: {
+					age_restricted: {
+						toggle: ''
+					}
+				}
 			},
 			members: {
 				role: {
@@ -816,7 +820,15 @@ export const DATA_E2E_IDENTIFIER = {
 		},
 		search: {
 			input: ''
-		}
+		},
+		birthday_confirmation: {
+			input: {
+				date_picker: ''
+			},
+			button: {
+				submit: ''
+			}
+		},
 	},
 	icon: {
 		end_call: ''

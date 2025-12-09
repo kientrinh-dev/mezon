@@ -1,5 +1,6 @@
 import { useAccount, useAppNavigation, useAuth } from '@mezon/core';
 import { selectCurrentChannelId, selectCurrentClanId } from '@mezon/store';
+import { generateE2eId } from '@mezon/utils';
 import { safeJSONParse } from 'mezon-js';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -51,7 +52,10 @@ const AgeRestricted = ({ closeAgeRestricted }: { closeAgeRestricted: () => void 
 	const [openModalConfirmAge, closeModalConfirmAge] = useModal(() => {
 		return (
 			<ModalLayout onClose={handleCloseModal}>
-				<div className="bg-theme-setting-primary  pt-4 rounded flex flex-col items-center text-theme-primary w-[550px]">
+				<div
+					className="bg-theme-setting-primary  pt-4 rounded flex flex-col items-center text-theme-primary w-[550px]"
+					data-e2e={generateE2eId('modal.birthday_confirmation')}
+				>
 					<img src={'assets/images/cake.png'} alt="warning" width={200} height={200} />
 					<div className="text-center ml-6 mr-6">
 						<h2 className="text-2xl font-bold text-center mb-4 text-theme-primary-active">{t('confirmBirthdayTitle')}</h2>
@@ -62,12 +66,14 @@ const AgeRestricted = ({ closeAgeRestricted }: { closeAgeRestricted: () => void 
 						id="birthday"
 						onChange={handleBirthdayChange}
 						className="mb-4 px-4 py-2 mt-5 border-2 border-color-theme text-theme-message rounded-lg bg-input-secondary w-9/10"
+						data-e2e={generateE2eId('modal.birthday_confirmation.input.date_picker')}
 					/>
 					<div className="flex space-x-4 mb-4 w-9/10">
 						<button
 							type="button"
 							onClick={handleSubmit}
 							className="border-2 border-blue-600 rounded-lg px-6 py-2 bg-blue-600 text-white w-full"
+							data-e2e={generateE2eId('modal.birthday_confirmation.button.submit')}
 						>
 							{t('submit')}
 						</button>
