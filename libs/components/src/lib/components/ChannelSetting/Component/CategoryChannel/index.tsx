@@ -2,7 +2,7 @@ import { useAppNavigation } from '@mezon/core';
 import type { CategoriesEntity, IUpdateChannelRequest } from '@mezon/store';
 import { channelsActions, selectAllCategories, selectChannelById, useAppDispatch, useAppSelector } from '@mezon/store';
 import { Icons, Menu } from '@mezon/ui';
-import type { IChannel } from '@mezon/utils';
+import { generateE2eId, type IChannel } from '@mezon/utils';
 import type { ReactElement } from 'react';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -81,8 +81,11 @@ const SettingCategoryChannel = (props: CategoryChannelProps) => {
 				<p className="text-xs font-bold text-theme-primary mt-4">{t('categoryManagement.category')}</p>
 
 				<Menu menu={menu}>
-					<div className="w-full h-12 rounded-md border-theme-primary text-theme-message bg-input-secondary  flex flex-row px-3 justify-between items-center uppercase">
-						<p>{categoryName}</p>
+					<div
+						className="w-full h-12 rounded-md border-theme-primary text-theme-message bg-input-secondary  flex flex-row px-3 justify-between items-center uppercase"
+						data-e2e={generateE2eId('channel_setting_page.category.dropdown')}	
+					>
+						<p data-e2e={generateE2eId('channel_setting_page.category.dropdown.value')}>{categoryName}</p>
 						<Icons.ArrowDownFill />
 					</div>
 				</Menu>
