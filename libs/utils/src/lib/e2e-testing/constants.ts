@@ -23,6 +23,9 @@ export const DATA_E2E_IDENTIFIER = {
 		base: '',
 		copy: ''
 	},
+	dropdown: {
+		item: ''
+	},
 	base_profile: {
 		display_name: '',
 		user_status: ''
@@ -542,6 +545,12 @@ export const DATA_E2E_IDENTIFIER = {
 				command: '',
 				type: '',
 				message_content: ''
+			}
+		},
+		category: {
+			channel_name: '',
+			dropdown: {
+				value: '',
 			}
 		}
 	},
